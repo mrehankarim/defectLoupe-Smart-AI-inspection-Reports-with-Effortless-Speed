@@ -1,0 +1,47 @@
+services:
+  db:
+    image: ankane/pgvector:latest
+    container_name: defect-loupe-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: defect-loupe
+    ports:
+      - "5433:5432"
+    volumes:
+      - defect-loupe-data:/var/lib/postgresql/data
+    networks:
+      - defect-loupe-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d defect-loupe" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: defect-loupe-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy # wait until Postgres is actually ready
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      ACCESS_TOKEN_SECRET: dxUiY9UD28qmQM61HEkX0QMC3oqA58vRUIji5ewXb1UCFGmYpBl4mGTcw7sWAiIp
+      ACCESS_TOKEN_EXPIRY: 15m
+      REFRESH_TOKEN_SECRET: PEHBHbO1UV9G1e63Ay3oWikocJuJvorQqKMEkdJuKQKTw5FEtk4kfFgUz2pR64WO54Y
+      REFRESH_TOKEN_EXPIRY: 10d
+    networks:
+      - defect-loupe-net
+
+networks:
+  defect-loupe-net:
+    driver: bridge
+
+volumes:
+  defect-loupe-data:
