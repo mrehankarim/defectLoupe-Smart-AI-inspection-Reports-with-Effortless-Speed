@@ -1,1 +1,0 @@
-Root configuration for the DefectLoupe FastAPI backend, defining Docker-based deployment, Python dependencies, environment setup, and a four-member team task decomposition for building a property inspection and defect tracking platform.

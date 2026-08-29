@@ -1,1 +1,0 @@
-FastAPI 0.115+ with Uvicorn ASGI server; SQLAlchemy 2.0 ORM over PostgreSQL 15 with the `pgvector` extension for vector similarity search; Alembic for migrations; Pydantic v2 for request/response schemas; PyJWT and pwdlib[argon2] for authentication; python-dotenv for configuration loading.
