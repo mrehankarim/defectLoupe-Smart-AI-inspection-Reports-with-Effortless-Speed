@@ -1,0 +1,4 @@
+- The application entrypoint is `app.main:app` served by Uvicorn, as declared in both the Dockerfile CMD and the README's local run command.
+- Configuration is externalized via environment variables consumed through python-dotenv, with secrets (token secrets, DB URL) never hard-coded into source code.
+- Database access uses SQLAlchemy 2.0 Mapped Column syntax with Alembic managing schema evolution through sequentially numbered migration files per team member.
+- Team collaboration follows strict folder isolation: each of the four members owns dedicated `routes/`, `services/`, `dtos/`, and `tests/` paths under `app/` to minimize merge conflicts.

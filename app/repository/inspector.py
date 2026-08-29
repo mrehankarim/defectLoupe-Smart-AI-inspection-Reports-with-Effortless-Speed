@@ -66,6 +66,7 @@ class Inspector(Base):
 
     company: Mapped["Company | None"] = relationship(
         back_populates="inspectors",
+        foreign_keys="[Inspector.company_id]",
     )
 
     clients: Mapped[list["Client"]] = relationship(

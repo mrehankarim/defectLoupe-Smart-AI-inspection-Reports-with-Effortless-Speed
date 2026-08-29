@@ -4,6 +4,8 @@ import uvicorn
 
 from app.repository import Base
 from app.config.db_config import engine
+from app.api.routes.auth_routes import router as auth_router
+from app.api.routes.inspector_routes import router as inspector_router
 
 
 @asynccontextmanager
@@ -14,6 +16,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.include_router(auth_router)
+app.include_router(inspector_router)
 
 
 @app.get("/")

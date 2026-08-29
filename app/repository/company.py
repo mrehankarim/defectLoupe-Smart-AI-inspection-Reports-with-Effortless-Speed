@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, Text
+from sqlalchemy import DateTime, String, Text, ForeignKey
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -20,6 +20,12 @@ class Company(Base):
 
     name: Mapped[str] = mapped_column(Text, nullable=False)
     logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    owner_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("inspectors.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     phone_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
@@ -44,6 +50,12 @@ class Company(Base):
     
     inspectors: Mapped[list["Inspector"]] = relationship(
         back_populates="company",
+        foreign_keys="[Inspector.company_id]",
+        lazy="selectin",
+    )
+
+    owner: Mapped["Inspector | None"] = relationship(
+        foreign_keys="[Company.owner_id]",
         lazy="selectin",
     )
 

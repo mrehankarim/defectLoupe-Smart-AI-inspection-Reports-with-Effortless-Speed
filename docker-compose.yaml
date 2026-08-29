@@ -36,6 +36,9 @@ services:
       ACCESS_TOKEN_EXPIRY: 15m
       REFRESH_TOKEN_SECRET: PEHBHbO1UV9G1e63Ay3oWikocJuJvorQqKMEkdJuKQKTw5FEtk4kfFgUz2pR64WO54Y
       REFRESH_TOKEN_EXPIRY: 10d
+      RESEND_EMAIL_VERIFICATION_KEY: re_VEjnZJtT_AmmGf3FLbge2B4TXWZsemKGH
+      APP_BASE_URL: http://localhost:8000
+      EMAIL_FROM_ADDRESS: DefectLoupe <onboarding@resend.dev>
     networks:
       - defect-loupe-net
 
