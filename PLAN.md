@@ -63,10 +63,10 @@ The monolith (`app/`) is split into **5 independent services**, each with its ow
 
 | Service | Port (internal) | Scope | Key Files | Owns Tables |
 |---|---|---|---|---|
-| **auth-service** | 8001 | User registration, login, JWT, email verification, RBAC | `auth/` | `users`, `inspectors`, `companies` |
-| **core-service** | 8002 | Clients, Properties, Inspections, Areas, Dashboard | `core/` | `clients`, `properties`, `inspections`, `inspection_areas` |
-| **media-service** | 8003 | Photo upload, voice notes, R2 storage, transcription trigger | `media/` | `area_photos`, `area_observations`, `transcriptions` |
-| **ai-service** | 8004 | RAG (pgvector), Vision AI (Gemini), Report generation, PDF | `ai/` | `document_chunks`, `report_jobs` |
+| **auth-service** | 8000 | User registration, login, JWT, email verification, RBAC | `auth/` | `users`, `inspectors`, `companies` |
+| **core-service** | 8000 | Clients, Properties, Inspections, Areas, Dashboard | `core/` | `clients`, `properties`, `inspections`, `inspection_areas` |
+| **media-service** | 8000 | Photo upload, voice notes, R2 storage, transcription trigger | `media/` | `area_photos`, `area_observations`, `transcriptions` |
+| **ai-service** | 8000 | RAG (pgvector), Vision AI (Gemini), Report generation, PDF | `ai/` | `document_chunks`, `report_jobs` |
 | **api-gateway** | 80 (host) | Traefik reverse proxy, path routing, CORS, rate limiting | `gateway/` | none |
 | **celery-workers** | n/a | Async background jobs (STT, vision, reports) | shared `ai/` + `media/` code | none |
 | **PostgreSQL** | 5432 (5433 host) | Shared database (separate schemas per service) | — | all tables |
@@ -145,7 +145,7 @@ services:
     build: ./services/auth
     labels:
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`)"
-      - "traefik.http.services.auth.loadbalancer.server.port=8001"
+      - "traefik.http.services.auth.loadbalancer.server.port=8000"
     environment: { DATABASE_URL, JWT secrets, Resend key }
     networks: [defectloupe-net]
 
@@ -153,7 +153,7 @@ services:
     build: ./services/core
     labels:
       - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`)"
-      - "traefik.http.services.core.loadbalancer.server.port=8002"
+      - "traefik.http.services.core.loadbalancer.server.port=8000"
     depends_on: [auth, db]
     networks: [defectloupe-net]
 
@@ -161,7 +161,7 @@ services:
     build: ./services/media
     labels:
       - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`)"
-      - "traefik.http.services.media.loadbalancer.server.port=8003"
+      - "traefik.http.services.media.loadbalancer.server.port=8000"
     depends_on: [auth, core, db, redis]
     environment: { R2_BUCKET, R2_ACCESS_KEY, R2_SECRET_KEY, REDIS_URL }
     networks: [defectloupe-net]
@@ -170,7 +170,7 @@ services:
     build: ./services/ai
     labels:
       - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`)"
-      - "traefik.http.services.ai.loadbalancer.server.port=8004"
+      - "traefik.http.services.ai.loadbalancer.server.port=8000"
     depends_on: [auth, core, media, db, redis]
     networks: [defectloupe-net]
 
@@ -344,12 +344,12 @@ Every member commits to this contract from Day 1:
 | JWT validation (all services) | Each service imports `shared/auth_deps.py` which decodes the JWT locally using the same `ACCESS_TOKEN_SECRET`. No HTTP call to auth-service. |
 | M2 needs `inspector_id` | Extracted from JWT payload by `get_current_inspector()` dependency. Already works standalone. |
 | M3 needs `area_id` / `photo_id` | Passed as URL path params. M3's endpoints validate them against the `area_photos`/`inspection_areas` tables in shared DB. No call to core-service. |
-| M4 needs inspection context | `GET /inspections/{id}/full-context` is mocked in M4's code with a hardcoded JSON fixture until M2's endpoint is ready (swap to `httpx.AsyncClient("http://core:8002/...")` on integration day). |
+| M4 needs inspection context | `GET /inspections/{id}/full-context` is mocked in M4's code with a hardcoded JSON fixture until M2's endpoint is ready (swap to `httpx.AsyncClient("http://core:8000/...")` on integration day). |
 | M4 needs photos for vision | `GET /photos/{id}` mocked with a local sample image; swap to media-service call on integration day. |
 | M4 needs transcriptions | `GET /transcriptions?observation_ids=...` mocked with fixture data; swap to media-service on integration day. |
 | M2 needs client email verification | Handled entirely inside core-service (no auth-service call). |
 | M3 needs tenant scope | Decoded from JWT locally (same pattern as M2). |
-| Web needs backend | Each member runs their own service locally + hits it via `localhost:8001-8004` directly during dev. Traefik at `:80` is only for integration. |
+| Web needs backend | Each member runs their own service locally + hits it via `localhost:8000` directly during dev (one service at a time) or uses `docker compose up` for all. Traefik at `:80` is only for integration. |
 | Mobile needs all APIs | M4 develops against local services + mock JSON fixtures. Once services are up on integration day, switch the Axios `baseURL` from mock server to `http://localhost`. |
 
 ### Integration Day (Day 3 of sprint) — All Mocks Become Real
@@ -396,7 +396,7 @@ M4's mobile scope (build incrementally across days):
 - [ ] **Create service scaffolds** — empty `services/core/`, `services/media/`, `services/ai/`, `services/gateway/` each with `app/main.py`, `Dockerfile`, `requirements.txt`
 - [ ] **Create `shared/` folder** — move `db_config.py` and `base.py` (SQLAlchemy declarative base) into `shared/` so all services import from the same place
 - [ ] **Write new `docker-compose.yaml`** — 6 services (gateway, auth, core, media, ai, celery-worker) + PostgreSQL + Redis
-- [ ] **Add Traefik gateway** — route `/auth/*` and `/inspectors/*` to auth-service (port 8001), add stub labels for core/media/ai
+- [ ] **Add Traefik gateway** — route `/auth/*` and `/inspectors/*` to auth-service (port 8000), add stub labels for core/media/ai
 - [ ] **Verify microservices launch** — `docker compose up --build` should start all 8 containers. Health check each service via Traefik at `localhost:80`
 - [ ] **Create shared `.env`** — single env file at root with all service variables (each service reads what it needs)
 
@@ -519,7 +519,7 @@ M4's mobile scope (build incrementally across days):
 
 #### Morning (3–4 hours) — Integration (All Mocks Become Real)
 - [ ] Merge all 4 feature branches → `develop`, resolve conflicts
-- [ ] Swap all mock stubs → real cross-service HTTP calls via `httpx` on Docker internal network (`http://core:8002`, `http://media:8003`, `http://ai:8004`)
+- [ ] Swap all mock stubs → real cross-service HTTP calls via `httpx` on Docker internal network (`http://core:8000`, `http://media:8000`, `http://ai:8000`)
 - [ ] Run all services through Traefik at `localhost:80`
 - [ ] Mobile flips Axios `baseURL` from mock server to `http://localhost`
 - [ ] **End-to-end smoke test** (all members together, 30 min): signup → login → create client → create property → start inspection → add areas → upload photo → record voice → trigger transcription → analyze defects → generate report → view PDF
@@ -830,8 +830,8 @@ GET    /api/v1/reports/{id}/verify               # public QR verification page
 | Database migration issues | Use `Base.metadata.create_all()` for hackathon (skip Alembic if blocking) |
 | Team member unavailable | Each member documents their API contracts in shared doc before starting |
 | **Microservice fails to start** | `docker compose ps` + `docker compose logs <service>` to isolate. Each service has its own healthcheck; failing one doesn't bring others down |
-| **Traefik routing misconfiguration** | Keep Traefik dashboard open at `localhost:8080` during dev. Test each service via direct port (8001–8004) to bypass gateway during debugging |
-| **Cross-service HTTP calls fail** | Use Docker internal DNS (`http://core:8002`, `http://media:8003`) for inter-service calls. Wrap in try/except with fallback to cached/stale data |
+| **Traefik routing misconfiguration** | Keep Traefik dashboard open at `localhost:8080` during dev. Test each service via `docker compose logs <service>` or curl through Traefik at `:80` |
+| **Cross-service HTTP calls fail** | Use Docker internal DNS (`http://core:8000`, `http://media:8000`) for inter-service calls. Wrap in try/except with fallback to cached/stale data |
 | **Redis/Celery worker dies** | Redis restarts fast; Celery workers auto-reconnect. Use `docker compose up -d --scale celery-worker=2` for redundancy |
 | **Container port conflicts on host** | Only expose ports for gateway (80), DB (5433), Redis (6379). Internal services stay on Docker network (no host port binding) |
 | **Service image rebuild takes too long** | Use Docker layer caching: keep `requirements.txt` separate from code, install deps first, then COPY code. Add `--cache-from` for faster builds |
@@ -864,7 +864,7 @@ GET    /api/v1/reports/{id}/verify               # public QR verification page
 - [ ] Each service passes its own healthcheck (Traefik auto-removes unhealthy backends)
 - [ ] Async jobs (STT, report generation) run via Celery workers, not in-process
 - [ ] Redis is reachable from all services and the Celery broker
-- [ ] Inter-service calls use Docker internal DNS (`http://core:8002`, etc.) — not `localhost`
+- [ ] Inter-service calls use Docker internal DNS (`http://core:8000`, etc.) — not `localhost`
 - [ ] Scaling test passes: `docker compose up -d --scale celery-worker=2` runs two parallel workers
 - [ ] Any single service can crash without taking down the rest (verified by `docker compose stop ai` while auth+core+media still respond)
 - [ ] `docker compose down` cleanly stops everything; `docker compose up -d` recovers with data intact (PostgreSQL volume persisted)

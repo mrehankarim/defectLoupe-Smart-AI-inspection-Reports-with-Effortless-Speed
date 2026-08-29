@@ -1,11 +1,11 @@
 # DefectLoupe — microservices orchestration
 #
-# Services (internal ports, not exposed to host except via gateway):
+# Services (all listen on port 8000 internally; host ports are unused):
 #   gateway       (Traefik)       → 80   (host: 80)  — public entry point
-#   auth          (FastAPI)       → 8001             — /auth/*, /inspectors/*
-#   core          (FastAPI)       → 8002             — /api/v1/clients, /properties, /inspections, /dashboard
-#   media         (FastAPI)       → 8003             — /api/v1/photos, /observations, /transcriptions
-#   ai            (FastAPI)       → 8004             — /api/v1/rag, /reports
+#   auth          (FastAPI)       → 8000             — /auth/*, /inspectors/*
+#   core          (FastAPI)       → 8000             — /api/v1/clients, /properties, /inspections, /dashboard
+#   media         (FastAPI)       → 8000             — /api/v1/photos, /observations, /transcriptions
+#   ai            (FastAPI)       → 8000             — /api/v1/rag, /reports
 #   celery-worker (Celery)        → n/a              — async STT, vision, report jobs
 #   db            (PostgreSQL)    → 5432 (host: 5433)
 #   redis         (Redis)         → 6379 (host: 6379)
@@ -41,7 +41,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`)"
-      - "traefik.http.services.auth.loadbalancer.server.port=8001"
+      - "traefik.http.services.auth.loadbalancer.server.port=8000"
     env_file:
       - ./services/auth/app/.env
     environment:
@@ -64,7 +64,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`)"
-      - "traefik.http.services.core.loadbalancer.server.port=8002"
+      - "traefik.http.services.core.loadbalancer.server.port=8000"
     env_file:
       - ./services/core/app/.env
     environment:
@@ -89,7 +89,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/inspections`) && PathSuffix(`/media`)"
-      - "traefik.http.services.media.loadbalancer.server.port=8003"
+      - "traefik.http.services.media.loadbalancer.server.port=8000"
     env_file:
       - ./services/media/app/.env
     environment:
@@ -115,14 +115,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathPrefix(`/api/v1/photos`) && PathSuffix(`/analyze`)"
-      - "traefik.http.services.ai.loadbalancer.server.port=8004"
+      - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
       - ./services/ai/app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
-      CORE_SERVICE_URL: http://core:8002
-      MEDIA_SERVICE_URL: http://media:8003
+      CORE_SERVICE_URL: http://core:8000
+      MEDIA_SERVICE_URL: http://media:8000
     depends_on:
       db:
         condition: service_healthy
@@ -154,8 +154,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
-      CORE_SERVICE_URL: http://core:8002
-      MEDIA_SERVICE_URL: http://media:8003
+      CORE_SERVICE_URL: http://core:8000
+      MEDIA_SERVICE_URL: http://media:8000
     depends_on:
       db:
         condition: service_healthy
