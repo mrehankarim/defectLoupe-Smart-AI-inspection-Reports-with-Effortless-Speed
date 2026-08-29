@@ -1,0 +1,30 @@
+# media-service — photos, voice notes, R2 storage, Whisper STT pipeline
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+python-multipart>=0.0.9
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
+# Object storage (Cloudflare R2 / S3-compatible)
+boto3>=1.34.0
+
+# Image processing (thumbnails, EXIF, watermarking)
+Pillow>=10.0.0
+
+# Speech-to-text
+faster-whisper>=1.0.0
+
+# Async task queue
+celery[redis]>=5.4.0
+redis>=5.0.0
+
+# Cross-service HTTP calls
+httpx>=0.27.0
+
+# Config / env
+python-dotenv>=1.0.0

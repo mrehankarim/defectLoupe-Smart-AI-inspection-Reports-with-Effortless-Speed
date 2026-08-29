@@ -1,16 +1,51 @@
+# Files to exclude from Docker build context (reduces image size + build time)
+.git
+.gitignore
+.qoder
+.qoder/**
+.vscode
+.idea
+
+# Plan / docs (not needed inside the image)
+PLAN.md
+TASK_DECOMPOSITION.md
+README.md
+docs/
+
+# Mobile + web (have their own build pipelines)
+mobile/
+web/
+
+# Python caches
 __pycache__
 *.pyc
 *.pyo
-*.pyd
-.Python
-.venv
-env/
-venv/
-.env
 .pytest_cache
 .coverage
-htmlcov
-.git
-.gitignore
-.vscode
-.idea
+htmlcov/
+.venv
+venv/
+
+# Node modules
+node_modules/
+.expo/
+.expo-shared/
+
+# ML model caches (huge — download at runtime or mount as volume)
+.huggingface/
+.torch/
+.whisper/
+
+# Logs + uploads
+logs/
+uploads/
+*.log
+
+# Environment (each service has its own .env; don't copy root .env)
+.env
+.env.local
+
+# Tests + docs
+tests/
+docs/
+*.md

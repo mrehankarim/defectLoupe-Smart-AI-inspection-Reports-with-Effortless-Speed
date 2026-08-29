@@ -1,4 +1,169 @@
+# DefectLoupe — microservices orchestration
+#
+# Services (internal ports, not exposed to host except via gateway):
+#   gateway       (Traefik)       → 80   (host: 80)  — public entry point
+#   auth          (FastAPI)       → 8001             — /auth/*, /inspectors/*
+#   core          (FastAPI)       → 8002             — /api/v1/clients, /properties, /inspections, /dashboard
+#   media         (FastAPI)       → 8003             — /api/v1/photos, /observations, /transcriptions
+#   ai            (FastAPI)       → 8004             — /api/v1/rag, /reports
+#   celery-worker (Celery)        → n/a              — async STT, vision, report jobs
+#   db            (PostgreSQL)    → 5432 (host: 5433)
+#   redis         (Redis)         → 6379 (host: 6379)
+#
+# Build context is the repo root for every service (so the shared/ package
+# can be COPY'd into each image).
+
 services:
+  gateway:
+    image: traefik:v3.0
+    container_name: defect-loupe-gateway
+    restart: unless-stopped
+    command:
+      - "--configFile=/etc/traefik/traefik.yaml"
+    ports:
+      - "80:80"
+      - "8080:8080"   # Traefik dashboard
+    volumes:
+      - ./services/gateway/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - defectloupe-net
+
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+      args:
+        SERVICE_NAME: auth
+    image: defectloupe-auth:latest
+    container_name: defect-loupe-auth
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`)"
+      - "traefik.http.services.auth.loadbalancer.server.port=8001"
+    env_file:
+      - ./services/auth/app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - defectloupe-net
+
+  core:
+    build:
+      context: .
+      dockerfile: services/core/Dockerfile
+      args:
+        SERVICE_NAME: core
+    image: defectloupe-core:latest
+    container_name: defect-loupe-core
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`)"
+      - "traefik.http.services.core.loadbalancer.server.port=8002"
+    env_file:
+      - ./services/core/app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_started
+    networks:
+      - defectloupe-net
+
+  media:
+    build:
+      context: .
+      dockerfile: services/media/Dockerfile
+      args:
+        SERVICE_NAME: media
+    image: defectloupe-media:latest
+    container_name: defect-loupe-media
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/inspections`) && PathSuffix(`/media`)"
+      - "traefik.http.services.media.loadbalancer.server.port=8003"
+    env_file:
+      - ./services/media/app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - defectloupe-net
+
+  ai:
+    build:
+      context: .
+      dockerfile: services/ai/Dockerfile
+      args:
+        SERVICE_NAME: ai
+    image: defectloupe-ai:latest
+    container_name: defect-loupe-ai
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathPrefix(`/api/v1/photos`) && PathSuffix(`/analyze`)"
+      - "traefik.http.services.ai.loadbalancer.server.port=8004"
+    env_file:
+      - ./services/ai/app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      REDIS_URL: redis://redis:6379/0
+      CORE_SERVICE_URL: http://core:8002
+      MEDIA_SERVICE_URL: http://media:8003
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      core:
+        condition: service_started
+      media:
+        condition: service_started
+    networks:
+      - defectloupe-net
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: services/ai/Dockerfile
+      args:
+        SERVICE_NAME: ai
+    image: defectloupe-ai:latest
+    container_name: defect-loupe-celery
+    restart: unless-stopped
+    command: >
+      celery -A app.workers.celery_app worker
+      -l info
+      -Q default,stt,vision,reports
+      --concurrency=2
+    env_file:
+      - ./services/ai/app/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      REDIS_URL: redis://redis:6379/0
+      CORE_SERVICE_URL: http://core:8002
+      MEDIA_SERVICE_URL: http://media:8003
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - defectloupe-net
+
   db:
     image: ankane/pgvector:latest
     container_name: defect-loupe-db
@@ -12,39 +177,33 @@ services:
     volumes:
       - defect-loupe-data:/var/lib/postgresql/data
     networks:
-      - defect-loupe-net
+      - defectloupe-net
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d defect-loupe" ]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d defect-loupe"]
       interval: 5s
       timeout: 5s
       retries: 10
 
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: defect-loupe-backend
+  redis:
+    image: redis:7-alpine
+    container_name: defect-loupe-redis
     restart: unless-stopped
     ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy # wait until Postgres is actually ready
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
-      ACCESS_TOKEN_SECRET: dxUiY9UD28qmQM61HEkX0QMC3oqA58vRUIji5ewXb1UCFGmYpBl4mGTcw7sWAiIp
-      ACCESS_TOKEN_EXPIRY: 15m
-      REFRESH_TOKEN_SECRET: PEHBHbO1UV9G1e63Ay3oWikocJuJvorQqKMEkdJuKQKTw5FEtk4kfFgUz2pR64WO54Y
-      REFRESH_TOKEN_EXPIRY: 10d
-      RESEND_EMAIL_VERIFICATION_KEY: re_VEjnZJtT_AmmGf3FLbge2B4TXWZsemKGH
-      APP_BASE_URL: http://localhost:8000
-      EMAIL_FROM_ADDRESS: DefectLoupe <onboarding@resend.dev>
+      - "6379:6379"
+    volumes:
+      - defect-loupe-redis:/data
     networks:
-      - defect-loupe-net
+      - defectloupe-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
 networks:
-  defect-loupe-net:
+  defectloupe-net:
     driver: bridge
 
 volumes:
   defect-loupe-data:
+  defect-loupe-redis:

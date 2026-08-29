@@ -1,0 +1,35 @@
+# ai-service — RAG (pgvector), Gemini vision, report generation
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.8.0
+python-multipart>=0.0.9
+
+# Database + vector search
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+pgvector>=0.3.0
+
+# Embeddings (local, free)
+sentence-transformers>=2.7.0
+
+# Vision AI (free tier)
+google-generativeai>=0.7.0
+
+# PDF / report generation
+Jinja2>=3.1.0
+WeasyPrint>=62.0
+
+# QR codes (for report verification)
+qrcode[pil]>=7.4.0
+
+# Async task queue
+celery[redis]>=5.4.0
+redis>=5.0.0
+
+# Cross-service HTTP calls
+httpx>=0.27.0
+
+# Config / env
+python-dotenv>=1.0.0

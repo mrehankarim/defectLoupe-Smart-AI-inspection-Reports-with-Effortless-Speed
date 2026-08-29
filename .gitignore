@@ -1,19 +1,71 @@
-.venv/
-venv/
-ENV/
-env/
-.env
-.env.*
-app/.env
-*.env
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+.Python
+env/
+venv/
+.venv/
 .pytest_cache/
+.coverage
+htmlcov/
 
-.idea/
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDEs
 .vscode/
+.idea/
 *.swp
+*.swo
 .DS_Store
 Thumbs.db
-.qoder/
+
+# Node / React Native / Expo
+node_modules/
+.expo/
+.expo-shared/
+mobile/dist/
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/ios/build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Web (Vite + React)
+web/dist/
+web/node_modules/
+
+# Uploads / generated files
+uploads/
+*.log
+logs/
+reports/*.pdf
+.cache/
+
+# Docker
+*.log
+docker-compose.override.yaml
+
+# ML model caches (heavy — keep out of git)
+.huggingface/
+.torch/
+.whisper/
+
+# Test / coverage
+.mypy_cache/
+.ruff_cache/
+.coverage.*
