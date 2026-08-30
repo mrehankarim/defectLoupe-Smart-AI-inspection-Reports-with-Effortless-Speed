@@ -60,15 +60,11 @@ class Client(Base):
 
     # ── Relationships ─────────────────────────────────────────────────────
 
-    # → Inspector who manages this client
-    inspector: Mapped["Inspector | None"] = relationship(
-        back_populates="clients",
-    )
+    # → Inspector who manages this client (cross-service — no back_populates)
+    inspector: Mapped["Inspector | None"] = relationship()
 
-    # → Agency this client is associated with
-    company: Mapped["Company | None"] = relationship(
-        back_populates="clients",
-    )
+    # → Agency this client is associated with (cross-service — no back_populates)
+    company: Mapped["Company | None"] = relationship()
 
     # → Properties owned by this client
     properties: Mapped[list["Property"]] = relationship(

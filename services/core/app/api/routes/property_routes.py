@@ -71,19 +71,6 @@ def delete_property(
     return property_service.delete_property(property_id, inspector, db)
 
 
-# Client's properties shortcut
-from app.services.property_service import list_client_properties
-
-
-@router.get("/clients/{client_id}/properties", response_model=list[PropertyResponse], summary="List all properties for a client")
-def get_client_properties(
-    client_id: UUID,
-    inspector=Depends(get_current_inspector),
-    db: Session = Depends(get_db),
-):
-    """Get all properties for a specific client."""
-    return list_client_properties(client_id, inspector, db)
-
 
 # ── Property History (inspections over time) ──────────────────────────────
 from app.services.inspection_service import get_property_history

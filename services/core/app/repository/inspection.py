@@ -62,9 +62,8 @@ class Inspection(Base):
     )
 
 
-    inspector: Mapped["Inspector"] = relationship(
-        back_populates="inspections",
-    )
+    # Cross-service relationship — no back_populates on shared Inspector
+    inspector: Mapped["Inspector"] = relationship()
 
     # → Property being inspected
     property: Mapped["Property"] = relationship(

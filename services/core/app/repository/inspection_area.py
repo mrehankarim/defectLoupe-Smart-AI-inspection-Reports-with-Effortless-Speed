@@ -38,14 +38,5 @@ class InspectionArea(Base):
         back_populates="inspection_areas",
     )
 
-    photos: Mapped[list["AreaPhoto"]] = relationship(
-        back_populates="inspection_area",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    observations: Mapped[list["AreaObservation"]] = relationship(
-        back_populates="inspection_area",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
+    # AreaPhoto and AreaObservation live in the media-service.
+    # Relationships will be wired during integration day.
