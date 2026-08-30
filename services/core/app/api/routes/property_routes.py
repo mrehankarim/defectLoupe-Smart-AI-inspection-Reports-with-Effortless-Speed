@@ -72,15 +72,15 @@ def delete_property(
 
 
 
-# ── Property History (inspections over time) ──────────────────────────────
-from app.services.inspection_service import get_property_history
+# -- Property History (inspections over time) --
+from app.services.inspection_service import get_property_history as _get_history
 
 
 @router.get("/{property_id}/history", summary="Get inspection history for a property")
-def get_property_history(
+def property_history(
     property_id: UUID,
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
 ):
     """Get all inspections for a property over time."""
-    return get_property_history(property_id, inspector, db)
+    return _get_history(property_id, inspector, db)
