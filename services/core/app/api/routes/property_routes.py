@@ -1,0 +1,85 @@
+"""API routes for the Property resource."""
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.orm import Session
+
+from shared.db_config import get_db
+from shared.auth_deps import get_current_inspector
+from app.api.dtos.property_dto import (
+    CreatePropertyRequest,
+    UpdatePropertyRequest,
+    PropertyResponse,
+    PropertyListResponse,
+)
+from app.services import property_service
+
+router = APIRouter(prefix="/api/v1/properties", tags=["properties"])
+
+
+@router.post("", response_model=PropertyResponse, status_code=201)
+def create_property(
+    data: CreatePropertyRequest,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Create a new property linked to a client."""
+    return property_service.create_property(data, inspector, db)
+
+
+@router.get("", response_model=PropertyListResponse)
+def list_properties(
+    client_id: UUID | None = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=200),
+    search: str | None = Query(None),
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """List all properties visible to the current inspector/agency."""
+    return property_service.list_properties(inspector, db, client_id, skip, limit, search)
+
+
+@router.get("/{property_id}", response_model=PropertyResponse)
+def get_property(
+    property_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Get details of a single property."""
+    return property_service.get_property(property_id, inspector, db)
+
+
+@router.patch("/{property_id}", response_model=PropertyResponse)
+def update_property(
+    property_id: UUID,
+    data: UpdatePropertyRequest,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Update a property's details."""
+    return property_service.update_property(property_id, data, inspector, db)
+
+
+@router.delete("/{property_id}")
+def delete_property(
+    property_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Delete a property."""
+    return property_service.delete_property(property_id, inspector, db)
+
+
+# Client's properties shortcut
+from app.services.property_service import list_client_properties
+
+
+@router.get("/clients/{client_id}/properties", response_model=list[PropertyResponse])
+def get_client_properties(
+    client_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Get all properties for a specific client."""
+    return list_client_properties(client_id, inspector, db)
