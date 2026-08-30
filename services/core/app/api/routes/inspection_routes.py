@@ -18,7 +18,7 @@ from app.services import inspection_service
 router = APIRouter(prefix="/api/v1/inspections", tags=["inspections"])
 
 
-@router.post("", response_model=InspectionResponse, status_code=201)
+@router.post("", response_model=InspectionResponse, status_code=201, summary="Create a new inspection")
 def create_inspection(
     data: CreateInspectionRequest,
     inspector=Depends(get_current_inspector),
@@ -28,7 +28,7 @@ def create_inspection(
     return inspection_service.create_inspection(data, inspector, db)
 
 
-@router.get("", response_model=InspectionListResponse)
+@router.get("", response_model=InspectionListResponse, summary="List inspections with optional filters")
 def list_inspections(
     status: InspectionStatus | None = Query(None),
     property_id: UUID | None = Query(None),
@@ -47,7 +47,7 @@ def list_inspections(
     )
 
 
-@router.get("/{inspection_id}", response_model=InspectionResponse)
+@router.get("/{inspection_id}", response_model=InspectionResponse, summary="Get inspection details")
 def get_inspection(
     inspection_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -57,7 +57,7 @@ def get_inspection(
     return inspection_service.get_inspection(inspection_id, inspector, db)
 
 
-@router.patch("/{inspection_id}", response_model=InspectionResponse)
+@router.patch("/{inspection_id}", response_model=InspectionResponse, summary="Update inspection (details and/or status transition)")
 def update_inspection(
     inspection_id: UUID,
     data: UpdateInspectionRequest,
@@ -68,7 +68,7 @@ def update_inspection(
     return inspection_service.update_inspection(inspection_id, data, inspector, db)
 
 
-@router.get("/{inspection_id}/full-context")
+@router.get("/{inspection_id}/full-context", summary="Get aggregated inspection data for reports and mobile")
 def get_inspection_full_context(
     inspection_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -85,7 +85,7 @@ import csv
 import io
 
 
-@router.get("/export/csv")
+@router.get("/export/csv", summary="Export inspections as CSV file")
 def export_inspections_csv(
     status: InspectionStatus | None = Query(None),
     inspector=Depends(get_current_inspector),
