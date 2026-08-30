@@ -16,7 +16,7 @@ from app.services import template_service
 router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
 
 
-@router.post("", response_model=AreaTemplateResponse, status_code=201)
+@router.post("", response_model=AreaTemplateResponse, status_code=201, summary="Create a custom area template")
 def create_template(
     data: CreateAreaTemplateRequest,
     inspector=Depends(get_current_inspector),
@@ -26,7 +26,7 @@ def create_template(
     return template_service.create_template(data, inspector, db)
 
 
-@router.get("", response_model=list[AreaTemplateResponse])
+@router.get("", response_model=list[AreaTemplateResponse], summary="List custom templates visible to this user")
 def list_templates(
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
@@ -35,7 +35,7 @@ def list_templates(
     return template_service.list_templates(inspector, db)
 
 
-@router.get("/{template_id}", response_model=AreaTemplateResponse)
+@router.get("/{template_id}", response_model=AreaTemplateResponse, summary="Get a single custom template")
 def get_template(
     template_id: UUID,
     db: Session = Depends(get_db),
@@ -44,7 +44,7 @@ def get_template(
     return template_service.get_template(template_id, db)
 
 
-@router.patch("/{template_id}", response_model=AreaTemplateResponse)
+@router.patch("/{template_id}", response_model=AreaTemplateResponse, summary="Update a custom template")
 def update_template(
     template_id: UUID,
     data: UpdateAreaTemplateRequest,
@@ -55,7 +55,7 @@ def update_template(
     return template_service.update_template(template_id, data, inspector, db)
 
 
-@router.delete("/{template_id}")
+@router.delete("/{template_id}", summary="Delete a custom template")
 def delete_template(
     template_id: UUID,
     inspector=Depends(get_current_inspector),

@@ -24,6 +24,7 @@ router = APIRouter(tags=["areas"])
     "/api/v1/inspections/{inspection_id}/areas",
     response_model=AreaResponse,
     status_code=201,
+    summary="Add an area to an inspection",
 )
 def add_area(
     inspection_id: UUID,
@@ -38,6 +39,7 @@ def add_area(
 @router.get(
     "/api/v1/inspections/{inspection_id}/areas",
     response_model=list[AreaResponse],
+    summary="List all areas for an inspection",
 )
 def list_areas(
     inspection_id: UUID,
@@ -51,6 +53,7 @@ def list_areas(
 @router.put(
     "/api/v1/inspections/{inspection_id}/areas/reorder",
     response_model=list[AreaResponse],
+    summary="Reorder areas by providing desired order of area IDs",
 )
 def reorder_areas(
     inspection_id: UUID,
@@ -62,7 +65,7 @@ def reorder_areas(
     return area_service.reorder_areas(inspection_id, data.area_ids, inspector, db)
 
 
-@router.delete("/api/v1/areas/{area_id}")
+@router.delete("/api/v1/areas/{area_id}", summary="Remove an area from an inspection")
 def delete_area(
     area_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -79,6 +82,7 @@ def delete_area(
     "/api/v1/inspections/{inspection_id}/areas/template",
     response_model=list[AreaResponse],
     status_code=201,
+    summary="Create areas from a built-in template",
 )
 def create_from_template(
     inspection_id: UUID,
@@ -92,7 +96,7 @@ def create_from_template(
     )
 
 
-@router.get("/api/v1/area-templates")
+@router.get("/api/v1/area-templates", summary="List all available built-in area templates")
 def list_templates():
     """List all available area templates."""
     return area_service.list_templates()
@@ -102,7 +106,7 @@ def list_templates():
 from app.services import template_service
 
 
-@router.post("/api/v1/inspections/{inspection_id}/apply-template/{template_id}", status_code=201)
+@router.post("/api/v1/inspections/{inspection_id}/apply-template/{template_id}", status_code=201, summary="Apply a custom template to an inspection")
 def apply_custom_template(
     inspection_id: UUID,
     template_id: UUID,
