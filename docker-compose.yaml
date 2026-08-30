@@ -63,7 +63,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/area-templates`)"
+      - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/area-templates`) || PathPrefix(`/api/v1/templates`)"
       - "traefik.http.services.core.loadbalancer.server.port=8000"
     env_file:
       - ./services/core/app/.env

@@ -60,6 +60,9 @@ def list_inspections(
     db: Session,
     status_filter: InspectionStatus | None = None,
     property_id: UUID | None = None,
+    client_id: UUID | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
     skip: int = 0,
     limit: int = 50,
     search: str | None = None,
@@ -82,6 +85,19 @@ def list_inspections(
         query = query.where(Inspection.status == status_filter)
     if property_id:
         query = query.where(Inspection.property_id == property_id)
+    if client_id:
+        # Filter by properties belonging to this client
+        query = query.where(
+            Inspection.property_id.in_(
+                select(Property.id).where(Property.client_id == client_id)
+            )
+        )
+    if date_from:
+        from datetime import datetime as dt
+        query = query.where(Inspection.created_at >= dt.fromisoformat(date_from))
+    if date_to:
+        from datetime import datetime as dt
+        query = query.where(Inspection.created_at <= dt.fromisoformat(date_to))
     if search:
         pattern = f"%{search}%"
         query = query.where(Inspection.title.ilike(pattern))
@@ -157,6 +173,26 @@ def get_full_context(
             for a in areas
         ],
     }
+
+
+def get_property_history(
+    property_id: UUID,
+    inspector,
+    db: Session,
+) -> list[InspectionResponse]:
+    """Get all inspections for a property over time (tenant-scoped)."""
+    prop = db.get(Property, property_id)
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    _check_property_tenant(prop, inspector, db)
+
+    inspections = db.execute(
+        select(Inspection)
+        .where(Inspection.property_id == property_id)
+        .order_by(Inspection.created_at.desc())
+    ).scalars().all()
+
+    return [InspectionResponse.model_validate(i) for i in inspections]
 
 
 # ── State Machine ─────────────────────────────────────────────────────────

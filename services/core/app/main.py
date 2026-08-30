@@ -14,6 +14,7 @@ from app.repository import client as _client_model  # noqa: F401
 from app.repository import property as _property_model  # noqa: F401
 from app.repository import inspection as _inspection_model  # noqa: F401
 from app.repository import inspection_area as _area_model  # noqa: F401
+from app.repository import area_template as _template_model  # noqa: F401
 
 # Create all tables on startup (hackathon mode — skip Alembic)
 Base.metadata.create_all(bind=engine)
@@ -34,12 +35,14 @@ from app.api.routes.property_routes import router as property_router
 from app.api.routes.inspection_routes import router as inspection_router
 from app.api.routes.area_routes import router as area_router
 from app.api.routes.dashboard_routes import router as dashboard_router
+from app.api.routes.template_routes import router as template_router
 
 app.include_router(client_router)
 app.include_router(property_router)
 app.include_router(inspection_router)
 app.include_router(area_router)
 app.include_router(dashboard_router)
+app.include_router(template_router)
 
 
 @app.get("/")
