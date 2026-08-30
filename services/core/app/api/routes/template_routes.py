@@ -63,16 +63,3 @@ def delete_template(
 ):
     """Delete a custom template."""
     return template_service.delete_template(template_id, inspector, db)
-
-
-@router.post("/api/v1/inspections/{inspection_id}/apply-template/{template_id}")
-def apply_template(
-    inspection_id: UUID,
-    template_id: UUID,
-    inspector=Depends(get_current_inspector),
-    db: Session = Depends(get_db),
-):
-    """Apply a template's areas to an inspection."""
-    return template_service.apply_template_to_inspection(
-        inspection_id, template_id, inspector, db,
-    )
