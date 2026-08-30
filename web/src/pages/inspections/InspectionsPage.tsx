@@ -32,6 +32,7 @@ interface Inspection {
   report_url: string | null; created_at: string; updated_at: string;
 }
 
+interface Property { id: string; address: string; city: string; }
 interface Area { id: string; name: string; display_order: number; }
 interface ListResponse<T> { items: T[]; total: number; }
 
@@ -64,6 +65,7 @@ export default function InspectionsPage() {
   const [activeTab, setActiveTab] = useState<"areas" | "photos" | "observations">("areas");
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ property_id: "", title: "", notes: "" });
+  const [properties, setProperties] = useState<Property[]>([]);
   const [newAreaName, setNewAreaName] = useState("");
   const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
 
@@ -94,6 +96,13 @@ export default function InspectionsPage() {
 
   useEffect(() => { fetchInspections(); }, [fetchInspections]);
   useEffect(() => { if (selectedInspection) fetchAreas(selectedInspection.id); }, [selectedInspection, fetchAreas]);
+
+  // Load properties for the create-inspection dropdown
+  useEffect(() => {
+    api.get<ListResponse<Property>>("/properties?limit=200")
+      .then((data) => setProperties(data.items))
+      .catch(() => {});
+  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -371,10 +380,15 @@ export default function InspectionsPage() {
             className="bg-white p-6 rounded-lg w-[420px] space-y-4 shadow-xl">
             <h2 className="text-xl font-bold">New Inspection</h2>
             <div>
-              <label className="text-sm text-gray-600 block mb-1">Property ID *</label>
-              <input required placeholder="UUID of the property" value={createForm.property_id}
+              <label className="text-sm text-gray-600 block mb-1">Property *</label>
+              <select required value={createForm.property_id}
                 onChange={(e) => setCreateForm({ ...createForm, property_id: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none">
+                <option value="">Select a property</option>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>{p.address}, {p.city}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="text-sm text-gray-600 block mb-1">Title</label>
