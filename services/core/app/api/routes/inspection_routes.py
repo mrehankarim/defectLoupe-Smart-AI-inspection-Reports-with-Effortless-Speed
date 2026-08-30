@@ -32,6 +32,9 @@ def create_inspection(
 def list_inspections(
     status: InspectionStatus | None = Query(None),
     property_id: UUID | None = Query(None),
+    client_id: UUID | None = Query(None),
+    date_from: str | None = Query(None, description="ISO date, e.g. 2026-01-01"),
+    date_to: str | None = Query(None, description="ISO date, e.g. 2026-12-31"),
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     search: str | None = Query(None),
@@ -40,7 +43,7 @@ def list_inspections(
 ):
     """List inspections with optional filters."""
     return inspection_service.list_inspections(
-        inspector, db, status, property_id, skip, limit, search,
+        inspector, db, status, property_id, client_id, date_from, date_to, skip, limit, search,
     )
 
 
@@ -73,3 +76,52 @@ def get_inspection_full_context(
 ):
     """Aggregated inspection data for reports and mobile app."""
     return inspection_service.get_full_context(inspection_id, inspector, db)
+
+
+# ── Property History ──────────────────────────────────────────────────────
+
+
+@router.get("/api/v1/properties/{property_id}/history")
+def get_property_history(
+    property_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Get all inspections for a property over time."""
+    return inspection_service.get_property_history(property_id, inspector, db)
+
+
+# ── CSV Export ────────────────────────────────────────────────────────────
+
+from fastapi.responses import StreamingResponse
+import csv
+import io
+
+
+@router.get("/export/csv")
+def export_inspections_csv(
+    status: InspectionStatus | None = Query(None),
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Export inspections as a CSV file."""
+    result = inspection_service.list_inspections(
+        inspector, db, status_filter=status, limit=10000,
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Title", "Status", "Property ID", "Inspector ID", "Created At", "Updated At"])
+    for item in result.items:
+        writer.writerow([
+            item.id, item.title, item.status.value,
+            item.property_id, item.inspector_id,
+            item.created_at.isoformat(), item.updated_at.isoformat(),
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inspections.csv"},
+    )
