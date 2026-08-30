@@ -11,8 +11,12 @@ from app.repository.base import Base
 
 
 class InspectionStatus(str, enum.Enum):
+    DRAFT = "draft"
+    SCHEDULED = "scheduled"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
+    REPORT_GENERATED = "report_generated"
+    ARCHIVED = "archived"
     CANCELLED = "cancelled"
 
 
@@ -42,7 +46,7 @@ class Inspection(Base):
     status: Mapped[InspectionStatus] = mapped_column(
         SAEnum(InspectionStatus, name="inspection_status_enum"),
         nullable=False,
-        default=InspectionStatus.IN_PROGRESS,
+        default=InspectionStatus.DRAFT,
     )
     report_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
