@@ -4,8 +4,7 @@
  * Drop into M1's scaffold at src/pages/inspections/DashboardStats.tsx
  */
 import { useState, useEffect } from "react";
-
-const API_BASE = "/api/v1";
+import { api, ApiError } from "../../services/api";
 
 interface DashboardStats {
   total_clients: number;
@@ -17,15 +16,39 @@ interface DashboardStats {
 
 export default function DashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/dashboard/stats`, { credentials: "include" })
-      .then((r) => r.json())
+    api.get<DashboardStats>("/dashboard/stats")
       .then(setStats)
-      .catch(() => {});
+      .catch((err) => setError((err as ApiError).detail || "Failed to load stats"))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!stats) return <div className="p-6">Loading stats...</div>;
+  if (loading) {
+    return (
+      <div className="p-6 text-center text-gray-400">
+        <div className="animate-pulse text-lg">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 text-center text-red-500">
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6 text-center text-gray-400">
+        <p>No stats available yet. Create some inspections to see data.</p>
+      </div>
+    );
+  }
 
   const cards = [
     { label: "Clients", value: stats.total_clients, color: "bg-blue-500" },
@@ -47,22 +70,26 @@ export default function DashboardStats() {
 
       <div className="bg-white border rounded-lg p-4">
         <h3 className="font-bold mb-3">Inspections by Status</h3>
-        <div className="space-y-2">
-          {Object.entries(stats.inspections_by_status).map(([status, count]) => (
-            <div key={status} className="flex justify-between items-center">
-              <span className="capitalize text-sm">{status.replace("_", " ")}</span>
-              <div className="flex items-center gap-2">
-                <div className="bg-gray-200 rounded-full h-2 w-32 overflow-hidden">
-                  <div
-                    className="bg-blue-500 h-full rounded-full"
-                    style={{ width: `${stats.total_inspections > 0 ? (count / stats.total_inspections) * 100 : 0}%` }}
-                  />
+        {Object.keys(stats.inspections_by_status).length === 0 ? (
+          <p className="text-sm text-gray-400">No inspections yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {Object.entries(stats.inspections_by_status).map(([status, count]) => (
+              <div key={status} className="flex justify-between items-center">
+                <span className="capitalize text-sm">{status.replace("_", " ")}</span>
+                <div className="flex items-center gap-2">
+                  <div className="bg-gray-200 rounded-full h-2 w-32 overflow-hidden">
+                    <div
+                      className="bg-blue-500 h-full rounded-full"
+                      style={{ width: `${stats.total_inspections > 0 ? (count / stats.total_inspections) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium w-6 text-right">{count}</span>
                 </div>
-                <span className="text-sm font-medium w-6 text-right">{count}</span>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
