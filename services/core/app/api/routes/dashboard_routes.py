@@ -12,7 +12,7 @@ from app.repository.property import Property
 router = APIRouter(prefix="/api/v1/dashboard", tags=["dashboard"])
 
 
-@router.get("/stats")
+@router.get("/stats", summary="Return dashboard statistics for the current tenant")
 def get_dashboard_stats(
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
