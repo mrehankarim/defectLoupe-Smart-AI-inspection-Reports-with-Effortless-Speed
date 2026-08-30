@@ -17,7 +17,7 @@ from app.services import client_service
 router = APIRouter(prefix="/api/v1/clients", tags=["clients"])
 
 
-@router.post("", response_model=ClientResponse, status_code=201)
+@router.post("", response_model=ClientResponse, status_code=201, summary="Create a new client")
 def create_client(
     data: CreateClientRequest,
     inspector=Depends(get_current_inspector),
@@ -27,7 +27,7 @@ def create_client(
     return client_service.create_client(data, inspector, db)
 
 
-@router.get("", response_model=ClientListResponse)
+@router.get("", response_model=ClientListResponse, summary="List clients (tenant-scoped)")
 def list_clients(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
@@ -39,7 +39,7 @@ def list_clients(
     return client_service.list_clients(inspector, db, skip, limit, search)
 
 
-@router.get("/{client_id}", response_model=ClientResponse)
+@router.get("/{client_id}", response_model=ClientResponse, summary="Get client details")
 def get_client(
     client_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -49,7 +49,7 @@ def get_client(
     return client_service.get_client(client_id, inspector, db)
 
 
-@router.patch("/{client_id}", response_model=ClientResponse)
+@router.patch("/{client_id}", response_model=ClientResponse, summary="Update client details")
 def update_client(
     client_id: UUID,
     data: UpdateClientRequest,
@@ -60,7 +60,7 @@ def update_client(
     return client_service.update_client(client_id, data, inspector, db)
 
 
-@router.delete("/{client_id}")
+@router.delete("/{client_id}", summary="Delete client and all their properties")
 def delete_client(
     client_id: UUID,
     inspector=Depends(get_current_inspector),

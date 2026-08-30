@@ -17,7 +17,7 @@ from app.services import property_service
 router = APIRouter(prefix="/api/v1/properties", tags=["properties"])
 
 
-@router.post("", response_model=PropertyResponse, status_code=201)
+@router.post("", response_model=PropertyResponse, status_code=201, summary="Create a new property")
 def create_property(
     data: CreatePropertyRequest,
     inspector=Depends(get_current_inspector),
@@ -27,7 +27,7 @@ def create_property(
     return property_service.create_property(data, inspector, db)
 
 
-@router.get("", response_model=PropertyListResponse)
+@router.get("", response_model=PropertyListResponse, summary="List properties (tenant-scoped)")
 def list_properties(
     client_id: UUID | None = Query(None),
     skip: int = Query(0, ge=0),
@@ -40,7 +40,7 @@ def list_properties(
     return property_service.list_properties(inspector, db, client_id, skip, limit, search)
 
 
-@router.get("/{property_id}", response_model=PropertyResponse)
+@router.get("/{property_id}", response_model=PropertyResponse, summary="Get property details")
 def get_property(
     property_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -50,7 +50,7 @@ def get_property(
     return property_service.get_property(property_id, inspector, db)
 
 
-@router.patch("/{property_id}", response_model=PropertyResponse)
+@router.patch("/{property_id}", response_model=PropertyResponse, summary="Update property details")
 def update_property(
     property_id: UUID,
     data: UpdatePropertyRequest,
@@ -61,7 +61,7 @@ def update_property(
     return property_service.update_property(property_id, data, inspector, db)
 
 
-@router.delete("/{property_id}")
+@router.delete("/{property_id}", summary="Delete property and its inspections")
 def delete_property(
     property_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -75,7 +75,7 @@ def delete_property(
 from app.services.property_service import list_client_properties
 
 
-@router.get("/clients/{client_id}/properties", response_model=list[PropertyResponse])
+@router.get("/clients/{client_id}/properties", response_model=list[PropertyResponse], summary="List all properties for a client")
 def get_client_properties(
     client_id: UUID,
     inspector=Depends(get_current_inspector),
@@ -89,7 +89,7 @@ def get_client_properties(
 from app.services.inspection_service import get_property_history
 
 
-@router.get("/{property_id}/history")
+@router.get("/{property_id}/history", summary="Get inspection history for a property")
 def get_property_history(
     property_id: UUID,
     inspector=Depends(get_current_inspector),
