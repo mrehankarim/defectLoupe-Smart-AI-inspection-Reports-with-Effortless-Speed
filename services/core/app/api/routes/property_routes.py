@@ -83,3 +83,17 @@ def get_client_properties(
 ):
     """Get all properties for a specific client."""
     return list_client_properties(client_id, inspector, db)
+
+
+# ── Property History (inspections over time) ──────────────────────────────
+from app.services.inspection_service import get_property_history
+
+
+@router.get("/{property_id}/history")
+def get_property_history(
+    property_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Get all inspections for a property over time."""
+    return get_property_history(property_id, inspector, db)

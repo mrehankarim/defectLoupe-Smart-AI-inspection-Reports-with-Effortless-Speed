@@ -78,19 +78,6 @@ def get_inspection_full_context(
     return inspection_service.get_full_context(inspection_id, inspector, db)
 
 
-# ── Property History ──────────────────────────────────────────────────────
-
-
-@router.get("/api/v1/properties/{property_id}/history")
-def get_property_history(
-    property_id: UUID,
-    inspector=Depends(get_current_inspector),
-    db: Session = Depends(get_db),
-):
-    """Get all inspections for a property over time."""
-    return inspection_service.get_property_history(property_id, inspector, db)
-
-
 # ── CSV Export ────────────────────────────────────────────────────────────
 
 from fastapi.responses import StreamingResponse
