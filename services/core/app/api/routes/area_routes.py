@@ -96,3 +96,20 @@ def create_from_template(
 def list_templates():
     """List all available area templates."""
     return area_service.list_templates()
+
+
+# ── Apply custom template to inspection ────────────────────────────────────
+from app.services import template_service
+
+
+@router.post("/api/v1/inspections/{inspection_id}/apply-template/{template_id}", status_code=201)
+def apply_custom_template(
+    inspection_id: UUID,
+    template_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Apply a custom template's areas to an inspection."""
+    return template_service.apply_template_to_inspection(
+        inspection_id, template_id, inspector, db,
+    )
