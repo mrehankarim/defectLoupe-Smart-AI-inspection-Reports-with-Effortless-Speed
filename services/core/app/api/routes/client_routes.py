@@ -68,3 +68,18 @@ def delete_client(
 ):
     """Delete a client and all their properties."""
     return client_service.delete_client(client_id, inspector, db)
+
+
+# ── Client's properties shortcut ─────────────────────────────────────────
+from app.services.property_service import list_client_properties
+from app.api.dtos.property_dto import PropertyResponse
+
+
+@router.get("/{client_id}/properties", response_model=list[PropertyResponse], summary="List all properties for a client")
+def get_client_properties(
+    client_id: UUID,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Get all properties for a specific client."""
+    return list_client_properties(client_id, inspector, db)

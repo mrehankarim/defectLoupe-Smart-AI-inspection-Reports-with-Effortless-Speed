@@ -12,7 +12,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from shared.base import Base
 from shared.db_config import engine
 
-# Import all models so Base.metadata knows about them before create_all
+# Import shared models so their tables exist for FK constraints
+from shared._user_model import User  # noqa: F401
+from shared._inspector_model import Inspector  # noqa: F401
+from shared._company_model import Company  # noqa: F401
+
+# Import all core models so Base.metadata knows about them before create_all
 from app.repository import client as _client_model  # noqa: F401
 from app.repository import property as _property_model  # noqa: F401
 from app.repository import inspection as _inspection_model  # noqa: F401
