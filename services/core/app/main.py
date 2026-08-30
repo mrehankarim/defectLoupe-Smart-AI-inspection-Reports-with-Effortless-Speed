@@ -52,4 +52,24 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Health check with dependency status."""
+    from sqlalchemy import text
+    db_ok = False
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        db_ok = True
+    except Exception:
+        pass
+    return {
+        "status": "ok" if db_ok else "degraded",
+        "database": "connected" if db_ok else "unavailable",
+    }
+
+
+@app.post("/api/v1/demo/seed")
+def seed_demo():
+    """Seed the database with demo data for the hackathon."""
+    from app.seed_demo import seed_demo_data
+    seed_demo_data()
+    return {"message": "Demo data seeded"}
