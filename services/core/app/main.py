@@ -19,7 +19,30 @@ from app.repository import area_template as _template_model  # noqa: F401
 # Create all tables on startup (hackathon mode — skip Alembic)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="DefectLoupe — core-service", version="0.1.0")
+tags_metadata = [
+    {"name": "clients", "description": "Client CRUD — manage property-inspection clients."},
+    {"name": "properties", "description": "Property CRUD — real-estate assets linked to clients."},
+    {"name": "inspections", "description": "Inspection lifecycle — create, schedule, run, complete, export."},
+    {"name": "areas", "description": "Inspection areas — rooms/zones with reorder and built-in templates."},
+    {"name": "templates", "description": "Custom area templates — user-defined reusable area sets."},
+    {"name": "dashboard", "description": "Dashboard statistics — tenant-scoped counts and summaries."},
+    {"name": "system", "description": "Health check and demo seed."},
+]
+
+app = FastAPI(
+    title="DefectLoupe — core-service",
+    version="0.1.0",
+    description=(
+        "Core business service for the DefectLoupe property-inspection platform.\n\n"
+        "Manages clients, properties, inspections (lifecycle with state machine), "
+        "inspection areas (built-in + custom templates), and dashboard statistics.\n\n"
+        "All endpoints require a valid JWT cookie (`access_token`) and are scoped "
+        "to the authenticated inspector's tenant (solo or company)."
+    ),
+    contact={"name": "DefectLoupe Team", "url": "https://github.com/umermujahid/DefectLoupe"},
+    license_info={"name": "MIT"},
+    openapi_tags=tags_metadata,
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,12 +68,13 @@ app.include_router(dashboard_router)
 app.include_router(template_router)
 
 
-@app.get("/")
+@app.get("/", tags=["system"])
 def root():
+    """Service identity ping."""
     return {"service": "core-service", "status": "ok"}
 
 
-@app.get("/health")
+@app.get("/health", tags=["system"])
 def health():
     """Health check with dependency status."""
     from sqlalchemy import text
@@ -67,7 +91,7 @@ def health():
     }
 
 
-@app.post("/api/v1/demo/seed")
+@app.post("/api/v1/demo/seed", tags=["system"])
 def seed_demo():
     """Seed the database with demo data for the hackathon."""
     from app.seed_demo import seed_demo_data

@@ -13,7 +13,7 @@ from app.api.dtos.area_template_dto import (
 )
 from app.services import template_service
 
-router = APIRouter(prefix="/api/v1/templates", tags=["area-templates"])
+router = APIRouter(prefix="/api/v1/templates", tags=["templates"])
 
 
 @router.post("", response_model=AreaTemplateResponse, status_code=201)
