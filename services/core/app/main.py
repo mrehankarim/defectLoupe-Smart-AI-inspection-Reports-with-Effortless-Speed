@@ -3,7 +3,10 @@
 Exposes: /api/v1/clients, /api/v1/properties, /api/v1/inspections,
          /api/v1/dashboard
 """
-from fastapi import FastAPI
+import logging
+import time
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from shared.base import Base
@@ -51,6 +54,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Request logging middleware ──────────────────────────────────────────────
+logger = logging.getLogger("core-service")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    response = await call_next(request)
+    duration_ms = (time.time() - start) * 1000
+    logger.info(
+        "%s %s %d %.1fms",
+        request.method,
+        request.url.path,
+        response.status_code,
+        duration_ms,
+    )
+    return response
 
 # ── Mount routes ──────────────────────────────────────────────────────────
 from app.api.routes.client_routes import router as client_router
