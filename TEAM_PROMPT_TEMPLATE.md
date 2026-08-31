@@ -5,7 +5,7 @@
 
 ---
 
-## I am [MEMBER: M1/M2/M3/M4]
+## I am MEMBER: M3
 
 ---
 
@@ -17,7 +17,7 @@ You are helping me build **DefectLoupe**, an AI-powered property inspection plat
 - **Backend:** FastAPI (Python 3.11), SQLAlchemy 2.0, Uvicorn
 - **Database:** PostgreSQL 15 + pgvector (for vector embeddings)
 - **Message Broker:** Redis 7 (Celery task queue for async jobs)
-- **File Storage:** Cloudflare R2 (S3-compatible), local fallback for dev
+- **File Storage:** Cloudinary (image/video storage + CDN), local fallback for dev
 - **Vision AI:** Google Gemini 1.5 Flash (free tier)
 - **Speech-to-Text:** faster-whisper (local) via Celery worker
 - **RAG Embeddings:** HuggingFace `all-MiniLM-L6-v2` (384-dim, via sentence-transformers)
@@ -86,7 +86,7 @@ Each service has `.env.example` in `services/<name>/app/.env.example`. Copy it t
 
 ---
 
-## My Role: Member [X]
+## My Role: Member 3
 
 ### Member Assignments (for reference)
 
@@ -99,37 +99,15 @@ Each service has `.env.example` in `services/<name>/app/.env.example`. Copy it t
 
 ### My Specific Scope
 
-**[IF M1 — Auth Lead]:**
-- **Service:** `services/auth/` — User registration, login, logout, refresh, email verification, JWT, RBAC (ADMIN/INSPECTOR/CLIENT_VIEWER), inspector profiles, company management
-- **Web pages:** Login, Signup, Dashboard layout (sidebar + header), Settings, Profile
-- **DevOps:** You own `docker-compose.yaml`, `services/gateway/traefik.yaml`, and `shared/auth_deps.py`
-- **Key task:** Implement `shared/auth_deps.py` with `get_current_user` and `get_current_inspector` — every other service depends on this
-- **Existing code:** Auth has the most existing code from the old monolith — check `services/auth/app/` for routes, services, DTOs, utils, and repositories already present
-- **Branch:** Create your own branch from `main`
 
-**[IF M2 — Core Business Lead]:**
-- **Service:** `services/core/` — Client CRUD, Property CRUD, Inspection lifecycle + state machine, Inspection Area management with reordering, Dashboard statistics, tenant-scoped queries
-- **Web pages:** Clients (table + form), Properties (list + create), Inspections (list + detail + area management)
-- **Models to create:** `Client`, `Property`, `Inspection`, `InspectionArea` (repositories already exist in `services/core/app/repository/`)
-- **Mocking:** Decode JWT locally via `shared.auth_deps` to get `inspector_id`/`company_id` — no HTTP call to auth-service needed
-- **Branch:** Create your own branch from `main`
 
-**[IF M3 — Media Lead]:**
-- **Service:** `services/media/` — Photo upload to R2, voice note upload, text/voice observations, Celery transcription worker (faster-whisper), image optimization (thumbnails, EXIF), audio format validation
+- **Service:** `services/media/` — Photo upload to Cloudinary, voice note upload, text/voice observations, Celery transcription worker (faster-whisper), image optimization (thumbnails, EXIF), audio format validation
 - **Web pages:** Area media gallery, Voice note player with waveform, Transcription review/editor
 - **Models to create:** `AreaPhoto`, `AreaObservation`, `Transcription` (repositories already exist in `services/media/app/repository/`)
 - **Mocking:** Accept `area_id` and `photo_id` as UUIDs from URL params — no call to core-service needed
 - **Branch:** Create your own branch from `main`
 
-**[IF M4 — AI + Mobile Lead]:**
-- **Service:** `services/ai/` — RAG document ingestion, vector similarity search (pgvector), Gemini vision analysis, Celery report generation worker, Jinja2 PDF reports, QR verification endpoint
-- **Web pages:** Report viewer (PDF embed), Public QR verify page, RAG document upload
-- **Mobile:** **Sole owner** of `mobile/` — entire React Native app (auth screens, dashboard, client/property/inspection flows, camera, voice recording, transcription review, report viewer, offline sync)
-- **Priority rule:** Mobile first. Web report viewer only after mobile works.
-- **Mocking:** Use hardcoded JSON fixtures for inspection context, sample photos for vision, fixture data for transcriptions. Swap to real HTTP calls on integration day.
-- **Branch:** Create your own branch from `main`
 
----
 
 ## Independence Contract
 

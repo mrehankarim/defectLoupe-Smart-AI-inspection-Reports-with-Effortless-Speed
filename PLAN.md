@@ -13,7 +13,7 @@
 |---|---|---|
 | **Backend API** | FastAPI (Python 3.11) + Uvicorn | Already scaffolded — auth, JWT, email verification done |
 | **Database** | PostgreSQL 15 + pgvector | Already running via Docker Compose |
-| **File Storage** | Cloudflare R2 (S3-compatible) | Free tier: 10 GB storage, unlimited requests. Local fallback for dev |
+| **File Storage** | Cloudinary (image/video storage + CDN) | Free tier: 25 GB storage, 25 GB bandwidth/month. Local fallback for dev |
 | **Mobile App** | React Native + Expo | Primary demo surface. Expo Camera + Audio for capture |
 | **Web Dashboard** | React + Vite + Tailwind CSS | Bonus — inspector dashboard, report viewer |
 | **Vision AI** | Google Gemini 1.5 Flash | Free tier: 15 RPM, generous daily quota. Best for defect detection |
@@ -65,7 +65,7 @@ The monolith (`app/`) is split into **5 independent services**, each with its ow
 |---|---|---|---|---|
 | **auth-service** | 8000 | User registration, login, JWT, email verification, RBAC | `auth/` | `users`, `inspectors`, `companies` |
 | **core-service** | 8000 | Clients, Properties, Inspections, Areas, Dashboard | `core/` | `clients`, `properties`, `inspections`, `inspection_areas` |
-| **media-service** | 8000 | Photo upload, voice notes, R2 storage, transcription trigger | `media/` | `area_photos`, `area_observations`, `transcriptions` |
+| **media-service** | 8000 | Photo upload, voice notes, Cloudinary storage, transcription trigger | `media/` | `area_photos`, `area_observations`, `transcriptions` |
 | **ai-service** | 8000 | RAG (pgvector), Vision AI (Gemini), Report generation, PDF | `ai/` | `document_chunks`, `report_jobs` |
 | **api-gateway** | 80 (host) | Traefik reverse proxy, path routing, CORS, rate limiting | `gateway/` | none |
 | **celery-workers** | n/a | Async background jobs (STT, vision, reports) | shared `ai/` + `media/` code | none |
@@ -102,7 +102,7 @@ DefectLoupe/
 │   │   │   ├── api/routes/
 │   │   │   ├── repository/     # area_photos, area_observations, transcriptions
 │   │   │   ├── services/
-│   │   │   └── utils/          # storage.py (R2), audio.py
+│   │   │   └── utils/          # storage.py (Cloudinary), audio.py
 │   │   ├── Dockerfile
 │   │   └── requirements.txt
 │   ├── ai/
@@ -163,7 +163,7 @@ services:
       - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`)"
       - "traefik.http.services.media.loadbalancer.server.port=8000"
     depends_on: [auth, core, db, redis]
-    environment: { R2_BUCKET, R2_ACCESS_KEY, R2_SECRET_KEY, REDIS_URL }
+    environment: { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET, REDIS_URL }
     networks: [defectloupe-net]
 
   ai:
@@ -255,7 +255,7 @@ volumes: { defectloupe-data: {} }
 | 2 | Property CRUD | Model exists, **no API routes** | Build routes + service + DTOs |
 | 3 | Inspection lifecycle + state machine | Model has basic status enum | Add full state machine: DRAFT → SCHEDULED → IN_PROGRESS → COMPLETED → REPORT_GENERATED |
 | 4 | Inspection area management | Model exists, **no API routes** | Build routes + reorder logic |
-| 5 | Photo upload + storage | Model exists, **no routes/storage** | R2 upload service, multipart endpoint |
+| 5 | Photo upload + storage | Model exists, **no routes/storage** | Cloudinary upload service, multipart endpoint |
 | 6 | Voice note upload + STT | Model exists, **no pipeline** | Upload endpoint + async Whisper transcription |
 | 7 | RAG vector store | pgvector available, **no schema/service** | Add document_chunks table, ingestion, search |
 | 8 | Vision AI defect detection | **Nothing** | Gemini Flash integration |
@@ -308,7 +308,7 @@ Every member works end-to-end on their own vertical (models → service → rout
 |---|---|---|---|---|
 | **M1** | Auth + Web Shell Lead | `auth-service` (users, inspectors, companies, JWT, RBAC, email) | Login, Signup, Dashboard shell, Settings, Profile | ❌ |
 | **M2** | Core Business Lead | `core-service` (clients, properties, inspections, areas, dashboard stats) | Clients (list + create + detail), Properties (list + create), Inspections (list + detail + area management) | ❌ |
-| **M3** | Media + Transcription Lead | `media-service` (photos, observations, R2 storage, STT pipeline) | Media gallery per area, Voice note player, Transcription editor | ❌ |
+| **M3** | Media + Transcription Lead | `media-service` (photos, observations, Cloudinary storage, STT pipeline) | Media gallery per area, Voice note player, Transcription editor | ❌ |
 | **M4** | Mobile + AI Lead | `ai-service` (RAG, vision, reports) + **full mobile app** | Report viewer (PDF embed), Public QR verify page, RAG document upload | ✅ **Sole owner** |
 
 ### What Each Member Delivers End-to-End
@@ -324,7 +324,7 @@ Every member works end-to-end on their own vertical (models → service → rout
 - Mocking: decodes JWT locally to get `inspector_id`/`company_id` — no call to auth-service needed
 
 **M3 (media-service + web media gallery)**
-- Backend: Photo upload to R2, voice note upload, text/voice observations, Celery transcription worker, image optimization (thumbnails, EXIF), audio format validation
+- Backend: Photo upload to Cloudinary, voice note upload, text/voice observations, Celery transcription worker, image optimization (thumbnails, EXIF), audio format validation
 - Web: Media gallery per inspection area, voice note player with waveform, transcription review/editor page
 - Mocking: accepts `area_id` and `photo_id` as UUIDs directly from the URL — no call to core-service needed. Uses mock inspection data for gallery display.
 
@@ -406,7 +406,7 @@ M4's mobile scope (build incrementally across days):
 - [ ] **Git branching** — Create `develop` branch + 4 feature branches: `feature/m1-auth-rbac`, `feature/m2-clients-inspections`, `feature/m3-media-stt`, `feature/m4-rag-mobile`
 - [ ] **M4: Expo project init** — `npx create-expo-app DefectLoupeMobile` with expo-camera, expo-av, expo-document-picker, @react-navigation, react-native-reanimated, axios, @react-native-async-storage/async-storage, expo-secure-store. Commit to `feature/m4-rag-mobile`.
 - [ ] **M1: React web project init** — `npm create vite@latest defectloupe-web -- --template react-ts` + Tailwind CSS setup + Axios API client (base URL = `http://localhost` via Traefik). Commit to `feature/m1-auth-rbac`.
-- [ ] **M1: Create R2 bucket** — Set up Cloudflare R2 bucket + access keys, add to `.env`
+- [ ] **M1: Create Cloudinary account** — Set up Cloudinary account + get API keys, add to `.env`
 - [ ] **M3: Spin up Redis** — verify `redis-cli ping` works inside the Redis container
 
 #### Afternoon/Evening (4–5 hours) — Parallel Development Starts
@@ -431,13 +431,13 @@ M4's mobile scope (build incrementally across days):
 - [ ] Verify core-service is reachable via `localhost/api/v1/clients` through Traefik
 
 **M3 (media-service):**
-- [ ] Scaffold `services/media/app/` with `main.py`, `Dockerfile`, `requirements.txt` (FastAPI + boto3 + shared deps)
-- [ ] Create `services/media/app/utils/storage.py` — R2 upload/download abstraction (boto3 client), with local file fallback for dev
+- [ ] Scaffold `services/media/app/` with `main.py`, `Dockerfile`, `requirements.txt` (FastAPI + cloudinary + shared deps)
+- [ ] Create `services/media/app/utils/storage.py` — Cloudinary upload/download abstraction (cloudinary SDK), with local file fallback for dev
 - [ ] Create `services/media/app/api/dtos/photo_dto.py` — UploadPhotoResponse, PhotoResponse
 - [ ] Create `services/media/app/api/routes/photo_routes.py` — POST /areas/{area_id}/photos (multipart), GET /areas/{area_id}/photos, DELETE /photos/{id}
-- [ ] Set up R2 bucket configuration in media-service config_loader
+- [ ] Set up Cloudinary configuration in media-service config_loader
 - [ ] Add Redis connection + Celery app init inside media-service (`services/media/app/celery_app.py`)
-- [ ] Test photo upload → R2 → return URL flow
+- [ ] Test photo upload → Cloudinary → return URL flow
 
 **M4 (ai-service + mobile init):**
 - [ ] Scaffold `services/ai/app/` with `main.py`, `Dockerfile`, `requirements.txt` (FastAPI + sentence-transformers + google-generativeai + weasyprint + jinja2 + celery)
@@ -475,7 +475,7 @@ M4's mobile scope (build incrementally across days):
 - [ ] Create `services/media/app/api/routes/observation_routes.py` — POST /photos/{id}/observations, POST /areas/{id}/observations, GET /areas/{id}/observations
 - [ ] Create `services/media/app/services/transcription_service.py` — async Whisper via Celery, status tracking (PENDING → PROCESSING → COMPLETED → FAILED)
 - [ ] Create `services/media/app/api/routes/transcription_routes.py` — POST /observations/{id}/transcribe (publishes Celery task to `stt` queue), GET /transcriptions/{id}, PATCH /transcriptions/{id}
-- [ ] Create Celery task `services/media/app/workers/transcribe_worker.py` — picks up audio files from R2, runs faster-whisper, writes result to `transcriptions` table
+- [ ] Create Celery task `services/media/app/workers/transcribe_worker.py` — picks up audio files from Cloudinary, runs faster-whisper, writes result to `transcriptions` table
 
 **M4 (ai-service):**
 - [ ] Implement vector similarity search: POST /rag/search — query text → embed → pgvector cosine similarity → top-K results
@@ -541,7 +541,7 @@ M4's mobile scope (build incrementally across days):
 
 **M3 (media-service + web):**
 - [ ] Add GET /inspections/{id}/media — all photos + voice notes grouped by area
-- [ ] Add media download endpoint (proxy R2 through backend)
+- [ ] Add media download endpoint (proxy Cloudinary through backend)
 - [ ] Polish web: media gallery drag-to-reorder, voice note waveform, transcription editor save flow
 - [ ] Test transcription with different audio formats and languages
 
@@ -654,7 +654,7 @@ M4's mobile scope (build incrementally across days):
 - [ ] Final bug fixes from yesterday's testing
 - [ ] Mobile: final UI polish (spacing, colors, typography consistency)
 - [ ] Web: final polish
-- [ ] Backend: add health check with dependency status (DB, R2, AI APIs)
+- [ ] Backend: add health check with dependency status (DB, Cloudinary, AI APIs)
 - [ ] Update README.md with final project documentation
 
 #### Afternoon
@@ -763,7 +763,7 @@ DELETE /api/v1/areas/{id}                        # remove area
 POST   /api/v1/areas/{id}/photos                # upload photo (multipart)
 GET    /api/v1/areas/{id}/photos                 # list photos
 DELETE /api/v1/photos/{id}                       # delete photo
-GET    /api/v1/photos/{id}/download              # proxy download from R2
+GET    /api/v1/photos/{id}/download              # proxy download from Cloudinary
 
 POST   /api/v1/areas/{id}/observations           # create text observation
 POST   /api/v1/photos/{id}/observations           # create observation on photo
