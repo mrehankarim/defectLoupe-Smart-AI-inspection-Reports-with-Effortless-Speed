@@ -6,9 +6,11 @@ from app.api.dtos.auth_dtos import (
     RegisterRequest,
     LoginRequest,
     RefreshTokenRequest,
+    ChangePasswordRequest,
     UserResponse,
     TokenResponse,
     LogoutResponse,
+    ActionResponse,
     VerifyEmailResponse,
     ResendVerificationResponse,
 )
@@ -16,24 +18,37 @@ from app.services.auth_service import (
     register_user,
     login_user,
     logout_user,
+    change_password,
     refresh_tokens,
     get_current_user,
     verify_email,
     resend_verification,
 )
 from app.repository.user import User
+from app.utils.rate_limit import limiter
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-def register(data: RegisterRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def register(
+    request: Request,
+    data: RegisterRequest,
+    db: Session = Depends(get_db),
+):
     """Create a new user account."""
     return register_user(data, db)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, response: Response, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(
+    request: Request,
+    data: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
     """Authenticate and receive access + refresh tokens via secure cookies."""
     return login_user(data, db, response)
 
@@ -48,7 +63,18 @@ def logout(
     return logout_user(current_user, db, response)
 
 
+@router.patch("/password", response_model=ActionResponse)
+def change_password_endpoint(
+    data: ChangePasswordRequest,
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return change_password(data, current_user, db, response)
+
+
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit("10/minute")
 def refresh(
     request: Request,
     response: Response,
@@ -78,7 +104,9 @@ def verify_email_endpoint(
 
 
 @router.post("/resend-verification", response_model=ResendVerificationResponse)
+@limiter.limit("5/minute")
 def resend_verification_endpoint(
+    request: Request,
     data: LoginRequest,
     db: Session = Depends(get_db),
 ):

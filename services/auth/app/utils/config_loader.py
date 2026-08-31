@@ -56,3 +56,33 @@ def get_app_base_url() -> str:
 
 def get_email_from_address() -> str:
     return os.getenv("EMAIL_FROM_ADDRESS", "DefectLoupe <onboarding@resend.dev>")
+
+
+def get_cors_origins() -> list[str]:
+    origins = [
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:5173,http://localhost:4173",
+        ).split(",")
+        if origin.strip()
+    ]
+    if not origins:
+        raise RuntimeError("CORS_ORIGINS must contain at least one origin")
+    return origins
+
+
+def get_cookie_secure() -> bool:
+    value = os.getenv("COOKIE_SECURE", "true").strip().lower()
+    if value in {"1", "true", "yes", "on"}:
+        return True
+    if value in {"0", "false", "no", "off"}:
+        return False
+    raise RuntimeError("COOKIE_SECURE must be a boolean value")
+
+
+def get_cookie_samesite() -> str:
+    value = os.getenv("COOKIE_SAMESITE", "lax").strip().lower()
+    if value not in {"lax", "strict", "none"}:
+        raise RuntimeError("COOKIE_SAMESITE must be lax, strict, or none")
+    return value

@@ -17,6 +17,7 @@ class CreateCompanyRequest(BaseModel):
 class CompanyResponse(BaseModel):
     id: UUID
     name: str
+    logo_url: str | None
     email: str
     phone_number: str | None
     website: str | None
@@ -29,6 +30,25 @@ class CompanyResponse(BaseModel):
     created_at: datetime
     model_config = {"from_attributes": True}
 
+
+class UpdateCompanyRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    logo_url: str | None = None
+    email: EmailStr | None = None
+    phone_number: str | None = None
+    website: str | None = None
+    address: str | None = Field(default=None, min_length=1)
+    city: str | None = Field(default=None, min_length=1, max_length=100)
+    state: str | None = Field(default=None, min_length=1, max_length=100)
+    zip_code: str | None = Field(default=None, min_length=1, max_length=20)
+    country: str | None = Field(default=None, min_length=1, max_length=100)
+
+
+class UpdateInspectorProfileRequest(BaseModel):
+    first_name: str | None = Field(default=None, min_length=1)
+    last_name: str | None = Field(default=None, min_length=1)
+    phone_number: str | None = None
+    license_number: str | None = None
 
 
 class AddInspectorRequest(BaseModel):

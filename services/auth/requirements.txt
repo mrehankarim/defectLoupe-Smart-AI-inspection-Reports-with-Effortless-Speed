@@ -24,3 +24,4 @@ python-dotenv>=1.0.0
 
 # Rate limiting
 slowapi>=0.1.9
+redis>=5.0

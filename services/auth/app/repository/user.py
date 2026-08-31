@@ -1,10 +1,12 @@
 from uuid import UUID, uuid4
-from sqlalchemy import DateTime, String, Text, Boolean
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, String, Text
 from sqlalchemy import func
 from datetime import datetime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.repository.base import Base
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
+
+from shared.auth_roles import UserRole
 
 
 class User(Base):
@@ -40,6 +42,13 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
+    )
+
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="user_role_enum"),
+        nullable=False,
+        default=UserRole.INSPECTOR,
+        server_default=UserRole.INSPECTOR.value,
     )
 
     email_verified: Mapped[bool] = mapped_column(
