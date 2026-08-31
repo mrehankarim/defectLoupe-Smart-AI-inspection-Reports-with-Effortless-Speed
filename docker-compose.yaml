@@ -40,12 +40,18 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`)"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`) || PathPrefix(`/api/v1/inspectors`)"
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
     env_file:
       - ./services/auth/app/.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
     depends_on:
       db:
         condition: service_healthy

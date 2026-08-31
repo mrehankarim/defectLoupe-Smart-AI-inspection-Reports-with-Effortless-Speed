@@ -68,15 +68,3 @@ class Inspector(Base):
         back_populates="inspectors",
         foreign_keys="[Inspector.company_id]",
     )
-
-    clients: Mapped[list["Client"]] = relationship(
-        back_populates="inspector",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
-
-    inspections: Mapped[list["Inspection"]] = relationship(
-        back_populates="inspector",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )
