@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --canvas: 248 250 252;
+  --surface: 255 255 255;
+  --surface-muted: 241 245 249;
+  --text: 15 23 42;
+  --text-muted: 71 85 105;
+  --border: 203 213 225;
+  --accent: 37 99 235;
+  --accent-strong: 29 78 216;
+  --danger: 220 38 38;
+  --success: 22 163 74;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: 15 23 42;
+  --surface: 30 41 59;
+  --surface-muted: 51 65 85;
+  --text: 241 245 249;
+  --text-muted: 203 213 225;
+  --border: 71 85 105;
+  --accent: 96 165 250;
+  --accent-strong: 147 197 253;
+  --danger: 252 165 165;
+  --success: 134 239 172;
+}
+
+@layer base {
+  * {
+    @apply border-[rgb(var(--border))];
+  }
+
+  html {
+    @apply bg-[rgb(var(--canvas))];
+  }
+
+  body {
+    @apply m-0 min-w-[320px] bg-[rgb(var(--canvas))] text-[rgb(var(--text))] antialiased;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button:not(:disabled),
+  a[href] {
+    @apply cursor-pointer;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-[rgb(var(--surface))];
+  }
+}
+
+@layer components {
+  .app-card {
+    @apply rounded-xl border bg-[rgb(var(--surface))] shadow-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border bg-[rgb(var(--surface))] px-4 py-2 text-sm font-semibold text-[rgb(var(--text))] transition-colors hover:bg-[rgb(var(--surface-muted))] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-sm font-medium text-[rgb(var(--text))];
+  }
+
+  .form-input {
+    @apply block w-full rounded-lg border bg-[rgb(var(--surface))] px-3 py-2 text-[rgb(var(--text))] placeholder:text-slate-400 focus:border-blue-500;
+  }
+
+  .form-error {
+    @apply mt-1 text-sm text-red-600 dark:text-red-300;
+  }
+
+  .alert-error {
+    @apply rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200;
+  }
+
+  .alert-success {
+    @apply rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/50 dark:text-green-200;
+  }
+}
+
+.dark .legacy-page {
+  color: rgb(var(--text));
+}
+
+.dark .legacy-page .bg-white {
+  background-color: rgb(var(--surface));
+}
+
+.dark .legacy-page .bg-gray-50,
+.dark .legacy-page .hover\:bg-gray-50:hover {
+  background-color: rgb(var(--surface-muted));
+}
+
+.dark .legacy-page .bg-gray-100,
+.dark .legacy-page .hover\:bg-gray-100:hover,
+.dark .legacy-page .hover\:bg-gray-200:hover {
+  background-color: rgb(71 85 105);
+}
+
+.dark .legacy-page .bg-gray-200 {
+  background-color: rgb(100 116 139);
+}
+
+.dark .legacy-page .bg-gray-300 {
+  background-color: rgb(71 85 105);
+}
+
+.dark .legacy-page .text-gray-400 {
+  color: rgb(148 163 184);
+}
+
+.dark .legacy-page .text-gray-500,
+.dark .legacy-page .text-gray-600,
+.dark .legacy-page .text-gray-700,
+.dark .legacy-page .text-gray-800 {
+  color: rgb(var(--text-muted));
+}
+
+.dark .legacy-page input,
+.dark .legacy-page select,
+.dark .legacy-page textarea {
+  background-color: rgb(var(--surface));
+  color: rgb(var(--text));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
