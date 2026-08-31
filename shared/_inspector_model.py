@@ -39,7 +39,11 @@ class Inspector(Base):
     phone_number: Mapped[str | None] = mapped_column(String(20), nullable=True)
     license_number: Mapped[str | None] = mapped_column(Text, nullable=True)
     inspector_type: Mapped[InspectorType] = mapped_column(
-        SAEnum(InspectorType, name="inspector_type_enum"),
+        SAEnum(
+            InspectorType,
+            name="inspector_type_enum",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False, default=InspectorType.INDIVIDUAL,
     )
     is_active: Mapped[bool] = mapped_column(default=True)

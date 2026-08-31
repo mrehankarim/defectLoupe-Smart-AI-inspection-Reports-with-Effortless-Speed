@@ -37,7 +37,11 @@ class AreaObservation(Base):
     )
 
     observation_type: Mapped[ObservationType] = mapped_column(
-        SAEnum(ObservationType, name="observation_type_enum"),
+        SAEnum(
+            ObservationType,
+            name="observation_type_enum",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
     )
     observation_text: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -54,10 +58,9 @@ class AreaObservation(Base):
         onupdate=func.now(),
     )
 
-    
-    inspection_area: Mapped["InspectionArea"] = relationship(
-        back_populates="observations",
-    )
+    # Cross-service relationship to InspectionArea is omitted
+    # (InspectionArea lives in core-service). Use the FK directly.
+
     photo: Mapped["AreaPhoto | None"] = relationship(
         back_populates="observations",
     )

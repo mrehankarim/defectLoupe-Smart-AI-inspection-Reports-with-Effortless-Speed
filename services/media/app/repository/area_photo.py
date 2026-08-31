@@ -32,9 +32,8 @@ class AreaPhoto(Base):
         server_default=func.now(),
     )
 
-    inspection_area: Mapped["InspectionArea"] = relationship(
-        back_populates="photos",
-    )
+    # Cross-service relationship to InspectionArea is omitted
+    # (InspectionArea lives in core-service). Use the FK directly.
 
     observations: Mapped[list["AreaObservation"]] = relationship(
         back_populates="photo",

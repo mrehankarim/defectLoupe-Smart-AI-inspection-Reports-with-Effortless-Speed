@@ -1,6 +1,6 @@
 # media-service
 
-Photo uploads, voice notes, Cloudflare R2 storage, Whisper STT pipeline.
+Photo uploads, voice notes, Cloudinary storage, Whisper STT pipeline.
 
 ## Scope
 
@@ -15,7 +15,7 @@ Photo uploads, voice notes, Cloudflare R2 storage, Whisper STT pipeline.
 
 ```bash
 cd services/media
-cp app/.env.example app/.env     # fill R2 keys
+cp app/.env.example app/.env     # fill Cloudinary keys
 uvicorn app.main:app --reload --port 8003
 
 # In another terminal — Celery worker for STT
