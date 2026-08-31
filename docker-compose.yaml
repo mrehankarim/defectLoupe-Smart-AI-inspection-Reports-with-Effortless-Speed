@@ -15,7 +15,7 @@
 
 services:
   gateway:
-    image: traefik:v3.0
+    image: traefik:v3.7.12
     container_name: defect-loupe-gateway
     restart: unless-stopped
     command:
@@ -43,9 +43,10 @@ services:
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`) || PathPrefix(`/api/v1/inspectors`)"
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
     env_file:
-      - ./services/auth/app/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      REDIS_URL: redis://redis:6379/0
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
@@ -54,6 +55,8 @@ services:
       start_period: 10s
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - defectloupe-net
@@ -72,14 +75,14 @@ services:
       - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/area-templates`) || PathPrefix(`/api/v1/templates`) || PathPrefix(`/api/v1/demo`)"
       - "traefik.http.services.core.loadbalancer.server.port=8000"
     env_file:
-      - ./services/core/app/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
     depends_on:
       db:
         condition: service_healthy
       auth:
-        condition: service_started
+        condition: service_healthy
     networks:
       - defectloupe-net
 
@@ -97,7 +100,7 @@ services:
       - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/areas`)"
       - "traefik.http.services.media.loadbalancer.server.port=8000"
     env_file:
-      - ./services/media/app/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
@@ -105,7 +108,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - defectloupe-net
 
@@ -123,7 +126,7 @@ services:
       - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathPrefix(`/api/v1/photos`) && PathSuffix(`/analyze`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
-      - ./services/ai/app/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
@@ -133,7 +136,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
       core:
         condition: service_started
       media:
@@ -156,7 +159,7 @@ services:
       -Q default,stt,vision,reports
       --concurrency=2
     env_file:
-      - ./services/ai/app/.env
+      - ./.env
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
@@ -166,7 +169,7 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - defectloupe-net
 
