@@ -10,6 +10,7 @@ import ClientsPage from "./pages/clients/ClientsPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import InspectionsPage from "./pages/inspections/InspectionsPage";
 import PropertiesPage from "./pages/properties/PropertiesPage";
+import ProfilePage from "./pages/settings/ProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
 
 function ClientDetailRoute() {
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/clients/:clientId" element={<ClientDetailRoute />} />
           <Route path="/properties" element={<LegacyPage><PropertiesPage /></LegacyPage>} />
           <Route path="/inspections" element={<LegacyPage><InspectionsPage /></LegacyPage>} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
