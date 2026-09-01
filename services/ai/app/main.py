@@ -5,8 +5,42 @@ Exposes: /api/v1/rag/*, /api/v1/photos/{id}/analyze,
          /api/v1/inspections/{id}/report/*,
          /api/v1/reports/{token}/verify (public)
 """
+import logging
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env BEFORE any shared imports (shared/db_config.py reads DATABASE_URL at import time)
+load_dotenv(Path(__file__).resolve().parent / ".env")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+
+from shared.base import Base
+from shared.db_config import engine
+
+# Import shared models so FK targets (companies, inspectors, users) exist in metadata
+from shared._company_model import Company  # noqa: F401
+from shared._inspector_model import Inspector  # noqa: F401
+from shared._user_model import User  # noqa: F401
+
+# Import all models so Base.metadata knows about them before create_all
+from app.repository import document_chunk as _doc_chunk_model  # noqa: F401
+from app.repository import report_job as _report_job_model  # noqa: F401
+from app.repository import photo_analysis as _photo_analysis_model  # noqa: F401
+
+# Enable pgvector extension and create all tables on startup (hackathon mode — skip Alembic)
+try:
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        conn.commit()
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    import warnings
+    warnings.warn(f"Could not create tables (DB may be unreachable): {exc}")
+
+logger = logging.getLogger("ai-service")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 app = FastAPI(title="DefectLoupe — ai-service", version="0.1.0")
 
