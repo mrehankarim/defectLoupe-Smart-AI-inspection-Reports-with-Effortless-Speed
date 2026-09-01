@@ -9,8 +9,10 @@ from app.repository.inspector import Inspector
 from app.api.dtos.inspector_dtos import (
     CreateCompanyRequest,
     CompanyResponse,
+    UpdateCompanyRequest,
     AddInspectorRequest,
     InspectorResponse,
+    UpdateInspectorProfileRequest,
     ProfileResponse,
 )
 from app.services.auth_service import get_current_user
@@ -18,7 +20,10 @@ from app.services.inspector_service import (
     create_company as svc_create_company,
     add_inspector_to_company,
     get_company_inspectors,
+    update_inspector_profile,
+    update_company_settings,
 )
+from app.utils.security import require_company_owner
 
 router = APIRouter(prefix="/inspectors", tags=["inspectors"])
 
@@ -46,6 +51,14 @@ def get_my_profile(
         is_company_owner=is_owner,
     )
 
+
+@router.patch("/me", response_model=InspectorResponse)
+def update_my_profile(
+    data: UpdateInspectorProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return update_inspector_profile(data, current_user, db)
 
 
 @router.post("/company", response_model=CompanyResponse, status_code=201)
@@ -81,6 +94,15 @@ def get_my_company(
     company = db.get(Company, inspector.company_id)
     return CompanyResponse.model_validate(company)
 
+
+@router.patch("/company", response_model=CompanyResponse)
+def update_my_company(
+    data: UpdateCompanyRequest,
+    current_user: User = Depends(get_current_user),
+    company: Company = Depends(require_company_owner),
+    db: Session = Depends(get_db),
+):
+    return update_company_settings(data, company, current_user, db)
 
 
 @router.post("/company/inspectors", response_model=InspectorResponse, status_code=201)

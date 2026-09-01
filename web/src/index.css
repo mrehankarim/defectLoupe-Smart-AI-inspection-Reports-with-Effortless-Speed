@@ -1,0 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --canvas-bg: #f8fafc;
+  --canvas-gradient: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.08) 0%, transparent 60%), #f8fafc;
+  --surface: 255 255 255;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-highlight: rgba(255, 255, 255, 0.95);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --input-bg: rgba(0, 0, 0, 0.03);
+  --input-border: rgba(0, 0, 0, 0.12);
+  --text: 15 23 42;
+  --text-muted: 100 116 139;
+  --border: 226 232 240;
+  --accent: 99 102 241;
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas-bg: #0b0d14;
+  --canvas-gradient: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.20) 0%, transparent 60%), #0b0d14;
+  --surface: 15 23 42;
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-highlight: rgba(255, 255, 255, 0.14);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 40px rgba(0, 0, 0, 0.40);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: rgba(255, 255, 255, 0.09);
+  --text: 241 245 249;
+  --text-muted: 148 163 184;
+  --border: 31 41 55;
+  --accent: 99 102 241;
+}
+
+/* Hide scrollbars by default per theme spec */
+::-webkit-scrollbar { display: none; }
+* {
+  scrollbar-width: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  * {
+    @apply border-[rgb(var(--border))];
+  }
+
+  html, body, #root {
+    min-height: 100%;
+    font-family: 'Outfit', system-ui, sans-serif;
+  }
+
+  body {
+    @apply m-0 bg-[var(--canvas-bg)] text-[rgb(var(--text))] antialiased selection:bg-indigo-500 selection:text-white;
+    background: var(--canvas-gradient);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button:not(:disabled),
+  a[href] {
+    @apply cursor-pointer;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-indigo-500 ring-offset-2 ring-offset-[rgb(var(--surface))];
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--glass-shadow);
+    @apply rounded-2xl transition-all duration-200 hover:border-indigo-500/30;
+  }
+
+  .glass-input {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    @apply block w-full rounded-xl px-3.5 py-2.5 text-sm text-[rgb(var(--text))] placeholder:text-slate-500 transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none;
+  }
+
+  .app-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--glass-shadow);
+    @apply rounded-3xl p-6 transition-all duration-200;
+  }
+
+  .btn-primary {
+    background: rgba(99, 102, 241, 0.22);
+    border: 1px solid rgba(99, 102, 241, 0.40);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-indigo-700 dark:text-indigo-200 transition-all duration-200 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-transparent px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[rgb(var(--text))];
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600/90 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-500/20 transition-all duration-200 hover:bg-rose-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .form-label {
+    @apply mb-1.5 block text-xs font-mono font-medium tracking-wider text-slate-500 dark:text-slate-400 uppercase;
+  }
+
+  .form-input {
+    @apply glass-input;
+  }
+
+  .form-error {
+    @apply mt-1.5 text-xs font-medium text-rose-500;
+  }
+
+  .alert-error {
+    @apply flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-700 dark:text-rose-300 backdrop-blur-md;
+  }
+
+  .alert-success {
+    @apply flex items-start gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-300 backdrop-blur-md;
+  }
+
+  .alert-info {
+    @apply flex items-start gap-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-700 dark:text-indigo-300 backdrop-blur-md;
+  }
+}
+
+.dark .legacy-page {
+  color: rgb(var(--text));
+}
+
+.dark .legacy-page .bg-white {
+  background-color: rgb(var(--surface));
+}
+
+.dark .legacy-page .bg-gray-50,
+.dark .legacy-page .hover\:bg-gray-50:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.dark .legacy-page input,
+.dark .legacy-page select,
+.dark .legacy-page textarea {
+  background-color: rgba(255, 255, 255, 0.04);
+  color: rgb(var(--text));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

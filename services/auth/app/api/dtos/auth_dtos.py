@@ -2,9 +2,8 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field
 
-
-
 from app.api.dtos.inspector_dtos import InspectorResponse
+from shared.auth_roles import UserRole
 
 
 class RegisterRequest(BaseModel):
@@ -29,6 +28,7 @@ class RefreshTokenRequest(BaseModel):
 class UserResponse(BaseModel):
     id: UUID
     email: str
+    role: UserRole
     is_active: bool
     email_verified: bool
     created_at: datetime
@@ -53,4 +53,13 @@ class VerifyEmailResponse(BaseModel):
 
 
 class ResendVerificationResponse(BaseModel):
+    message: str
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class ActionResponse(BaseModel):
     message: str

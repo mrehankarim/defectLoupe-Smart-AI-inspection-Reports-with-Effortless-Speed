@@ -36,6 +36,10 @@ def send_verification_email(
     Raises on API failure so callers can decide whether to retry or surface an error.
     """
     link = build_verification_link(token)
+    logger.warning("==================================================")
+    logger.warning("VERIFICATION LINK FOR %s: %s", to_email, link)
+    logger.warning("==================================================")
+
     html_body = verification_email_html(
         user_name=user_name,
         verification_link=link,
@@ -47,12 +51,20 @@ def send_verification_email(
         expiry_hours=VERIFICATION_LINK_EXPIRY_HOURS,
     )
 
-    resend.api_key = get_resend_api_key()
-    result = resend.Emails.send({
-        "from": get_email_from_address(),
-        "to": to_email,
-        "subject": "Verify your DefectLoupe email address",
-        "html": html_body,
-        "text": text_body,
-    })
-    logger.info("Verification email sent to %s (id=%s)", to_email, result.get("id"))
+    try:
+        resend.api_key = get_resend_api_key()
+        result = resend.Emails.send({
+            "from": get_email_from_address(),
+            "to": to_email,
+            "subject": "Verify your DefectLoupe email address",
+            "html": html_body,
+            "text": text_body,
+        })
+        logger.info("Verification email sent via Resend to %s (id=%s)", to_email, result.get("id"))
+    except Exception as exc:
+        logger.error("Resend email delivery failed for %s: %s", to_email, exc)
+        logger.warning(
+            "Use the logged verification link above to verify this account directly in local development: %s",
+            link,
+        )
+        raise exc

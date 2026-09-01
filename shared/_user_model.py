@@ -7,11 +7,12 @@ from the auth-service codebase.
 from uuid import UUID, uuid4
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, Text
+from sqlalchemy import Boolean, DateTime, Enum as SAEnum, String, Text
 from sqlalchemy import func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
+from shared.auth_roles import UserRole
 from shared.base import Base
 
 
@@ -25,6 +26,12 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(Text, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="user_role_enum"),
+        nullable=False,
+        default=UserRole.INSPECTOR,
+        server_default=UserRole.INSPECTOR.value,
+    )
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     email_verification_token: Mapped[str | None] = mapped_column(String(255), nullable=True)

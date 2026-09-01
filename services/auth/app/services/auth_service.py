@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
 import logging
+import os
 
 from fastapi import HTTPException, status, Depends
 from sqlalchemy import select
@@ -11,6 +12,7 @@ from app.repository.user import User
 from app.repository.company import Company
 from app.repository.inspector import Inspector, InspectorType
 from app.utils.password import hash_password
+from shared.auth_roles import UserRole
 from app.utils.jwt_utils import (
     create_access_token,
     create_refresh_token,
@@ -26,12 +28,15 @@ from app.utils.cookie_helpers import (
 from app.api.dtos.auth_dtos import (
     RegisterRequest,
     LoginRequest,
+    ChangePasswordRequest,
     UserResponse,
     TokenResponse,
     LogoutResponse,
+    ActionResponse,
     VerifyEmailResponse,
     ResendVerificationResponse,
 )
+from app.services.audit_service import record_audit_event
 from app.services.email_service import (
     send_verification_email,
     VERIFICATION_LINK_EXPIRY_HOURS,
@@ -85,6 +90,7 @@ def register_user(
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
+        role=UserRole.INSPECTOR,
     )
     db.add(user)
     db.flush()  # get user.id
@@ -105,7 +111,16 @@ def register_user(
 
     # Generate verification token and send email
     _generate_verification_token(user, db)
+
+    dev_auto_verify = os.getenv("DEV_AUTO_VERIFY", "false").strip().lower() in {"true", "1", "yes", "on"}
+    if dev_auto_verify:
+        user.email_verified = True
+        db.commit()
+        db.refresh(user)
+        logger.info("DEV_AUTO_VERIFY is enabled: Automatically verified email for %s", user.email)
+
     _send_verification_email_safe(user)
+    record_audit_event(db, user.id, "registered")
 
     return UserResponse.model_validate(user)
 
@@ -151,6 +166,7 @@ def login_user(
     db.commit()
 
     set_auth_cookies(response, access_token, refresh_token)
+    record_audit_event(db, user.id, "logged_in")
 
     return TokenResponse(
         message="Login successful",
@@ -169,7 +185,31 @@ def logout_user(
     user.refresh_token = None
     db.commit()
     clear_auth_cookies(response)
+    record_audit_event(db, user.id, "logged_out")
     return LogoutResponse(message="Logged out successfully")
+
+
+def change_password(
+    data: ChangePasswordRequest,
+    user: User,
+    db: Session,
+    response: Response,
+) -> ActionResponse:
+    from app.utils.password import verify_password
+
+    if not verify_password(data.current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+        )
+
+    user.hashed_password = hash_password(data.new_password)
+    user.refresh_token = None
+    db.commit()
+    clear_auth_cookies(response)
+    record_audit_event(db, user.id, "password_changed")
+
+    return ActionResponse(message="Password changed successfully. Please log in again.")
 
 
 
@@ -215,6 +255,7 @@ def refresh_tokens(
         user.refresh_token = None
         db.commit()
         clear_auth_cookies(response)
+        record_audit_event(db, user.id, "refresh_token_reuse_detected")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token reuse detected – all sessions revoked",
@@ -235,6 +276,7 @@ def refresh_tokens(
     db.commit()
 
     set_auth_cookies(response, new_access_token, new_refresh_token)
+    record_audit_event(db, user.id, "tokens_refreshed")
 
     return TokenResponse(
         message="Tokens refreshed",
@@ -349,6 +391,7 @@ def verify_email(
     user.email_verification_token = None
     user.email_verification_token_expires_at = None
     db.commit()
+    record_audit_event(db, user.id, "email_verified")
 
     return VerifyEmailResponse(
         message="Email verified successfully. You can now log in.",

@@ -58,9 +58,3 @@ class Company(Base):
         foreign_keys="[Company.owner_id]",
         lazy="selectin",
     )
-
-    clients: Mapped[list["Client"]] = relationship(
-        back_populates="company",
-        cascade="all, delete-orphan",
-        lazy="selectin",
-    )

@@ -27,10 +27,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY services/${SERVICE_NAME}/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy service code + shared package
+# Copy service code, migration assets, and shared package
 COPY services/${SERVICE_NAME}/app ./app
+COPY services/${SERVICE_NAME}/alembic ./alembic
+COPY services/${SERVICE_NAME}/alembic.ini ./alembic.ini
 COPY shared ./shared
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

@@ -4,13 +4,16 @@ Each service imports these helpers to decode the JWT locally using
 the same ACCESS_TOKEN_SECRET — no cross-service HTTP call needed.
 """
 import os
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from uuid import UUID
 
 import jwt as pyjwt
 from fastapi import Request, HTTPException, status, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from shared.auth_roles import UserRole, effective_role
 from shared.db_config import get_db
 
 
@@ -97,3 +100,78 @@ def get_tenant_filter(inspector):
     if inspector.company_id:
         return {"company_id": inspector.company_id}
     return {"inspector_id": inspector.id}
+
+
+@dataclass(frozen=True)
+class UserContext:
+    user_id: UUID
+    email: str
+    role: UserRole
+    company_id: UUID | None
+    inspector_id: UUID | None
+
+
+def get_current_user_context(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserContext:
+    from shared._inspector_model import Inspector
+
+    inspector = db.execute(
+        select(Inspector).where(Inspector.user_id == current_user.id)
+    ).scalar_one_or_none()
+    return UserContext(
+        user_id=current_user.id,
+        email=current_user.email,
+        role=effective_role(current_user.role, current_user.is_admin),
+        company_id=inspector.company_id if inspector else None,
+        inspector_id=inspector.id if inspector else None,
+    )
+
+
+def get_current_company(
+    context: UserContext = Depends(get_current_user_context),
+    db: Session = Depends(get_db),
+):
+    from shared._company_model import Company
+
+    if not context.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Not associated with a company",
+        )
+    company = db.get(Company, context.company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Company not found",
+        )
+    return company
+
+
+def require_company_owner(
+    context: UserContext = Depends(get_current_user_context),
+    company=Depends(get_current_company),
+):
+    if context.inspector_id != company.owner_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the company owner can perform this action",
+        )
+    return company
+
+
+def require_role(*roles: UserRole | str):
+    allowed_roles = {UserRole(role) for role in roles}
+
+    def dependency(
+        context: UserContext = Depends(get_current_user_context),
+    ) -> UserContext:
+        if context.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions",
+            )
+        return context
+
+    return dependency
