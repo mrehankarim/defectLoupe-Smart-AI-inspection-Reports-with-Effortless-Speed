@@ -62,9 +62,11 @@ def root():
 def health():
     return {"status": "ok"}
 
-# Route mounting (Day 2):
-#   from app.api.routes.rag_routes import router as rag_router
+# Route mounting
+from app.api.routes.rag_routes import router as rag_router
+app.include_router(rag_router)
+# TODO (Day 2+):
 #   from app.api.routes.vision_routes import router as vision_router
 #   from app.api.routes.report_routes import router as report_router
-#   app.include_router(rag_router)
-#   ...
+#   app.include_router(vision_router)
+#   app.include_router(report_router)
