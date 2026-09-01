@@ -123,7 +123,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathPrefix(`/api/v1/photos`) && PathSuffix(`/analyze`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathRegexp(`^/api/v1/photos/[^/]+/analyze/?$`)"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
       - ./.env
@@ -152,7 +152,8 @@ services:
         SERVICE_NAME: ai
     image: defectloupe-ai:latest
     container_name: defect-loupe-celery
-    restart: unless-stopped
+    profiles: ["workers"]
+    restart: on-failure:3
     command: >
       celery -A app.workers.celery_app worker
       -l info

@@ -1,6 +1,7 @@
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
 import logging
+import os
 
 from fastapi import HTTPException, status, Depends
 from sqlalchemy import select
@@ -110,6 +111,14 @@ def register_user(
 
     # Generate verification token and send email
     _generate_verification_token(user, db)
+
+    dev_auto_verify = os.getenv("DEV_AUTO_VERIFY", "false").strip().lower() in {"true", "1", "yes", "on"}
+    if dev_auto_verify:
+        user.email_verified = True
+        db.commit()
+        db.refresh(user)
+        logger.info("DEV_AUTO_VERIFY is enabled: Automatically verified email for %s", user.email)
+
     _send_verification_email_safe(user)
     record_audit_event(db, user.id, "registered")
 
