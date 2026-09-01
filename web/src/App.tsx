@@ -12,6 +12,9 @@ import InspectionsPage from "./pages/inspections/InspectionsPage";
 import PropertiesPage from "./pages/properties/PropertiesPage";
 import ProfilePage from "./pages/settings/ProfilePage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import VerifyReportPage from "./pages/reports/VerifyReportPage";
+import ReportViewerPage from "./pages/reports/ReportViewerPage";
+import KnowledgeBasePage from "./pages/reports/KnowledgeBasePage";
 
 function ClientDetailRoute() {
   const { clientId = "" } = useParams();
@@ -24,6 +27,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/verify/:verify_token" element={<VerifyReportPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route index element={<Navigate replace to="/dashboard" />} />
@@ -34,6 +38,8 @@ export default function App() {
           <Route path="/inspections" element={<LegacyPage><InspectionsPage /></LegacyPage>} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/reports" element={<LegacyPage><ReportViewerPage /></LegacyPage>} />
+          <Route path="/knowledge-base" element={<LegacyPage><KnowledgeBasePage /></LegacyPage>} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate replace to="/dashboard" />} />
