@@ -21,7 +21,7 @@ from app.services.report_context import gather_inspection_context
 logger = logging.getLogger(__name__)
 
 # Directory for generated PDFs
-REPORTS_DIR = Path(__file__).resolve().parents[3] / "reports"
+REPORTS_DIR = Path(__file__).resolve().parents[2] / "reports"
 
 
 def _ensure_reports_dir() -> Path:
@@ -47,7 +47,7 @@ def _render_html(context: dict, qr_code_data: str, verify_url: str) -> str:
     """Render the Jinja2 report template."""
     from jinja2 import Environment, FileSystemLoader
 
-    templates_dir = Path(__file__).resolve().parents[3] / "templates"
+    templates_dir = Path(__file__).resolve().parents[2] / "templates"
     env = Environment(loader=FileSystemLoader(str(templates_dir)), autoescape=True)
     template = env.get_template("report_template.html")
     return template.render(context=context, qr_code_data=qr_code_data, verify_url=verify_url)

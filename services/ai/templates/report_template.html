@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Inspection Report — {{ inspection.property_address | default("Property") }}</title>
+  <title>Inspection Report — {{ context.property_address | default("Property") }}</title>
   <style>
     @page { size: A4; margin: 2cm; }
     body { font-family: Helvetica, Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.5; }
