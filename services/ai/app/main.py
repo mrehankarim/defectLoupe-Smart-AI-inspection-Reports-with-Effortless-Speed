@@ -66,6 +66,8 @@ def health():
 from app.api.routes.rag_routes import router as rag_router
 from app.api.routes.vision_routes import router as vision_router
 from app.api.routes.report_routes import router as report_router
+from app.api.routes.verify_routes import router as verify_router
 app.include_router(rag_router)
 app.include_router(vision_router)
 app.include_router(report_router)
+app.include_router(verify_router)
