@@ -15,17 +15,19 @@
 
 services:
   gateway:
-    image: traefik:v3.0
+    image: traefik:latest
     container_name: defect-loupe-gateway
     restart: unless-stopped
     command:
       - "--configFile=/etc/traefik/traefik.yaml"
+    environment:
+      - DOCKER_API_VERSION=1.44
     ports:
       - "80:80"
       - "8080:8080"   # Traefik dashboard
     volumes:
       - ./services/gateway/traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Docker Desktop: works on both Windows and Linux
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - defectloupe-net
 
