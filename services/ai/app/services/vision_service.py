@@ -146,16 +146,19 @@ def _call_gemini_sdk(image_bytes: bytes, mime_type: str) -> dict:
     model = genai.GenerativeModel(model_name)
 
     image_part = {"mime_type": mime_type, "data": image_bytes}
-    response = model.generate_content(
-        [ANALYSIS_PROMPT, image_part],
-        generation_config=genai.types.GenerationConfig(
-            temperature=0.2,
-            max_output_tokens=1024,
-            response_mime_type="application/json",
-        ),
-    )
-
-    return json.loads(response.text)
+    try:
+        response = model.generate_content(
+            [ANALYSIS_PROMPT, image_part],
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.2,
+                max_output_tokens=1024,
+                response_mime_type="application/json",
+            ),
+        )
+        return json.loads(response.text)
+    except Exception as exc:
+        logger.error("Gemini SDK request failed: %s", exc)
+        raise HTTPException(status_code=502, detail=f"Gemini API request failed: {exc}")
 
 
 def _call_gemini(image_bytes: bytes, mime_type: str) -> dict:

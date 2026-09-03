@@ -9,7 +9,7 @@ import logging
 from uuid import UUID
 
 from fastapi import HTTPException
-from sqlalchemy import delete, func as sa_func
+from sqlalchemy import delete, func as sa_func, cast, Text
 from sqlalchemy.orm import Session
 
 from app.repository.document_chunk import DocumentChunk
@@ -142,7 +142,7 @@ def list_documents(
     stmt = (
         db.query(
             DocumentChunk.filename,
-            sa_func.min(DocumentChunk.id).label("id"),
+            sa_func.min(cast(DocumentChunk.id, Text)).label("id"),
             sa_func.min(DocumentChunk.created_at).label("created_at"),
         )
         .group_by(DocumentChunk.filename)

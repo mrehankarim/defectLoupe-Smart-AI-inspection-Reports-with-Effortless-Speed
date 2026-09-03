@@ -12,6 +12,7 @@ celery_app = Celery(
     "ai_worker",
     broker=REDIS_URL,
     backend=REDIS_URL,
+    include=["app.workers.report_worker"],
 )
 
 celery_app.conf.update(
@@ -20,6 +21,3 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
 )
-
-# Auto-discover tasks in workers package
-celery_app.autodiscover_tasks(["app.workers"])
