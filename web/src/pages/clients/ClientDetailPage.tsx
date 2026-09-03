@@ -1,10 +1,7 @@
-/**
- * Client Detail page — shows client info, their properties, and inspection history.
- * M2 scope: detail view with property list and inspection timeline.
- * Drop into M1's scaffold at src/pages/clients/ClientDetailPage.tsx
- */
 import { useState, useEffect } from "react";
 import { api, ApiError } from "../../services/api";
+import { useToast } from "../../components/Layout";
+import { Card } from "../../components/Card";
 
 interface Client {
   id: string; first_name: string; last_name: string;
@@ -24,19 +21,8 @@ interface Inspection {
 
 interface ListResponse<T> { items: T[]; total: number; }
 
-function Toast({ message, onClose }: { message: string; onClose: () => void }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  return (
-    <div className="fixed top-4 right-4 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg z-[100] max-w-sm">
-      <div className="flex justify-between items-center gap-3">
-        <span className="text-sm">{message}</span>
-        <button onClick={onClose} className="text-white/80 hover:text-white font-bold">&times;</button>
-      </div>
-    </div>
-  );
-}
-
 export default function ClientDetailPage({ clientId }: { clientId: string }) {
+  const { showToast } = useToast();
   const [client, setClient] = useState<Client | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [history, setHistory] = useState<Record<string, Inspection[]>>({});
@@ -55,7 +41,6 @@ export default function ClientDetailPage({ clientId }: { clientId: string }) {
         setClient(clientData);
         setProperties(propsData.items);
 
-        // Fetch inspection history for each property
         const historyEntries = await Promise.all(
           propsData.items.map(async (p) => {
             const inspData = await api.get<ListResponse<Inspection>>(
@@ -69,23 +54,24 @@ export default function ClientDetailPage({ clientId }: { clientId: string }) {
         setHistory(historyMap);
       })
       .catch((err) => {
-        setError((err as ApiError).detail || "Failed to load client details");
+        const msg = (err as ApiError).detail || "Failed to load client details";
+        setError(msg);
+        showToast(msg, "error");
       })
       .finally(() => setLoading(false));
-  }, [clientId]);
+  }, [clientId, showToast]);
 
   if (loading) {
     return (
-      <div className="text-center py-12 text-gray-400">
+      <div className="text-center py-16 text-text-muted">
         <div className="animate-pulse text-lg">Loading client details...</div>
       </div>
     );
   }
 
-  if (error) {
+  if (error && !client) {
     return (
-      <div className="p-6">
-        <Toast message={error} onClose={() => setError(null)} />
+      <div className="text-center py-16">
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -93,42 +79,51 @@ export default function ClientDetailPage({ clientId }: { clientId: string }) {
 
   if (!client) {
     return (
-      <div className="text-center py-12 text-gray-400">
+      <div className="text-center py-16 text-text-muted">
         <p className="text-lg">Client not found</p>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-1">{client.first_name} {client.last_name}</h1>
-      <p className="text-gray-600">{client.email} · {client.phone_number || "No phone"}</p>
-      <p className="text-sm text-gray-400 mb-6">Client since {new Date(client.created_at).toLocaleDateString()}</p>
+    <div>
+      {/* Client header */}
+      <div className="mb-8">
+        <p className="text-[11px] tracking-[0.13em] font-extrabold text-brand-500 uppercase mb-1">CLIENT PROFILE</p>
+        <h1 className="text-2xl font-bold text-text-primary">{client.first_name} {client.last_name}</h1>
+        <p className="text-sm text-text-secondary mt-1">{client.email} &middot; {client.phone_number || "No phone"}</p>
+        <p className="text-xs text-text-muted mt-1">Client since {new Date(client.created_at).toLocaleDateString()}</p>
+      </div>
 
-      <h2 className="text-xl font-bold mb-3">Properties ({properties.length})</h2>
+      {/* Properties */}
+      <h2 className="text-lg font-bold text-text-primary mb-4">Properties ({properties.length})</h2>
       {properties.length === 0 ? (
-        <p className="text-gray-400 text-sm">No properties for this client yet.</p>
+        <p className="text-sm text-text-secondary">No properties for this client yet.</p>
       ) : (
-        <div className="space-y-6">
+        <div className="flex flex-col gap-4">
           {properties.map((prop) => (
-            <div key={prop.id} className="border rounded-lg p-4">
-              <h3 className="font-bold">{prop.address}, {prop.city}</h3>
-              <p className="text-sm text-gray-500 capitalize">{prop.property_type} · Built {prop.year_built || "N/A"}</p>
+            <Card key={prop.id}>
+              <h3 className="font-bold text-text-primary">{prop.address}, {prop.city}</h3>
+              <p className="text-sm text-text-secondary capitalize mt-0.5">
+                {prop.property_type} &middot; Built {prop.year_built || "N/A"}
+              </p>
 
-              <h4 className="font-medium mt-3 mb-2">Inspection History</h4>
+              <h4 className="font-semibold text-text-primary mt-4 mb-2 text-sm">Inspection History</h4>
               {(history[prop.id] || []).length === 0 ? (
-                <p className="text-sm text-gray-400">No inspections yet</p>
+                <p className="text-sm text-text-muted">No inspections yet</p>
               ) : (
-                <div className="space-y-1">
+                <div className="flex flex-col gap-1">
                   {(history[prop.id] || []).map((insp) => (
-                    <div key={insp.id} className="flex justify-between items-center text-sm border-b py-1">
-                      <span>{insp.title || "Untitled"}</span>
-                      <span className="text-gray-500 capitalize">{insp.status.replace("_", " ")}</span>
+                    <div key={insp.id} className="flex justify-between items-center text-sm py-1.5 border-b border-border last:border-b-0">
+                      <span className="text-text-primary">{insp.title || "Untitled"}</span>
+                      <span className="inline-block bg-brand-50 text-brand-600 text-xs font-semibold px-2 py-0.5 rounded-full capitalize">
+                        {insp.status.replace(/_/g, " ")}
+                      </span>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}

@@ -1,7 +1,10 @@
 """API routes for the Inspection resource."""
 from uuid import UUID
+import csv
+import io
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from shared.db_config import get_db
@@ -26,6 +29,37 @@ def create_inspection(
 ):
     """Create a new inspection for a property."""
     return inspection_service.create_inspection(data, inspector, db)
+
+
+# ── CSV Export (must be before /{inspection_id} to avoid path shadowing) ──
+
+@router.get("/export/csv", summary="Export inspections as CSV file")
+def export_inspections_csv(
+    status: InspectionStatus | None = Query(None),
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Export inspections as a CSV file."""
+    result = inspection_service.list_inspections(
+        inspector, db, status_filter=status, limit=10000,
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["ID", "Title", "Status", "Property ID", "Inspector ID", "Created At", "Updated At"])
+    for item in result.items:
+        writer.writerow([
+            item.id, item.title, item.status.value,
+            item.property_id, item.inspector_id,
+            item.created_at.isoformat(), item.updated_at.isoformat(),
+        ])
+
+    output.seek(0)
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inspections.csv"},
+    )
 
 
 @router.get("", response_model=InspectionListResponse, summary="List inspections with optional filters")
@@ -76,39 +110,3 @@ def get_inspection_full_context(
 ):
     """Aggregated inspection data for reports and mobile app."""
     return inspection_service.get_full_context(inspection_id, inspector, db)
-
-
-# ── CSV Export ────────────────────────────────────────────────────────────
-
-from fastapi.responses import StreamingResponse
-import csv
-import io
-
-
-@router.get("/export/csv", summary="Export inspections as CSV file")
-def export_inspections_csv(
-    status: InspectionStatus | None = Query(None),
-    inspector=Depends(get_current_inspector),
-    db: Session = Depends(get_db),
-):
-    """Export inspections as a CSV file."""
-    result = inspection_service.list_inspections(
-        inspector, db, status_filter=status, limit=10000,
-    )
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["ID", "Title", "Status", "Property ID", "Inspector ID", "Created At", "Updated At"])
-    for item in result.items:
-        writer.writerow([
-            item.id, item.title, item.status.value,
-            item.property_id, item.inspector_id,
-            item.created_at.isoformat(), item.updated_at.isoformat(),
-        ])
-
-    output.seek(0)
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=inspections.csv"},
-    )

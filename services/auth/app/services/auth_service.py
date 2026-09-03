@@ -7,12 +7,11 @@ from fastapi import HTTPException, status, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config.db_config import get_db
-from app.repository.user import User
-from app.repository.company import Company
-from app.repository.inspector import Inspector, InspectorType
-from app.utils.password import hash_password
-from shared.auth_roles import UserRole
+from shared.db_config import get_db
+from shared._user_model import User
+from shared._company_model import Company
+from shared._inspector_model import Inspector, InspectorType
+from shared.password import hash_password
 from app.utils.jwt_utils import (
     create_access_token,
     create_refresh_token,
@@ -28,15 +27,12 @@ from app.utils.cookie_helpers import (
 from app.api.dtos.auth_dtos import (
     RegisterRequest,
     LoginRequest,
-    ChangePasswordRequest,
     UserResponse,
     TokenResponse,
     LogoutResponse,
-    ActionResponse,
     VerifyEmailResponse,
     ResendVerificationResponse,
 )
-from app.services.audit_service import record_audit_event
 from app.services.email_service import (
     send_verification_email,
     VERIFICATION_LINK_EXPIRY_HOURS,
@@ -87,10 +83,11 @@ def register_user(
             detail="Email already registered",
         )
 
+    auto_verify = os.getenv("AUTO_VERIFY_EMAIL", "true").lower() == "true"
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
-        role=UserRole.INSPECTOR,
+        email_verified=auto_verify,
     )
     db.add(user)
     db.flush()  # get user.id
@@ -109,18 +106,9 @@ def register_user(
     db.commit()
     db.refresh(user)
 
-    # Generate verification token and send email
-    _generate_verification_token(user, db)
-
-    dev_auto_verify = os.getenv("DEV_AUTO_VERIFY", "false").strip().lower() in {"true", "1", "yes", "on"}
-    if dev_auto_verify:
-        user.email_verified = True
-        db.commit()
-        db.refresh(user)
-        logger.info("DEV_AUTO_VERIFY is enabled: Automatically verified email for %s", user.email)
-
-    _send_verification_email_safe(user)
-    record_audit_event(db, user.id, "registered")
+    if not auto_verify:
+        _generate_verification_token(user, db)
+        _send_verification_email_safe(user)
 
     return UserResponse.model_validate(user)
 
@@ -138,7 +126,7 @@ def login_user(
             detail="Invalid credentials",
         )
 
-    from app.utils.password import verify_password
+    from shared.password import verify_password
 
     if not verify_password(data.password, user.hashed_password):
         raise HTTPException(
@@ -166,7 +154,6 @@ def login_user(
     db.commit()
 
     set_auth_cookies(response, access_token, refresh_token)
-    record_audit_event(db, user.id, "logged_in")
 
     return TokenResponse(
         message="Login successful",
@@ -185,31 +172,7 @@ def logout_user(
     user.refresh_token = None
     db.commit()
     clear_auth_cookies(response)
-    record_audit_event(db, user.id, "logged_out")
     return LogoutResponse(message="Logged out successfully")
-
-
-def change_password(
-    data: ChangePasswordRequest,
-    user: User,
-    db: Session,
-    response: Response,
-) -> ActionResponse:
-    from app.utils.password import verify_password
-
-    if not verify_password(data.current_password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
-
-    user.hashed_password = hash_password(data.new_password)
-    user.refresh_token = None
-    db.commit()
-    clear_auth_cookies(response)
-    record_audit_event(db, user.id, "password_changed")
-
-    return ActionResponse(message="Password changed successfully. Please log in again.")
 
 
 
@@ -223,7 +186,7 @@ def refresh_tokens(
     Rotate refresh token: validate old token, issue new pair,
     invalidate old token in DB, set new cookies.
     """
-    from app.utils.password import verify_password as pw_verify
+    from shared.password import verify_password as pw_verify
 
     # Prefer cookie, fall back to body
     refresh_token = request.cookies.get(REFRESH_COOKIE) or body_token
@@ -255,7 +218,6 @@ def refresh_tokens(
         user.refresh_token = None
         db.commit()
         clear_auth_cookies(response)
-        record_audit_event(db, user.id, "refresh_token_reuse_detected")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token reuse detected – all sessions revoked",
@@ -276,7 +238,6 @@ def refresh_tokens(
     db.commit()
 
     set_auth_cookies(response, new_access_token, new_refresh_token)
-    record_audit_event(db, user.id, "tokens_refreshed")
 
     return TokenResponse(
         message="Tokens refreshed",
@@ -391,7 +352,6 @@ def verify_email(
     user.email_verification_token = None
     user.email_verification_token_expires_at = None
     db.commit()
-    record_audit_event(db, user.id, "email_verified")
 
     return VerifyEmailResponse(
         message="Email verified successfully. You can now log in.",
@@ -407,30 +367,25 @@ def resend_verification(
     Resend the verification email. Accepts email + password to confirm
     the requester owns the account.
     """
-    from app.utils.password import verify_password
+    from shared.password import verify_password
 
     user = db.execute(select(User).where(User.email == data.email)).scalar_one_or_none()
+
+    # Generic response to prevent email enumeration
+    generic_response = ResendVerificationResponse(
+        message="If the account exists and is unverified, a verification email has been sent.",
+    )
+
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No account found with this email",
-        )
+        return generic_response
 
     if not verify_password(data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
+        return generic_response
 
     if user.email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email is already verified",
-        )
+        return generic_response
 
     _generate_verification_token(user, db)
     _send_verification_email_safe(user)
 
-    return ResendVerificationResponse(
-        message="Verification email resent. Please check your inbox.",
-    )
+    return generic_response

@@ -42,15 +42,15 @@ def list_templates(
     db: Session,
 ) -> list[AreaTemplateResponse]:
     """List all templates visible to this user: own + global + company."""
-    query = select(AreaTemplate).where(
-        (AreaTemplate.is_global == True)  # noqa: E712
-        | (AreaTemplate.inspector_id == inspector.id)
-    )
+    conditions = [
+        (AreaTemplate.is_global == True),  # noqa: E712
+        (AreaTemplate.inspector_id == inspector.id),
+    ]
     if inspector.company_id:
-        query = select(AreaTemplate).where(
-            (AreaTemplate.is_global == True)  # noqa: E712
-            | (AreaTemplate.company_id == inspector.company_id)
-        )
+        conditions.append(AreaTemplate.company_id == inspector.company_id)
+
+    from sqlalchemy import or_
+    query = select(AreaTemplate).where(or_(*conditions))
 
     templates = db.execute(query.order_by(AreaTemplate.name)).scalars().all()
     return [AreaTemplateResponse.model_validate(t) for t in templates]

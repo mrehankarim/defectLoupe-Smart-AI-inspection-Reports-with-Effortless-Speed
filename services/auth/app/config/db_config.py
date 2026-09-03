@@ -1,3 +1,4 @@
-from shared.db_config import SessionLocal, engine, get_db
+"""Compatibility import for the shared database session."""
+from shared.db_config import engine, get_db, SessionLocal
 
-__all__ = ["SessionLocal", "engine", "get_db"]
+__all__ = ["engine", "get_db", "SessionLocal"]

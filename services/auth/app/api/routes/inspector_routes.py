@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config.db_config import get_db
-from app.repository.user import User
-from app.repository.company import Company
-from app.repository.inspector import Inspector
+from shared.db_config import get_db
+from shared._user_model import User
+from shared._company_model import Company
+from shared._inspector_model import Inspector
 from app.api.dtos.inspector_dtos import (
     CreateCompanyRequest,
     CompanyResponse,
@@ -85,13 +85,14 @@ def get_my_company(
     ).scalar_one_or_none()
 
     if not inspector or not inspector.company_id:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not associated with any company",
         )
 
     company = db.get(Company, inspector.company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     return CompanyResponse.model_validate(company)
 
 
@@ -121,7 +122,6 @@ def add_inspector(
     ).scalar_one_or_none()
 
     if not owner_inspector or not owner_inspector.company_id:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not a company member",
@@ -129,7 +129,6 @@ def add_inspector(
 
     company = db.get(Company, owner_inspector.company_id)
     if not company or company.owner_id != owner_inspector.id:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the company owner can add inspectors",
@@ -151,11 +150,12 @@ def list_company_inspectors(
     ).scalar_one_or_none()
 
     if not inspector or not inspector.company_id:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Not associated with any company",
         )
 
     company = db.get(Company, inspector.company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     return get_company_inspectors(company, db)

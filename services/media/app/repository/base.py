@@ -1,5 +1,4 @@
-"""Re-export the shared SQLAlchemy Base so models can do:
+"""Media models share the repository-wide SQLAlchemy metadata."""
+from shared.base import Base
 
-    from app.repository.base import Base
-"""
-from shared.base import Base  # noqa: F401
+__all__ = ["Base"]

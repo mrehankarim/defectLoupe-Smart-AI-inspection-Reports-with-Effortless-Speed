@@ -2,8 +2,6 @@ from fastapi import Response
 
 from app.utils.config_loader import (
     get_access_token_expiry_seconds,
-    get_cookie_samesite,
-    get_cookie_secure,
     get_refresh_token_expiry_seconds,
 )
 
@@ -22,8 +20,10 @@ def set_auth_cookies(
         value=access_token,
         max_age=get_access_token_expiry_seconds(),
         httponly=True,
-        secure=get_cookie_secure(),
-        samesite=get_cookie_samesite(),
+        # Local development is served over HTTP.  Set COOKIE_SECURE=true in
+        # production to require HTTPS without breaking the browser login flow.
+        secure=__import__('os').getenv("COOKIE_SECURE", "false").lower() == "true",
+        samesite="lax",
         path="/",
     )
     response.set_cookie(
@@ -31,13 +31,14 @@ def set_auth_cookies(
         value=refresh_token,
         max_age=get_refresh_token_expiry_seconds(),
         httponly=True,
-        secure=get_cookie_secure(),
-        samesite=get_cookie_samesite(),
+        secure=__import__('os').getenv("COOKIE_SECURE", "false").lower() == "true",
+        samesite="lax",
         path="/",
     )
 
 
 def clear_auth_cookies(response: Response) -> None:
     """Delete both auth cookies."""
-    response.delete_cookie(key=ACCESS_COOKIE, httponly=True, secure=get_cookie_secure(), samesite=get_cookie_samesite(), path="/")
-    response.delete_cookie(key=REFRESH_COOKIE, httponly=True, secure=get_cookie_secure(), samesite=get_cookie_samesite(), path="/")
+    secure = __import__('os').getenv("COOKIE_SECURE", "false").lower() == "true"
+    response.delete_cookie(key=ACCESS_COOKIE, httponly=True, secure=secure, samesite="lax", path="/")
+    response.delete_cookie(key=REFRESH_COOKIE, httponly=True, secure=secure, samesite="lax", path="/")

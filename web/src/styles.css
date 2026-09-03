@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ── DefectLoupe design tokens ─────────────────────────────────── */
+@theme {
+  --color-brand-50: #e5f3f0;
+  --color-brand-100: #c0e6df;
+  --color-brand-200: #78d4c7;
+  --color-brand-400: #2ba897;
+  --color-brand-500: #146c62;
+  --color-brand-600: #105a51;
+  --color-brand-700: #0d4a43;
+  --color-brand-800: #102b31;
+  --color-brand-900: #0a1e22;
+
+  --color-surface: #f4f7f8;
+  --color-surface-card: #ffffff;
+  --color-border: #e1e9eb;
+  --color-text-primary: #17212b;
+  --color-text-secondary: #647480;
+  --color-text-muted: #94a3b8;
+
+  --color-sidebar-bg: #102b31;
+  --color-sidebar-text: #cddcdf;
+  --color-sidebar-hover: #21454b;
+  --color-sidebar-active: #21454b;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base resets ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* ── Focus ring utility ────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar styling for sidebar ─────────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}

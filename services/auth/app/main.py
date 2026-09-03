@@ -1,21 +1,32 @@
-"""auth-service — FastAPI entrypoint."""
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
-from sqlalchemy import text
+"""auth-service — FastAPI entrypoint.
 
-from app.utils.config_loader import get_cors_origins
-from app.utils.rate_limit import limiter
+Exposes: /auth/*, /inspectors/*, /api/v1/auth/*
+Mounts existing auth routes from the legacy monolith.
+
+During Day 1 of the hackathon the imports will be refactored to use the
+`shared` package (shared.db_config, shared.base, shared.auth_deps).
+"""
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from shared.base import Base
 from shared.db_config import engine
 
+# Register the canonical auth models before creating tables.  They share the
+# same metadata registry as core/media, so foreign keys work across services.
+from shared._user_model import User  # noqa: F401
+from shared._inspector_model import Inspector  # noqa: F401
+from shared._company_model import Company  # noqa: F401
+
 app = FastAPI(title="DefectLoupe — auth-service", version="0.1.0")
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+Base.metadata.create_all(bind=engine)
+
+import os as _os
+_cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")
+_cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=get_cors_origins(),
+    allow_origins=_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,21 +40,9 @@ def root():
 
 @app.get("/health")
 def health():
-    try:
-        with engine.connect() as connection:
-            connection.execute(text("SELECT 1"))
-    except Exception as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database unavailable",
-        ) from exc
-    return {"status": "ok", "database": "connected"}
-
+    return {"status": "ok"}
 
 from app.api.routes.auth_routes import router as auth_router
 from app.api.routes.inspector_routes import router as inspector_router
-
-app.include_router(auth_router, prefix="/api/v1")
-app.include_router(inspector_router, prefix="/api/v1")
-app.include_router(auth_router, include_in_schema=False)
-app.include_router(inspector_router, include_in_schema=False)
+app.include_router(auth_router)
+app.include_router(inspector_router)

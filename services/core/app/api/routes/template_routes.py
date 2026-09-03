@@ -38,6 +38,7 @@ def list_templates(
 @router.get("/{template_id}", response_model=AreaTemplateResponse, summary="Get a single custom template")
 def get_template(
     template_id: UUID,
+    inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
 ):
     """Get a single template."""

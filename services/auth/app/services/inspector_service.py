@@ -2,20 +2,16 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.repository.company import Company
-from app.repository.inspector import Inspector, InspectorType
-from app.repository.user import User
-from app.utils.password import hash_password
-from shared.auth_roles import UserRole
+from shared._company_model import Company
+from shared._inspector_model import Inspector, InspectorType
+from shared._user_model import User
+from shared.password import hash_password
 from app.api.dtos.inspector_dtos import (
     CreateCompanyRequest,
     CompanyResponse,
-    UpdateCompanyRequest,
     AddInspectorRequest,
     InspectorResponse,
-    UpdateInspectorProfileRequest,
 )
-from app.services.audit_service import record_audit_event
 
 
 def create_company(
@@ -63,12 +59,6 @@ def create_company(
     inspector.inspector_type = InspectorType.AGENCY_MEMBER
     db.commit()
     db.refresh(company)
-    record_audit_event(
-        db,
-        user.id,
-        "company_created",
-        {"company_id": str(company.id)},
-    )
 
     return CompanyResponse.model_validate(company)
 
@@ -98,11 +88,11 @@ def add_inspector_to_company(
                 detail="An inspector with this email already exists",
             )
 
-    # Create user account
+    # Create user account — auto-verify since the company owner vouches for them
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
-        role=UserRole.INSPECTOR,
+        email_verified=True,
     )
     db.add(user)
     db.flush()
@@ -133,72 +123,3 @@ def get_company_inspectors(
         select(Inspector).where(Inspector.company_id == company.id)
     ).scalars().all()
     return [InspectorResponse.model_validate(i) for i in inspectors]
-
-
-def update_inspector_profile(
-    data: UpdateInspectorProfileRequest,
-    user: User,
-    db: Session,
-) -> InspectorResponse:
-    inspector = db.execute(
-        select(Inspector).where(Inspector.user_id == user.id)
-    ).scalar_one_or_none()
-    if not inspector:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Inspector profile not found",
-        )
-
-    changes = data.model_dump(exclude_unset=True)
-    if not changes:
-        return InspectorResponse.model_validate(inspector)
-
-    for field, value in changes.items():
-        setattr(inspector, field, value)
-    db.commit()
-    db.refresh(inspector)
-    record_audit_event(
-        db,
-        user.id,
-        "profile_updated",
-        {"fields": sorted(changes)},
-    )
-
-    return InspectorResponse.model_validate(inspector)
-
-
-def update_company_settings(
-    data: UpdateCompanyRequest,
-    company: Company,
-    user: User,
-    db: Session,
-) -> CompanyResponse:
-    changes = data.model_dump(exclude_unset=True)
-    if not changes:
-        return CompanyResponse.model_validate(company)
-
-    if "email" in changes:
-        existing_company = db.execute(
-            select(Company).where(
-                Company.email == changes["email"],
-                Company.id != company.id,
-            )
-        ).scalar_one_or_none()
-        if existing_company:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Company email already registered",
-            )
-
-    for field, value in changes.items():
-        setattr(company, field, value)
-    db.commit()
-    db.refresh(company)
-    record_audit_event(
-        db,
-        user.id,
-        "company_settings_updated",
-        {"company_id": str(company.id), "fields": sorted(changes)},
-    )
-
-    return CompanyResponse.model_validate(company)
