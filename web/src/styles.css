@@ -1,1 +1,77 @@
-:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#17212b;background:#f4f7f8}*{box-sizing:border-box}body{margin:0}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;background:#146c62;color:white;padding:10px 15px;font-weight:650;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}a{color:#146c62;cursor:pointer;font-weight:650}.app{display:flex;min-height:100vh}aside{width:220px;background:#102b31;color:#cddcdf;padding:28px 16px;display:flex;flex-direction:column;gap:4px}.brand{font-size:21px;color:white;font-weight:800;margin:0 10px 30px}.brand span{color:#78d4c7}aside button{text-align:left;background:transparent;color:#cddcdf;text-transform:capitalize}aside button.active,aside button:hover{background:#21454b;color:#fff}.content{width:min(1100px,100%);margin:0 auto;padding:48px}header{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}h1{margin:3px 0 7px;font-size:30px}h2{margin-top:0}.eyebrow{font-size:11px;letter-spacing:.13em;font-weight:800;color:#146c62;margin:0}.muted{color:#647480;line-height:1.55}.card{background:white;border:1px solid #e1e9eb;border-radius:12px;padding:22px;margin-bottom:20px;box-shadow:0 2px 7px #102b3108}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}.stats .card{margin:0}.stats span{display:block;color:#647480;font-size:14px}.stats strong{font-size:32px;display:block;margin-top:9px}.table-wrap{padding:0;overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:15px 20px;border-bottom:1px solid #e8eeee}th{color:#647480;font-size:12px;text-transform:uppercase;letter-spacing:.06em}.pill{display:inline-block;background:#e5f3f0;color:#146c62;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700}.backdrop{position:fixed;inset:0;background:#102b3166;display:grid;place-items:center;padding:20px}.modal{width:min(460px,100%);position:relative}.close{position:absolute;right:12px;top:9px;background:transparent;color:#647480;font-size:25px;padding:3px 9px}.form{display:grid;gap:13px}.form input,.form select,.form textarea{border:1px solid #cddadd;border-radius:8px;padding:11px;width:100%}.form textarea{min-height:100px;resize:vertical}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:12px}.notice{background:#fff7dc;color:#725900;padding:11px 14px;border-radius:8px}.auth{min-height:100vh;display:grid;grid-template-columns:1fr 420px;gap:90px;align-items:center;max-width:1000px;margin:auto;padding:35px}.auth h1{font-size:50px}.auth-card{display:grid;gap:14px}.center{text-align:center;font-size:14px}.secondary{background:#e9eff0;color:#17212b}.loading{display:grid;place-items:center;min-height:100vh;color:#647480}@media(max-width:700px){.app{display:block}aside{width:100%;flex-direction:row;overflow:auto;padding:14px}.brand{margin:6px 15px 0 0;white-space:nowrap}.content{padding:28px 18px}.stats{grid-template-columns:1fr 1fr}.auth{grid-template-columns:1fr;padding:24px;gap:18px}.auth h1{font-size:38px}header{align-items:flex-start;gap:15px}.twocol{grid-template-columns:1fr}}
+@import "tailwindcss";
+
+/* ── DefectLoupe design tokens ─────────────────────────────────── */
+@theme {
+  --color-brand-50: #e5f3f0;
+  --color-brand-100: #c0e6df;
+  --color-brand-200: #78d4c7;
+  --color-brand-400: #2ba897;
+  --color-brand-500: #146c62;
+  --color-brand-600: #105a51;
+  --color-brand-700: #0d4a43;
+  --color-brand-800: #102b31;
+  --color-brand-900: #0a1e22;
+
+  --color-surface: #f4f7f8;
+  --color-surface-card: #ffffff;
+  --color-border: #e1e9eb;
+  --color-text-primary: #17212b;
+  --color-text-secondary: #647480;
+  --color-text-muted: #94a3b8;
+
+  --color-sidebar-bg: #102b31;
+  --color-sidebar-text: #cddcdf;
+  --color-sidebar-hover: #21454b;
+  --color-sidebar-active: #21454b;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base resets ───────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+/* ── Focus ring utility ────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar styling for sidebar ─────────────────────────────── */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+/* ── Animations ────────────────────────────────────────────────── */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}

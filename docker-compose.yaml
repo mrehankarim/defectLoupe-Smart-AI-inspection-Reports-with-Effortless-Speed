@@ -51,6 +51,7 @@ services:
       REFRESH_TOKEN_SECRET: defectloupe-hackathon-secret
       AUTO_VERIFY_EMAIL: "true"
       COOKIE_SECURE: "false"
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80"
     depends_on:
       db:
         condition: service_healthy
@@ -76,6 +77,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80"
     depends_on:
       db:
         condition: service_healthy

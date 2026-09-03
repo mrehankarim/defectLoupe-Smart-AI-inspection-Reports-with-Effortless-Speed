@@ -1,30 +1,69 @@
-import React, { FormEvent, useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { api, ApiError } from './services/api';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './styles.css';
 
-type Page = 'dashboard' | 'clients' | 'properties' | 'inspections' | 'account';
-type Client = { id:string; first_name:string; last_name:string; email:string; phone_number?:string };
-type Property = { id:string; client_id:string; address_line1:string; city:string; state:string; zip_code:string; property_type?:string };
-type Inspection = { id:string; property_id:string; title?:string; notes?:string; status:string; created_at:string };
-const label = (c: Client) => `${c.first_name} ${c.last_name}`;
-const error = (e: unknown) => (e as ApiError).detail || 'Something went wrong. Please try again.';
+/* ── Layout ────────────────────────────────────────────────────── */
+import Layout from './components/Layout';
 
-function Login({ onDone }: { onDone:()=>void }) {
-  const [mode,setMode]=useState<'login'|'register'>('login'); const [message,setMessage]=useState(''); const [busy,setBusy]=useState(false);
-  async function submit(e: FormEvent<HTMLFormElement>) { e.preventDefault(); setBusy(true); setMessage(''); const data=Object.fromEntries(new FormData(e.currentTarget)); try { await fetch(mode==='login'?'/auth/login':'/auth/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(Object.entries(data).filter(([,v])=>v!=='')))}).then(async r=>{if(!r.ok) throw {detail:(await r.json()).detail}; return r.json()}); if(mode==='login') onDone(); else setMessage('Account created. Verify the email address, then sign in.'); } catch(e) { setMessage(error(e)); } finally { setBusy(false); } }
-  return <main className="auth"><section><p className="eyebrow">PROPERTY INSPECTIONS</p><h1>DefectLoupe</h1><p className="muted">Keep every property, finding and inspection report in one reliable workspace.</p></section><form className="card auth-card" onSubmit={submit}><h2>{mode==='login'?'Welcome back':'Create your account'}</h2>{mode==='register'&&<div className="twocol"><input required name="first_name" placeholder="First name"/><input required name="last_name" placeholder="Last name"/></div>}<input required name="email" type="email" placeholder="Email address"/><input required name="password" type="password" minLength={8} placeholder="Password"/>{mode==='register'&&<input name="phone_number" placeholder="Phone number (optional)"/>}<button disabled={busy}>{busy?'Please wait…':mode==='login'?'Sign in':'Create account'}</button>{message&&<p className="notice">{message}</p>}<p className="muted center">{mode==='login'?'New to DefectLoupe? ':'Already have an account? '}<a onClick={()=>setMode(mode==='login'?'register':'login')}>{mode==='login'?'Create account':'Sign in'}</a></p></form></main>
+/* ── Pages ─────────────────────────────────────────────────────── */
+import LoginPage from './pages/auth/LoginPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import ClientsPage from './pages/clients/ClientsPage';
+import PropertiesPage from './pages/properties/PropertiesPage';
+import InspectionsPage from './pages/inspections/InspectionsPage';
+import AccountPage from './pages/account/AccountPage';
+
+/* ── Auth gate ─────────────────────────────────────────────────── */
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const [status, setStatus] = useState<'loading' | 'authed' | 'anon'>('loading');
+
+  useEffect(() => {
+    fetch('/auth/me', { credentials: 'include' })
+      .then((r) => setStatus(r.ok ? 'authed' : 'anon'))
+      .catch(() => setStatus('anon'));
+  }, []);
+
+  if (status === 'loading') {
+    return (
+      <main className="flex items-center justify-center min-h-screen bg-surface">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-text-muted text-sm">Loading DefectLoupe...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (status === 'anon') {
+    return <LoginPage onDone={() => setStatus('authed')} />;
+  }
+
+  return <>{children}</>;
 }
 
-function Dashboard() { const [stats,setStats]=useState<Record<string,number>|null>(null); useEffect(()=>{api.get<Record<string,number>>('/dashboard/stats').then(setStats).catch(()=>setStats({}));},[]); return <><header><div><p className="eyebrow">OVERVIEW</p><h1>Inspection dashboard</h1><p className="muted">A clear view of your field work.</p></div></header><div className="stats">{[['Clients','total_clients'],['Properties','total_properties'],['Inspections','total_inspections'],['Completion rate','completion_rate']].map(([n,k])=><article className="card" key={k}><span>{n}</span><strong>{stats ? `${stats[k]||0}${k==='completion_rate'?'%':''}`:'—'}</strong></article>)}</div><section className="card"><h2>Getting started</h2><p className="muted">Create a client, add their property, then schedule an inspection. Each record stays linked so your reports have the full context.</p></section></> }
+/* ── App shell ─────────────────────────────────────────────────── */
+function App() {
+  const handleLogout = () => {
+    window.location.reload();
+  };
 
-function Clients() { const [items,setItems]=useState<Client[]>([]); const [show,setShow]=useState(false); const load=()=>api.get<{items:Client[]}>('/clients?limit=100').then(x=>setItems(x.items)); useEffect(()=>{load().catch(()=>{});},[]); async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();await api.post('/clients',Object.fromEntries(new FormData(e.currentTarget)));setShow(false);load();} return <><header><div><p className="eyebrow">PEOPLE</p><h1>Clients</h1></div><button onClick={()=>setShow(true)}>Add client</button></header><Table headers={['Name','Email','Phone']} rows={items.map(c=>[label(c),c.email,c.phone_number||'—'])}/>{show&&<Modal title="New client" onClose={()=>setShow(false)}><form onSubmit={submit} className="form"><div className="twocol"><input required name="first_name" placeholder="First name"/><input required name="last_name" placeholder="Last name"/></div><input required name="email" type="email" placeholder="Email"/><input name="phone_number" placeholder="Phone"/><button>Save client</button></form></Modal>}</> }
+  return (
+    <BrowserRouter>
+      <AuthGate>
+        <Layout onLogout={handleLogout}>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/clients" element={<ClientsPage />} />
+            <Route path="/properties" element={<PropertiesPage />} />
+            <Route path="/inspections" element={<InspectionsPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+      </AuthGate>
+    </BrowserRouter>
+  );
+}
 
-function Properties() { const [items,setItems]=useState<Property[]>([]),[clients,setClients]=useState<Client[]>([]),[show,setShow]=useState(false); const load=()=>api.get<{items:Property[]}>('/properties?limit=100').then(x=>setItems(x.items)); useEffect(()=>{load().catch(()=>{});api.get<{items:Client[]}>('/clients?limit=100').then(x=>setClients(x.items)).catch(()=>{});},[]); async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const d=Object.fromEntries(new FormData(e.currentTarget));await api.post('/properties',d);setShow(false);load();} return <><header><div><p className="eyebrow">LOCATIONS</p><h1>Properties</h1></div><button disabled={!clients.length} onClick={()=>setShow(true)}>Add property</button></header>{!clients.length&&<p className="notice">Add a client before creating a property.</p>}<Table headers={['Address','City','Type']} rows={items.map(p=>[p.address_line1,p.city,p.property_type||'—'])}/>{show&&<Modal title="New property" onClose={()=>setShow(false)}><form onSubmit={submit} className="form"><select required name="client_id"><option value="">Choose client</option>{clients.map(c=><option value={c.id} key={c.id}>{label(c)}</option>)}</select><input required name="address_line1" placeholder="Street address"/><div className="twocol"><input required name="city" placeholder="City"/><input required name="state" placeholder="State"/></div><input required name="zip_code" placeholder="Postal code"/><input name="property_type" placeholder="Property type (e.g. residential)"/><button>Save property</button></form></Modal>}</> }
-
-function Inspections() { const [items,setItems]=useState<Inspection[]>([]),[properties,setProperties]=useState<Property[]>([]),[show,setShow]=useState(false); const load=()=>api.get<{items:Inspection[]}>('/inspections?limit=100').then(x=>setItems(x.items)); useEffect(()=>{load().catch(()=>{});api.get<{items:Property[]}>('/properties?limit=100').then(x=>setProperties(x.items)).catch(()=>{});},[]); async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();await api.post('/inspections',Object.fromEntries(new FormData(e.currentTarget)));setShow(false);load();} return <><header><div><p className="eyebrow">FIELD WORK</p><h1>Inspections</h1></div><button disabled={!properties.length} onClick={()=>setShow(true)}>Schedule inspection</button></header>{!properties.length&&<p className="notice">Add a property before scheduling an inspection.</p>}<Table headers={['Title','Status','Created']} rows={items.map(i=>[i.title||'Untitled inspection',<span className="pill">{i.status}</span>,new Date(i.created_at).toLocaleDateString()])}/>{show&&<Modal title="Schedule inspection" onClose={()=>setShow(false)}><form onSubmit={submit} className="form"><select required name="property_id"><option value="">Choose property</option>{properties.map(p=><option key={p.id} value={p.id}>{p.address_line1}, {p.city}</option>)}</select><input name="title" placeholder="Inspection title"/><textarea name="notes" placeholder="Notes for the inspector"/><button>Schedule inspection</button></form></Modal>}</> }
-
-function Account({logout}:{logout:()=>void}) { return <section className="card"><p className="eyebrow">ACCOUNT</p><h1>Your workspace</h1><p className="muted">Your session is secured with HTTP-only cookies.</p><button className="secondary" onClick={async()=>{await fetch('/auth/logout',{method:'POST',credentials:'include'});logout();}}>Sign out</button></section> }
-function Table({headers,rows}:{headers:string[],rows:(string|React.ReactNode)[][]}) { return <div className="card table-wrap">{!rows.length?<p className="muted">Nothing here yet.</p>:<table><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((v,j)=><td key={j}>{v}</td>)}</tr>)}</tbody></table>}</div> }
-function Modal({title,onClose,children}:{title:string,onClose:()=>void,children:React.ReactNode}) { return <div className="backdrop" onMouseDown={onClose}><section className="modal card" onMouseDown={e=>e.stopPropagation()}><button className="close" onClick={onClose}>×</button><h2>{title}</h2>{children}</section></div> }
-function App(){const [authed,setAuthed]=useState<boolean|null>(null);const [page,setPage]=useState<Page>('dashboard');useEffect(()=>{fetch('/auth/me',{credentials:'include'}).then(r=>setAuthed(r.ok)).catch(()=>setAuthed(false));},[]);if(authed===null)return <main className="loading">Loading DefectLoupe…</main>;if(!authed)return <Login onDone={()=>setAuthed(true)}/>;const pages={dashboard:<Dashboard/>,clients:<Clients/>,properties:<Properties/>,inspections:<Inspections/>,account:<Account logout={()=>setAuthed(false)}/>};return <div className="app"><aside><div className="brand">Defect<span>Loupe</span></div>{(['dashboard','clients','properties','inspections','account'] as Page[]).map(p=><button className={page===p?'active':''} key={p} onClick={()=>setPage(p)}>{p}</button>)}</aside><main className="content">{pages[page]}</main></div>};createRoot(document.getElementById('root')!).render(<App/>);
+createRoot(document.getElementById('root')!).render(<App />);

@@ -58,8 +58,15 @@ def _assert_area_access(area_id: UUID, inspector, db: Session) -> None:
     """), {"area_id": str(area_id)}).scalar_one_or_none()
     if result is None:
         raise HTTPException(status_code=404, detail="Inspection area not found")
-    if str(result) != str(inspector.id) and not inspector.company_id:
-        raise HTTPException(status_code=403, detail="Not allowed to access this inspection area")
+    # Check tenant access: direct owner or same company
+    if str(result) != str(inspector.id):
+        if not inspector.company_id:
+            raise HTTPException(status_code=403, detail="Not allowed to access this inspection area")
+        # For company members, verify the inspection's inspector belongs to the same company
+        from shared._inspector_model import Inspector as InspModel
+        owner_inspector = db.get(InspModel, result)
+        if not owner_inspector or owner_inspector.company_id != inspector.company_id:
+            raise HTTPException(status_code=403, detail="Not allowed to access this inspection area")
 
 
 @router.post("/photos", response_model=PhotoResponse, status_code=status.HTTP_201_CREATED)

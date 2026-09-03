@@ -1,19 +1,21 @@
-/**
- * Inspections page — list with filters, create flow, detail with tabbed area management.
- * M2 scope: list with status badges + filters + create + detail + area reorder + templates.
- * Drop into M1's React+Vite scaffold at src/pages/inspections/InspectionsPage.tsx
- */
 import { useState, useEffect, useCallback } from "react";
 import { api, buildQuery, ApiError } from "../../services/api";
+import { useToast } from "../../components/Layout";
+import PageHeader from "../../components/PageHeader";
+import Button from "../../components/Button";
+import Modal from "../../components/Modal";
+import EmptyState from "../../components/EmptyState";
+import { InputField, SelectField, TextareaField } from "../../components/FormFields";
+import { Card } from "../../components/Card";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-200 text-gray-800",
-  scheduled: "bg-yellow-200 text-yellow-800",
-  in_progress: "bg-blue-200 text-blue-800",
-  completed: "bg-green-200 text-green-800",
-  report_generated: "bg-purple-200 text-purple-800",
-  archived: "bg-gray-300 text-gray-600",
-  cancelled: "bg-red-200 text-red-800",
+  draft: "bg-gray-100 text-gray-700",
+  scheduled: "bg-yellow-100 text-yellow-700",
+  in_progress: "bg-blue-100 text-blue-700",
+  completed: "bg-green-100 text-green-700",
+  report_generated: "bg-purple-100 text-purple-700",
+  archived: "bg-gray-200 text-gray-600",
+  cancelled: "bg-red-100 text-red-700",
 };
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -36,22 +38,8 @@ interface Property { id: string; address: string; city: string; }
 interface Area { id: string; name: string; display_order: number; }
 interface ListResponse<T> { items: T[]; total: number; }
 
-// ── Toast / Error display ──────────────────────────────────────────────
-
-function Toast({ message, type, onClose }: { message: string; type: "error" | "success"; onClose: () => void }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  const bg = type === "error" ? "bg-red-600" : "bg-green-600";
-  return (
-    <div className={`fixed top-4 right-4 ${bg} text-white px-4 py-3 rounded-lg shadow-lg z-[100] max-w-sm`}>
-      <div className="flex justify-between items-center gap-3">
-        <span className="text-sm">{message}</span>
-        <button onClick={onClose} className="text-white/80 hover:text-white font-bold">&times;</button>
-      </div>
-    </div>
-  );
-}
-
 export default function InspectionsPage() {
+  const { showToast } = useToast();
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -67,14 +55,17 @@ export default function InspectionsPage() {
   const [createForm, setCreateForm] = useState({ property_id: "", title: "", notes: "" });
   const [properties, setProperties] = useState<Property[]>([]);
   const [newAreaName, setNewAreaName] = useState("");
-  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
-
-  const showToast = (message: string, type: "error" | "success" = "success") => setToast({ message, type });
 
   const fetchInspections = useCallback(async () => {
     setLoading(true);
     try {
-      const q = buildQuery({ status: statusFilter || null, search: search || null, date_from: dateFrom || null, date_to: dateTo || null, limit: 50 });
+      const q = buildQuery({
+        status: statusFilter || null,
+        search: search || null,
+        date_from: dateFrom || null,
+        date_to: dateTo || null,
+        limit: 50,
+      });
       const data = await api.get<ListResponse<Inspection>>(`/inspections${q}`);
       setInspections(data.items);
       setTotal(data.total);
@@ -83,21 +74,25 @@ export default function InspectionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, search, dateFrom, dateTo]);
+  }, [statusFilter, search, dateFrom, dateTo, showToast]);
 
   const fetchAreas = useCallback(async (inspectionId: string) => {
     setAreasLoading(true);
     try {
       const data = await api.get<Area[]>(`/inspections/${inspectionId}/areas`);
       setAreas(data);
-    } catch { setAreas([]); }
-    finally { setAreasLoading(false); }
+    } catch {
+      setAreas([]);
+    } finally {
+      setAreasLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchInspections(); }, [fetchInspections]);
-  useEffect(() => { if (selectedInspection) fetchAreas(selectedInspection.id); }, [selectedInspection, fetchAreas]);
+  useEffect(() => {
+    if (selectedInspection) fetchAreas(selectedInspection.id);
+  }, [selectedInspection, fetchAreas]);
 
-  // Load properties for the create-inspection dropdown
   useEffect(() => {
     api.get<ListResponse<Property>>("/properties?limit=200")
       .then((data) => setProperties(data.items))
@@ -120,7 +115,7 @@ export default function InspectionsPage() {
   async function handleStatusChange(id: string, newStatus: string) {
     try {
       await api.patch(`/inspections/${id}`, { status: newStatus });
-      showToast(`Status → ${newStatus.replace("_", " ")}`);
+      showToast(`Status changed to ${newStatus.replace(/_/g, " ")}`);
       fetchInspections();
       if (selectedInspection?.id === id) {
         setSelectedInspection({ ...selectedInspection, status: newStatus });
@@ -183,101 +178,112 @@ export default function InspectionsPage() {
     window.open(`/api/v1/inspections/export/csv${q}`, "_blank");
   }
 
-  // ── Detail View ─────────────────────────────────────────────────────
+  /* ── Detail View ──────────────────────────────────────────────── */
   if (selectedInspection) {
     const insp = selectedInspection;
 
     return (
-      <div className="p-6">
-        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <div>
+        <button
+          onClick={() => { setSelectedInspection(null); setActiveTab("areas"); }}
+          className="text-brand-500 hover:underline mb-5 block text-sm font-medium bg-transparent border-none cursor-pointer"
+        >
+          &larr; Back to list
+        </button>
 
-        <button onClick={() => { setSelectedInspection(null); setActiveTab("areas"); }}
-          className="text-blue-600 hover:underline mb-4 block text-sm">&larr; Back to list</button>
-
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold">{insp.title || "Untitled Inspection"}</h1>
+            <h1 className="text-2xl font-bold text-text-primary">{insp.title || "Untitled Inspection"}</h1>
             <div className="flex items-center gap-3 mt-2">
-              <span className={`inline-block px-3 py-1 rounded-full text-sm capitalize ${STATUS_COLORS[insp.status]}`}>
-                {insp.status.replace("_", " ")}
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold capitalize ${STATUS_COLORS[insp.status]}`}>
+                {insp.status.replace(/_/g, " ")}
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-text-muted">
                 {new Date(insp.created_at).toLocaleDateString()}
               </span>
             </div>
-            {insp.notes && <p className="text-gray-600 text-sm mt-2">{insp.notes}</p>}
+            {insp.notes && <p className="text-sm text-text-secondary mt-2">{insp.notes}</p>}
           </div>
           <div className="flex gap-2 flex-wrap">
             {(VALID_TRANSITIONS[insp.status] || []).map((s) => (
-              <button key={s} onClick={() => handleStatusChange(insp.id, s)}
-                className="bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 capitalize">
-                → {s.replace("_", " ")}
-              </button>
+              <Button key={s} size="sm" onClick={() => handleStatusChange(insp.id, s)}>
+                &rarr; {s.replace(/_/g, " ")}
+              </Button>
             ))}
           </div>
         </div>
 
-        {/* ── Tabs ──────────────────────────────────────────────────── */}
-        <div className="border-b mb-4">
+        {/* Tabs */}
+        <div className="border-b border-border mb-6">
           <div className="flex gap-6">
             {(["areas", "photos", "observations"] as const).map((tab) => (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`pb-2 text-sm font-medium border-b-2 capitalize transition-colors ${
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`pb-2.5 text-sm font-medium border-b-2 capitalize transition-colors bg-transparent cursor-pointer ${
                   activeTab === tab
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}>
+                    ? "border-brand-500 text-brand-500"
+                    : "border-transparent text-text-muted hover:text-text-primary"
+                }`}
+              >
                 {tab}
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── Areas Tab ─────────────────────────────────────────────── */}
+        {/* Areas Tab */}
         {activeTab === "areas" && (
           <div>
             <div className="flex gap-2 mb-4">
-              <input placeholder="New area name..." value={newAreaName}
+              <input
+                placeholder="New area name..."
+                value={newAreaName}
                 onChange={(e) => setNewAreaName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddArea()}
-                className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-              <button onClick={handleAddArea} disabled={!newAreaName.trim()}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm outline-none
+                  focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors"
+              />
+              <Button variant="success" onClick={handleAddArea} disabled={!newAreaName.trim()}>
                 + Add
-              </button>
+              </Button>
             </div>
-            <div className="flex gap-2 mb-4 flex-wrap">
-              <span className="text-xs text-gray-500 self-center">Templates:</span>
+            <div className="flex gap-2 mb-5 flex-wrap items-center">
+              <span className="text-xs text-text-muted">Templates:</span>
               {["standard_residential", "commercial", "pre_purchase"].map((t) => (
-                <button key={t} onClick={() => handleApplyTemplate(t)}
-                  className="bg-gray-100 border px-3 py-1 rounded text-xs hover:bg-gray-200 capitalize">
-                  {t.replace("_", " ")}
+                <button
+                  key={t}
+                  onClick={() => handleApplyTemplate(t)}
+                  className="bg-gray-100 border border-border px-3 py-1.5 rounded-lg text-xs hover:bg-gray-200 capitalize transition-colors cursor-pointer"
+                >
+                  {t.replace(/_/g, " ")}
                 </button>
               ))}
             </div>
 
             {areasLoading ? (
-              <div className="text-center py-8 text-gray-400">Loading areas...</div>
+              <div className="text-center py-12 text-text-muted">Loading areas...</div>
             ) : areas.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p className="text-lg mb-1">No areas yet</p>
-                <p className="text-sm">Add areas manually or apply a template above</p>
-              </div>
+              <EmptyState
+                icon="📋"
+                title="No areas yet"
+                description="Add areas manually or apply a template above"
+              />
             ) : (
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1.5">
                 {areas.map((area, idx) => (
-                  <div key={area.id} className="flex justify-between items-center border rounded p-3 hover:bg-gray-50 group">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400 w-6 text-right text-sm">{area.display_order}.</span>
-                      <span className="font-medium">{area.name}</span>
+                  <div key={area.id} className="flex justify-between items-center border border-border rounded-lg px-4 py-3 hover:bg-gray-50/50 group transition-colors">
+                    <div className="flex items-center gap-3">
+                      <span className="text-text-muted w-6 text-right text-sm font-mono">{area.display_order}.</span>
+                      <span className="font-medium text-text-primary">{area.name}</span>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => handleMoveArea(idx, "up")} disabled={idx === 0}
-                        className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Move up">↑</button>
+                        className="p-1.5 text-text-muted hover:text-text-primary disabled:opacity-30 rounded-md hover:bg-gray-100 transition-colors cursor-pointer" title="Move up">&uarr;</button>
                       <button onClick={() => handleMoveArea(idx, "down")} disabled={idx === areas.length - 1}
-                        className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30" title="Move down">↓</button>
+                        className="p-1.5 text-text-muted hover:text-text-primary disabled:opacity-30 rounded-md hover:bg-gray-100 transition-colors cursor-pointer" title="Move down">&darr;</button>
                       <button onClick={() => handleDeleteArea(area.id)}
-                        className="p-1 text-red-400 hover:text-red-600 ml-2" title="Delete">✕</button>
+                        className="p-1.5 text-red-400 hover:text-red-600 ml-1 rounded-md hover:bg-red-50 transition-colors cursor-pointer" title="Delete">&times;</button>
                     </div>
                   </div>
                 ))}
@@ -286,130 +292,141 @@ export default function InspectionsPage() {
           </div>
         )}
 
-        {/* ── Photos Tab ────────────────────────────────────────────── */}
+        {/* Photos Tab */}
         {activeTab === "photos" && (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-lg mb-1">Photos</p>
-            <p className="text-sm">Photo management is handled by the media service (M3)</p>
-            <p className="text-xs mt-2">Photos will appear here once uploaded through the inspection area workflow</p>
-          </div>
+          <EmptyState
+            icon="📷"
+            title="Photos"
+            description="Photo management is handled by the media service. Photos will appear here once uploaded."
+          />
         )}
 
-        {/* ── Observations Tab ──────────────────────────────────────── */}
+        {/* Observations Tab */}
         {activeTab === "observations" && (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-lg mb-1">Observations</p>
-            <p className="text-sm">Observation management is handled by the media service (M3)</p>
-            <p className="text-xs mt-2">Text and voice observations will appear here once created</p>
-          </div>
+          <EmptyState
+            icon="📝"
+            title="Observations"
+            description="Text and voice observations will appear here once created through the inspection workflow."
+          />
         )}
       </div>
     );
   }
 
-  // ── List View ───────────────────────────────────────────────────────
+  /* ── List View ────────────────────────────────────────────────── */
   return (
-    <div className="p-6">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    <>
+      <PageHeader
+        eyebrow="Field Work"
+        title={`Inspections (${total})`}
+        actions={
+          <>
+            <Button variant="secondary" onClick={handleExportCSV}>Export CSV</Button>
+            <Button onClick={() => setShowCreate(true)}>+ New Inspection</Button>
+          </>
+        }
+      />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Inspections ({total})</h1>
-        <div className="flex gap-2">
-          <button onClick={handleExportCSV} className="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200 text-sm">
-            Export CSV
-          </button>
-          <button onClick={() => setShowCreate(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-            + New Inspection
-          </button>
-        </div>
-      </div>
-
-      {/* ── Filters ─────────────────────────────────────────────────── */}
+      {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-          className="p-2 border rounded text-sm">
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2.5 border border-border rounded-lg text-sm outline-none
+            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 bg-white"
+        >
           <option value="">All Statuses</option>
           {Object.keys(STATUS_COLORS).map((s) => (
-            <option key={s} value={s}>{s.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}</option>
+            <option key={s} value={s}>
+              {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            </option>
           ))}
         </select>
-        <input type="text" placeholder="Search title..." value={search}
+        <input
+          type="text"
+          placeholder="Search title..."
+          value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[180px] p-2 border rounded text-sm" />
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          className="p-2 border rounded text-sm" title="From date" />
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          className="p-2 border rounded text-sm" title="To date" />
+          className="flex-1 min-w-[200px] px-4 py-2.5 border border-border rounded-lg text-sm outline-none
+            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors"
+        />
+        <input
+          type="date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          className="px-3 py-2.5 border border-border rounded-lg text-sm outline-none
+            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+          title="From date"
+        />
+        <input
+          type="date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          className="px-3 py-2.5 border border-border rounded-lg text-sm outline-none
+            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+          title="To date"
+        />
       </div>
 
-      {/* ── Content ─────────────────────────────────────────────────── */}
+      {/* Content */}
       {loading ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <div className="animate-pulse text-lg">Loading inspections...</div>
         </div>
       ) : inspections.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-lg mb-1">No inspections found</p>
-          <p className="text-sm">Create your first inspection or adjust your filters</p>
-        </div>
+        <EmptyState
+          icon="🔍"
+          title="No inspections found"
+          description="Create your first inspection or adjust your filters"
+          action={<Button onClick={() => setShowCreate(true)}>+ New Inspection</Button>}
+        />
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {inspections.map((insp) => (
-            <div key={insp.id} onClick={() => setSelectedInspection(insp)}
-              className="border rounded-lg p-4 hover:shadow-md cursor-pointer flex justify-between items-center transition-shadow">
+            <div
+              key={insp.id}
+              onClick={() => setSelectedInspection(insp)}
+              className="border border-border rounded-xl px-5 py-4 hover:shadow-md cursor-pointer flex justify-between items-center transition-shadow bg-surface-card"
+            >
               <div>
-                <h3 className="font-bold">{insp.title || "Untitled"}</h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <h3 className="font-bold text-text-primary">{insp.title || "Untitled"}</h3>
+                <p className="text-sm text-text-muted mt-1">
                   Created {new Date(insp.created_at).toLocaleDateString()}
-                  {insp.notes && <span className="ml-2 text-gray-400">— {insp.notes.slice(0, 60)}</span>}
+                  {insp.notes && (
+                    <span className="ml-2 text-text-muted/70">&mdash; {insp.notes.slice(0, 60)}</span>
+                  )}
                 </p>
               </div>
-              <span className={`px-3 py-1 rounded-full text-xs capitalize whitespace-nowrap ${STATUS_COLORS[insp.status]}`}>
-                {insp.status.replace("_", " ")}
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize whitespace-nowrap ${STATUS_COLORS[insp.status]}`}>
+                {insp.status.replace(/_/g, " ")}
               </span>
             </div>
           ))}
         </div>
       )}
 
-      {/* ── Create Modal ────────────────────────────────────────────── */}
+      {/* Create Modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCreate(false)}>
-          <form onSubmit={handleCreate} onClick={(e) => e.stopPropagation()}
-            className="bg-white p-6 rounded-lg w-[420px] space-y-4 shadow-xl">
-            <h2 className="text-xl font-bold">New Inspection</h2>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">Property *</label>
-              <select required value={createForm.property_id}
-                onChange={(e) => setCreateForm({ ...createForm, property_id: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none">
-                <option value="">Select a property</option>
-                {properties.map((p) => (
-                  <option key={p.id} value={p.id}>{p.address}, {p.city}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">Title</label>
-              <input placeholder="e.g. Pre-Purchase Inspection" value={createForm.title}
-                onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">Notes</label>
-              <textarea placeholder="Optional notes..." value={createForm.notes}
-                onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" rows={2} />
-            </div>
+        <Modal title="New Inspection" onClose={() => setShowCreate(false)}>
+          <form onSubmit={handleCreate} className="flex flex-col gap-4">
+            <SelectField required label="Property" value={createForm.property_id}
+              onChange={(e) => setCreateForm({ ...createForm, property_id: e.target.value })}>
+              <option value="">Select a property</option>
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>{p.address}, {p.city}</option>
+              ))}
+            </SelectField>
+            <InputField placeholder="e.g. Pre-Purchase Inspection" label="Title" value={createForm.title}
+              onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })} />
+            <TextareaField placeholder="Optional notes..." label="Notes" value={createForm.notes}
+              onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })} rows={2} />
             <div className="flex gap-2 pt-2">
-              <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1">Create</button>
-              <button type="button" onClick={() => setShowCreate(false)}
-                className="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200 flex-1">Cancel</button>
+              <Button type="submit" className="flex-1">Create</Button>
+              <Button type="button" variant="secondary" onClick={() => setShowCreate(false)} className="flex-1">Cancel</Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
-    </div>
+    </>
   );
 }

@@ -38,29 +38,31 @@ def get_dashboard_stats(
         ).scalar()
 
     # Total properties (via tenant clients)
+    client_filter = (
+        (Client.company_id == inspector.company_id) if inspector.company_id
+        else (Client.inspector_id == inspector.id)
+    )
     client_ids = db.execute(
-        select(Client.id).where(Client.id.in_(
-            select(Client.id).where(
-                (Client.company_id == inspector.company_id) if inspector.company_id
-                else (Client.inspector_id == inspector.id)
-            )
-        ))
+        select(Client.id).where(client_filter)
     ).scalars().all()
 
     total_properties = db.execute(
-        select(sa_func.count(Property.id)).where(Property.client_id.in_(list(client_ids)))
+        select(sa_func.count(Property.id)).where(Property.client_id.in_(client_ids))
     ).scalar() if client_ids else 0
 
-    # Inspection counts by status
-    inspections_query = select(Inspection).where(
-        Inspection.inspector_id.in_(inspector_ids)
-    )
-    all_inspections = db.execute(inspections_query).scalars().all()
+    # Inspection counts by status — SQL-level aggregation instead of loading all rows
+    status_rows = db.execute(
+        select(Inspection.status, sa_func.count(Inspection.id))
+        .where(Inspection.inspector_id.in_(inspector_ids))
+        .group_by(Inspection.status)
+    ).all()
 
-    total_inspections = len(all_inspections)
-    status_counts = {}
-    for s in InspectionStatus:
-        status_counts[s.value] = sum(1 for i in all_inspections if i.status == s)
+    status_counts = {s.value: 0 for s in InspectionStatus}
+    total_inspections = 0
+    for row_status, row_count in status_rows:
+        key = row_status.value if hasattr(row_status, 'value') else str(row_status)
+        status_counts[key] = row_count
+        total_inspections += row_count
 
     # Completion rate
     completed = status_counts.get(InspectionStatus.COMPLETED.value, 0)

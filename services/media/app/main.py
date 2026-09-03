@@ -19,9 +19,13 @@ from app.repository.transcription import Transcription  # noqa: F401
 app = FastAPI(title="DefectLoupe — media-service", version="0.1.0")
 Base.metadata.create_all(bind=engine)
 
+import os as _os
+_cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
+_cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -11,9 +11,13 @@ from app.api.routes.report_routes import router as report_router
 
 app = FastAPI(title="DefectLoupe — ai-service", version="0.1.0")
 
+import os as _os
+_cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
+_cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -23,6 +23,12 @@ faster-whisper>=1.0.0
 celery[redis]>=5.4.0
 redis>=5.0.0
 
+# JWT decode (shared auth_deps)
+PyJWT>=2.8.0
+
+# Password hashing (shared password module)
+pwdlib[argon2]>=0.6.0
+
 # Cross-service HTTP calls
 httpx>=0.27.0
 

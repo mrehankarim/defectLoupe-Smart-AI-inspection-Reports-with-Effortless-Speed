@@ -1,10 +1,12 @@
-/**
- * Clients page — list, create, edit, delete clients.
- * M2 scope: table with search/filter + create/edit modal + empty/loading states.
- * Drop into M1's React+Vite scaffold at src/pages/clients/ClientsPage.tsx
- */
 import { useState, useEffect, useCallback } from "react";
 import { api, buildQuery, ApiError } from "../../services/api";
+import { useToast } from "../../components/Layout";
+import PageHeader from "../../components/PageHeader";
+import Button from "../../components/Button";
+import Modal from "../../components/Modal";
+import EmptyState from "../../components/EmptyState";
+import { InputField, SelectField } from "../../components/FormFields";
+import { Card } from "../../components/Card";
 
 interface Client {
   id: string; first_name: string; last_name: string;
@@ -15,20 +17,8 @@ interface Client {
 
 interface ListResponse<T> { items: T[]; total: number; }
 
-function Toast({ message, type, onClose }: { message: string; type: "error" | "success"; onClose: () => void }) {
-  useEffect(() => { const t = setTimeout(onClose, 4000); return () => clearTimeout(t); }, [onClose]);
-  const bg = type === "error" ? "bg-red-600" : "bg-green-600";
-  return (
-    <div className={`fixed top-4 right-4 ${bg} text-white px-4 py-3 rounded-lg shadow-lg z-[100] max-w-sm`}>
-      <div className="flex justify-between items-center gap-3">
-        <span className="text-sm">{message}</span>
-        <button onClick={onClose} className="text-white/80 hover:text-white font-bold">&times;</button>
-      </div>
-    </div>
-  );
-}
-
 export default function ClientsPage() {
+  const { showToast } = useToast();
   const [clients, setClients] = useState<Client[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -37,9 +27,6 @@ export default function ClientsPage() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ first_name: "", last_name: "", email: "", phone_number: "" });
-  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
-
-  const showToast = (message: string, type: "error" | "success" = "success") => setToast({ message, type });
 
   const fetchClients = useCallback(async () => {
     setLoading(true);
@@ -53,7 +40,7 @@ export default function ClientsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, showToast]);
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
@@ -106,106 +93,92 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-6">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+    <>
+      <PageHeader
+        eyebrow="People"
+        title={`Clients (${total})`}
+        actions={<Button onClick={openCreate}>+ New Client</Button>}
+      />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Clients ({total})</h1>
-        <button onClick={openCreate}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
-          + New Client
-        </button>
+      {/* Search */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full max-w-md px-4 py-2.5 border border-border rounded-lg text-sm outline-none
+            focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors"
+        />
       </div>
 
-      <input type="text" placeholder="Search by name or email..." value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="w-full p-2 border rounded mb-4 text-sm focus:ring-2 focus:ring-blue-300 outline-none" />
-
+      {/* Content */}
       {loading ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <div className="animate-pulse text-lg">Loading clients...</div>
         </div>
       ) : clients.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <p className="text-lg mb-1">No clients yet</p>
-          <p className="text-sm">Click "+ New Client" to add your first client</p>
-        </div>
+        <EmptyState
+          icon="👤"
+          title="No clients yet"
+          description='Click "+ New Client" to add your first client'
+          action={<Button onClick={openCreate}>+ New Client</Button>}
+        />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-50 border-b">
-                <th className="p-3 text-left text-sm font-medium text-gray-600">Name</th>
-                <th className="p-3 text-left text-sm font-medium text-gray-600">Email</th>
-                <th className="p-3 text-left text-sm font-medium text-gray-600">Phone</th>
-                <th className="p-3 text-left text-sm font-medium text-gray-600">Created</th>
-                <th className="p-3 text-right text-sm font-medium text-gray-600">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((c) => (
-                <tr key={c.id} className="border-b hover:bg-gray-50 transition-colors">
-                  <td className="p-3 font-medium">{c.first_name} {c.last_name}</td>
-                  <td className="p-3 text-sm text-gray-600">{c.email}</td>
-                  <td className="p-3 text-sm text-gray-600">{c.phone_number || "—"}</td>
-                  <td className="p-3 text-sm text-gray-500">{new Date(c.created_at).toLocaleDateString()}</td>
-                  <td className="p-3 text-right space-x-3">
-                    <button onClick={() => openEdit(c)} className="text-blue-600 hover:underline text-sm">Edit</button>
-                    <button onClick={() => handleDelete(c.id)} className="text-red-600 hover:underline text-sm">Delete</button>
-                  </td>
+        <Card padding={false}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Name</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Email</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Phone</th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-text-secondary uppercase tracking-wider">Created</th>
+                  <th className="px-5 py-3 text-right text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {clients.map((c) => (
+                  <tr key={c.id} className="border-b border-border last:border-b-0 hover:bg-gray-50/50 transition-colors">
+                    <td className="px-5 py-3.5 font-medium text-sm">{c.first_name} {c.last_name}</td>
+                    <td className="px-5 py-3.5 text-sm text-text-secondary">{c.email}</td>
+                    <td className="px-5 py-3.5 text-sm text-text-secondary">{c.phone_number || "—"}</td>
+                    <td className="px-5 py-3.5 text-sm text-text-muted">{new Date(c.created_at).toLocaleDateString()}</td>
+                    <td className="px-5 py-3.5 text-right">
+                      <button onClick={() => openEdit(c)} className="text-brand-500 hover:underline text-sm font-medium mr-3 bg-transparent border-none cursor-pointer">Edit</button>
+                      <button onClick={() => handleDelete(c.id)} className="text-red-500 hover:underline text-sm font-medium bg-transparent border-none cursor-pointer">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
+      {/* Create / Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowForm(false)}>
-          <form onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}
-            className="bg-white p-6 rounded-lg w-[420px] space-y-4 shadow-xl">
-            <h2 className="text-xl font-bold">{editingClient ? "Edit Client" : "New Client"}</h2>
-
+        <Modal title={editingClient ? "Edit Client" : "New Client"} onClose={() => setShowForm(false)}>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">First name *</label>
-                <input required minLength={1} maxLength={100} placeholder="Ali" value={form.first_name}
-                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-              </div>
-              <div>
-                <label className="text-sm text-gray-600 block mb-1">Last name *</label>
-                <input required minLength={1} maxLength={100} placeholder="Khan" value={form.last_name}
-                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-              </div>
+              <InputField required minLength={1} maxLength={100} placeholder="Ali" label="First name" value={form.first_name}
+                onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
+              <InputField required minLength={1} maxLength={100} placeholder="Khan" label="Last name" value={form.last_name}
+                onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
             </div>
-
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">Email *</label>
-              <input required type="email" placeholder="ali@example.com" value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-            </div>
-
-            <div>
-              <label className="text-sm text-gray-600 block mb-1">Phone</label>
-              <input placeholder="+92-300-1234567" value={form.phone_number}
-                onChange={(e) => setForm({ ...form, phone_number: e.target.value })}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-300 outline-none" />
-            </div>
-
+            <InputField required type="email" placeholder="ali@example.com" label="Email" value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <InputField placeholder="+92-300-1234567" label="Phone" value={form.phone_number}
+              onChange={(e) => setForm({ ...form, phone_number: e.target.value })} />
             <div className="flex gap-2 pt-2">
-              <button type="submit" disabled={submitting}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1 disabled:opacity-50">
+              <Button type="submit" disabled={submitting} className="flex-1">
                 {submitting ? "Saving..." : (editingClient ? "Update" : "Create")}
-              </button>
-              <button type="button" onClick={() => setShowForm(false)}
-                className="bg-gray-100 border px-4 py-2 rounded hover:bg-gray-200 flex-1">Cancel</button>
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setShowForm(false)} className="flex-1">Cancel</Button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
-    </div>
+    </>
   );
 }

@@ -186,7 +186,7 @@ def refresh_tokens(
     Rotate refresh token: validate old token, issue new pair,
     invalidate old token in DB, set new cookies.
     """
-    from app.utils.password import verify_password as pw_verify
+    from shared.password import verify_password as pw_verify
 
     # Prefer cookie, fall back to body
     refresh_token = request.cookies.get(REFRESH_COOKIE) or body_token
@@ -370,27 +370,22 @@ def resend_verification(
     from shared.password import verify_password
 
     user = db.execute(select(User).where(User.email == data.email)).scalar_one_or_none()
+
+    # Generic response to prevent email enumeration
+    generic_response = ResendVerificationResponse(
+        message="If the account exists and is unverified, a verification email has been sent.",
+    )
+
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No account found with this email",
-        )
+        return generic_response
 
     if not verify_password(data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
+        return generic_response
 
     if user.email_verified:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Email is already verified",
-        )
+        return generic_response
 
     _generate_verification_token(user, db)
     _send_verification_email_safe(user)
 
-    return ResendVerificationResponse(
-        message="Verification email resent. Please check your inbox.",
-    )
+    return generic_response

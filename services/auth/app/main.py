@@ -20,9 +20,13 @@ from shared._company_model import Company  # noqa: F401
 app = FastAPI(title="DefectLoupe — auth-service", version="0.1.0")
 Base.metadata.create_all(bind=engine)
 
+import os as _os
+_cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")
+_cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten for prod
+    allow_origins=_cors,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -88,10 +88,11 @@ def add_inspector_to_company(
                 detail="An inspector with this email already exists",
             )
 
-    # Create user account
+    # Create user account — auto-verify since the company owner vouches for them
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
+        email_verified=True,
     )
     db.add(user)
     db.flush()

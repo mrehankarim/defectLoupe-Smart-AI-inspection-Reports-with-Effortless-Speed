@@ -25,4 +25,14 @@ async def generate_report(inspection_id: UUID, request: Request, _=Depends(get_c
 
 @router.get("/{inspection_id}/report")
 async def get_report(inspection_id: UUID, request: Request, _=Depends(get_current_inspector)):
-    return await generate_report(inspection_id, request, _)
+    """Retrieve a previously generated report (idempotent GET)."""
+    context = await _context(inspection_id, request)
+    inspection, areas = context.get("inspection", {}), context.get("areas", [])
+    return {
+        "inspection_id": str(inspection_id),
+        "title": inspection.get("title") or "Property inspection report",
+        "status": inspection.get("status", "unknown"),
+        "summary": f"Inspection includes {len(areas)} documented area(s).",
+        "areas": areas,
+        "report_url": f"/api/v1/inspections/{inspection_id}/report",
+    }
