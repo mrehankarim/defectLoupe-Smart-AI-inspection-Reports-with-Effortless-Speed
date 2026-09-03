@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api, ApiError } from '../../services/api';
 import Button from '../../components/Button';
 import { InputField } from '../../components/FormFields';
@@ -7,7 +8,8 @@ function error(e: unknown) {
   return (e as ApiError).detail || 'Something went wrong. Please try again.';
 }
 
-export default function LoginPage({ onDone }: { onDone: () => void }) {
+export default function LoginPage({ onDone }: { onDone?: () => void } = {}) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('error');
@@ -40,7 +42,11 @@ export default function LoginPage({ onDone }: { onDone: () => void }) {
       }
 
       if (mode === 'login') {
-        onDone();
+        if (onDone) {
+          onDone();
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setMessageType('success');
         setMessage('Account created. Verify your email address, then sign in.');

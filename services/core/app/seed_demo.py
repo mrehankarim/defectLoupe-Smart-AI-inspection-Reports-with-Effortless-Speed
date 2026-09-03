@@ -17,6 +17,10 @@ from shared.db_config import SessionLocal
 from shared.base import Base
 from shared.db_config import engine
 
+from shared._user_model import User  # noqa: F401
+from shared._inspector_model import Inspector  # noqa: F401
+from shared._company_model import Company  # noqa: F401
+
 # Import all models
 from app.repository.client import Client
 from app.repository.property import Property, PropertyType

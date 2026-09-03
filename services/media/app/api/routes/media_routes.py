@@ -77,12 +77,6 @@ def create_photo(data: PhotoCreate, inspector=Depends(get_current_inspector), db
     return photo
 
 
-@router.get("/areas/{area_id}/photos", response_model=list[PhotoResponse])
-def list_photos(area_id: UUID, inspector=Depends(get_current_inspector), db: Session = Depends(get_db)):
-    _assert_area_access(area_id, inspector, db)
-    return list(db.execute(select(AreaPhoto).where(AreaPhoto.inspection_area_id == area_id)).scalars())
-
-
 @router.post("/observations", response_model=ObservationResponse, status_code=status.HTTP_201_CREATED)
 def create_observation(data: ObservationCreate, inspector=Depends(get_current_inspector), db: Session = Depends(get_db)):
     _assert_area_access(data.inspection_area_id, inspector, db)
@@ -93,12 +87,6 @@ def create_observation(data: ObservationCreate, inspector=Depends(get_current_in
     observation = AreaObservation(**data.model_dump())
     db.add(observation); db.commit(); db.refresh(observation)
     return observation
-
-
-@router.get("/areas/{area_id}/observations", response_model=list[ObservationResponse])
-def list_observations(area_id: UUID, inspector=Depends(get_current_inspector), db: Session = Depends(get_db)):
-    _assert_area_access(area_id, inspector, db)
-    return list(db.execute(select(AreaObservation).where(AreaObservation.inspection_area_id == area_id)).scalars())
 
 
 @router.post("/observations/{observation_id}/transcription", status_code=status.HTTP_201_CREATED)
