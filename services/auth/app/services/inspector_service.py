@@ -2,10 +2,10 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.repository.company import Company
-from app.repository.inspector import Inspector, InspectorType
-from app.repository.user import User
-from app.utils.password import hash_password
+from shared._company_model import Company
+from shared._inspector_model import Inspector, InspectorType
+from shared._user_model import User
+from shared.password import hash_password
 from app.api.dtos.inspector_dtos import (
     CreateCompanyRequest,
     CompanyResponse,

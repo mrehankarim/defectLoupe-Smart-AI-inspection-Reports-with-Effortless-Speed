@@ -1,16 +1,17 @@
 from uuid import UUID, uuid4
 from datetime import datetime, timezone, timedelta
 import logging
+import os
 
 from fastapi import HTTPException, status, Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config.db_config import get_db
-from app.repository.user import User
-from app.repository.company import Company
-from app.repository.inspector import Inspector, InspectorType
-from app.utils.password import hash_password
+from shared.db_config import get_db
+from shared._user_model import User
+from shared._company_model import Company
+from shared._inspector_model import Inspector, InspectorType
+from shared.password import hash_password
 from app.utils.jwt_utils import (
     create_access_token,
     create_refresh_token,
@@ -82,9 +83,11 @@ def register_user(
             detail="Email already registered",
         )
 
+    auto_verify = os.getenv("AUTO_VERIFY_EMAIL", "true").lower() == "true"
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
+        email_verified=auto_verify,
     )
     db.add(user)
     db.flush()  # get user.id
@@ -103,9 +106,9 @@ def register_user(
     db.commit()
     db.refresh(user)
 
-    # Generate verification token and send email
-    _generate_verification_token(user, db)
-    _send_verification_email_safe(user)
+    if not auto_verify:
+        _generate_verification_token(user, db)
+        _send_verification_email_safe(user)
 
     return UserResponse.model_validate(user)
 
@@ -123,7 +126,7 @@ def login_user(
             detail="Invalid credentials",
         )
 
-    from app.utils.password import verify_password
+    from shared.password import verify_password
 
     if not verify_password(data.password, user.hashed_password):
         raise HTTPException(
@@ -364,7 +367,7 @@ def resend_verification(
     Resend the verification email. Accepts email + password to confirm
     the requester owns the account.
     """
-    from app.utils.password import verify_password
+    from shared.password import verify_password
 
     user = db.execute(select(User).where(User.email == data.email)).scalar_one_or_none()
     if not user:

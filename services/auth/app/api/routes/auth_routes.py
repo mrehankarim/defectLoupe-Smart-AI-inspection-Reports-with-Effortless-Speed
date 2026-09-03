@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
-from app.config.db_config import get_db
+from shared.db_config import get_db
 from app.api.dtos.auth_dtos import (
     RegisterRequest,
     LoginRequest,
@@ -21,7 +21,7 @@ from app.services.auth_service import (
     verify_email,
     resend_verification,
 )
-from app.repository.user import User
+from shared._user_model import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

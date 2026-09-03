@@ -41,11 +41,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.auth.rule=PathPrefix(`/auth`) || PathPrefix(`/inspectors`) || PathPrefix(`/api/v1/auth`)"
+      - "traefik.http.routers.auth.priority=40"
       - "traefik.http.services.auth.loadbalancer.server.port=8000"
     env_file:
-      - ./services/auth/app/.env
+      - ./services/auth/app/.env.example
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
+      REFRESH_TOKEN_SECRET: defectloupe-hackathon-secret
+      AUTO_VERIFY_EMAIL: "true"
+      COOKIE_SECURE: "false"
     depends_on:
       db:
         condition: service_healthy
@@ -64,11 +69,13 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/area-templates`) || PathPrefix(`/api/v1/templates`) || PathPrefix(`/api/v1/demo`)"
+      - "traefik.http.routers.core.priority=10"
       - "traefik.http.services.core.loadbalancer.server.port=8000"
     env_file:
-      - ./services/core/app/.env
+      - ./services/core/app/.env.example
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
+      ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
     depends_on:
       db:
         condition: service_healthy
@@ -88,13 +95,18 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/areas`)"
+      - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/media`)"
+      - "traefik.http.routers.media.priority=50"
       - "traefik.http.services.media.loadbalancer.server.port=8000"
     env_file:
-      - ./services/media/app/.env
+      - ./services/media/app/.env.example
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
+      ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - defect-loupe-uploads:/data/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -114,13 +126,15 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathPrefix(`/api/v1/photos`) && PathSuffix(`/analyze`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`)"
+      - "traefik.http.routers.ai.priority=100"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:
-      - ./services/ai/app/.env
+      - ./services/ai/app/.env.example
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
+      ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
       CORE_SERVICE_URL: http://core:8000
       MEDIA_SERVICE_URL: http://media:8000
     depends_on:
@@ -150,10 +164,11 @@ services:
       -Q default,stt,vision,reports
       --concurrency=2
     env_file:
-      - ./services/ai/app/.env
+      - ./services/ai/app/.env.example
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       REDIS_URL: redis://redis:6379/0
+      ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
       CORE_SERVICE_URL: http://core:8000
       MEDIA_SERVICE_URL: http://media:8000
     depends_on:
@@ -207,3 +222,4 @@ networks:
 volumes:
   defect-loupe-data:
   defect-loupe-redis:
+  defect-loupe-uploads:

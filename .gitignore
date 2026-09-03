@@ -70,3 +70,4 @@ docker-compose.override.yaml
 .mypy_cache/
 .ruff_cache/
 .coverage.*
+*.tsbuildinfo

@@ -8,8 +8,17 @@ During Day 1 of the hackathon the imports will be refactored to use the
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from shared.base import Base
+from shared.db_config import engine
+
+# Register the canonical auth models before creating tables.  They share the
+# same metadata registry as core/media, so foreign keys work across services.
+from shared._user_model import User  # noqa: F401
+from shared._inspector_model import Inspector  # noqa: F401
+from shared._company_model import Company  # noqa: F401
 
 app = FastAPI(title="DefectLoupe — auth-service", version="0.1.0")
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,8 +38,7 @@ def root():
 def health():
     return {"status": "ok"}
 
-# Route mounting happens after Day 1 refactor:
-#   from app.api.routes.auth_routes import router as auth_router
-#   from app.api.routes.inspector_routes import router as inspector_router
-#   app.include_router(auth_router)
-#   app.include_router(inspector_router)
+from app.api.routes.auth_routes import router as auth_router
+from app.api.routes.inspector_routes import router as inspector_router
+app.include_router(auth_router)
+app.include_router(inspector_router)

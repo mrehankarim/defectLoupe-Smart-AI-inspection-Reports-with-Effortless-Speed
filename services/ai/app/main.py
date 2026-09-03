@@ -7,6 +7,7 @@ Exposes: /api/v1/rag/*, /api/v1/photos/{id}/analyze,
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api.routes.report_routes import router as report_router
 
 app = FastAPI(title="DefectLoupe — ai-service", version="0.1.0")
 
@@ -17,6 +18,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(report_router)
 
 
 @app.get("/")
@@ -27,10 +29,3 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
-# Route mounting (Day 2):
-#   from app.api.routes.rag_routes import router as rag_router
-#   from app.api.routes.vision_routes import router as vision_router
-#   from app.api.routes.report_routes import router as report_router
-#   app.include_router(rag_router)
-#   ...
