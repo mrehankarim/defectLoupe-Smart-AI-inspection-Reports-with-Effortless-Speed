@@ -4,6 +4,8 @@ Exposes: /api/v1/photos, /api/v1/observations, /api/v1/transcriptions,
          /api/v1/areas/{id}/photos, /api/v1/areas/{id}/observations,
          /api/v1/inspections/{id}/media
 """
+import os
+import warnings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from shared.base import Base
@@ -17,10 +19,13 @@ from app.repository.area_observation import AreaObservation  # noqa: F401
 from app.repository.transcription import Transcription  # noqa: F401
 
 app = FastAPI(title="DefectLoupe — media-service", version="0.1.0")
-Base.metadata.create_all(bind=engine)
 
-import os as _os
-_cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    warnings.warn(f"Could not create tables (DB may be unreachable): {exc}")
+
+_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
 _cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
 
 app.add_middleware(
@@ -41,5 +46,13 @@ def root():
 def health():
     return {"status": "ok"}
 
+
+from app.api.routes.photo_routes import router as photo_router
+from app.api.routes.observation_routes import router as observation_router
+from app.api.routes.transcription_routes import router as transcription_router
 from app.api.routes.media_routes import router as media_router
+
+app.include_router(photo_router)
+app.include_router(observation_router)
+app.include_router(transcription_router)
 app.include_router(media_router)

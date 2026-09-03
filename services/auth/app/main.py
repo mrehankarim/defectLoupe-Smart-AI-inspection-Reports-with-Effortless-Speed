@@ -18,7 +18,11 @@ from shared._inspector_model import Inspector  # noqa: F401
 from shared._company_model import Company  # noqa: F401
 
 app = FastAPI(title="DefectLoupe — auth-service", version="0.1.0")
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    import warnings
+    warnings.warn(f"Could not create tables (DB may be unreachable): {exc}")
 
 import os as _os
 _cors_raw = _os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")

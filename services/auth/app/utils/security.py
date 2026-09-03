@@ -5,10 +5,10 @@ from fastapi import Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config.db_config import get_db
-from app.repository.company import Company
-from app.repository.inspector import Inspector
-from app.repository.user import User
+from shared.db_config import get_db
+from shared._company_model import Company
+from shared._inspector_model import Inspector
+from shared._user_model import User
 from app.services.auth_service import get_current_user
 from shared.auth_roles import UserRole, effective_role
 

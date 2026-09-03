@@ -18,15 +18,17 @@ CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY", "")
 CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET", "")
 CLOUDINARY_URL: str = os.getenv("CLOUDINARY_URL", "")
 
-# Configure the Cloudinary SDK globally
-import cloudinary
-
-cloudinary.config(
-    cloud_name=CLOUDINARY_CLOUD_NAME,
-    api_key=CLOUDINARY_API_KEY,
-    api_secret=CLOUDINARY_API_SECRET,
-    secure=True,
-)
+# Configure the Cloudinary SDK globally if installed
+try:
+    import cloudinary
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
+except ImportError:
+    cloudinary = None
 
 # ── Redis / Celery ───────────────────────────────────────────────────────
 REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
@@ -40,5 +42,5 @@ LOCAL_UPLOAD_DIR.mkdir(exist_ok=True)
 
 
 def is_cloudinary_configured() -> bool:
-    """Return True when Cloudinary credentials are present."""
-    return bool(CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)
+    """Return True when Cloudinary credentials and package are present."""
+    return bool(cloudinary and CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)

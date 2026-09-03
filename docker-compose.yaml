@@ -128,7 +128,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`)"
+      - "traefik.http.routers.ai.rule=PathPrefix(`/api/v1/rag`) || PathPrefix(`/api/v1/reports`) || PathRegexp(`^/api/v1/photos/[^/]+/analyze/?$`) || PathRegexp(`^/api/v1/inspections/[^/]+/report/.*$`) || PathRegexp(`^/api/v1/inspections/[^/]+/generate-report$`)"
       - "traefik.http.routers.ai.priority=100"
       - "traefik.http.services.ai.loadbalancer.server.port=8000"
     env_file:

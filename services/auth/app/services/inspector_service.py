@@ -9,8 +9,10 @@ from shared.password import hash_password
 from app.api.dtos.inspector_dtos import (
     CreateCompanyRequest,
     CompanyResponse,
+    UpdateCompanyRequest,
     AddInspectorRequest,
     InspectorResponse,
+    UpdateInspectorProfileRequest,
 )
 
 
@@ -123,3 +125,41 @@ def get_company_inspectors(
         select(Inspector).where(Inspector.company_id == company.id)
     ).scalars().all()
     return [InspectorResponse.model_validate(i) for i in inspectors]
+
+
+def update_inspector_profile(
+    data: UpdateInspectorProfileRequest,
+    user: User,
+    db: Session,
+) -> InspectorResponse:
+    """Update the current user's inspector profile fields."""
+    inspector = db.execute(
+        select(Inspector).where(Inspector.user_id == user.id)
+    ).scalar_one_or_none()
+    if not inspector:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Inspector profile not found",
+        )
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(inspector, field, value)
+    db.commit()
+    db.refresh(inspector)
+    return InspectorResponse.model_validate(inspector)
+
+
+def update_company_settings(
+    data: UpdateCompanyRequest,
+    company: Company,
+    user: User,
+    db: Session,
+) -> CompanyResponse:
+    """Update settings for the specified company."""
+    update_data = data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(company, field, value)
+    db.commit()
+    db.refresh(company)
+    return CompanyResponse.model_validate(company)
+

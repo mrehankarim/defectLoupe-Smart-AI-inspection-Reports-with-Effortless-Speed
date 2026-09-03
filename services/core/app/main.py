@@ -25,7 +25,11 @@ from app.repository import inspection_area as _area_model  # noqa: F401
 from app.repository import area_template as _template_model  # noqa: F401
 
 # Create all tables on startup (hackathon mode — skip Alembic)
-Base.metadata.create_all(bind=engine)
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as exc:
+    import warnings
+    warnings.warn(f"Could not create tables (DB may be unreachable): {exc}")
 
 tags_metadata = [
     {"name": "clients", "description": "Client CRUD — manage property-inspection clients."},
