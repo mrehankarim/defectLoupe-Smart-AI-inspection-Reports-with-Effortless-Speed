@@ -61,21 +61,21 @@ export function AuthPageLayout({ children }: { children: ReactNode }) {
 
       {/* Header Bar */}
       <header className="relative z-20 flex items-center justify-between max-w-5xl w-full mx-auto">
-        <Link className="flex items-center gap-3 group" to="/login">
+        <Link className="flex items-center gap-3 group" to="/">
           <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-300 transition-transform group-hover:scale-105"
+            className="w-10 h-10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 transition-transform group-hover:scale-105"
             style={{
-              background: "rgba(99,102,241,0.18)",
-              border: "1px solid rgba(99,102,241,0.35)",
-              boxShadow: "0 0 20px rgba(99,102,241,0.25), inset 0 1px 0 rgba(255,255,255,0.15)",
+              background: "rgba(16,185,129,0.18)",
+              border: "1px solid rgba(16,185,129,0.35)",
+              boxShadow: "0 0 20px rgba(16,185,129,0.25)",
             }}
           >
             <IconShield />
           </div>
           <div>
-            <span className="text-base font-bold tracking-[ -0.02em] text-slate-900 dark:text-slate-100">DefectLoupe</span>
-            <span className="ml-2 rounded-full bg-indigo-500/10 border border-indigo-500/30 px-2 py-0.5 text-[10px] font-mono font-medium text-indigo-600 dark:text-indigo-300">
-              AI MVP
+            <span className="text-base font-bold tracking-[-0.02em] text-slate-900 dark:text-slate-100">DefectLoupe</span>
+            <span className="ml-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-mono font-medium text-emerald-700 dark:text-emerald-300">
+              Pro AI
             </span>
           </div>
         </Link>
@@ -98,7 +98,7 @@ export function AuthPageLayout({ children }: { children: ReactNode }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           ) : (
-            <svg className="h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
             </svg>
           )}

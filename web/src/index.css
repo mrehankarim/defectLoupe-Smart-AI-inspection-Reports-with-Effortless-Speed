@@ -1,41 +1,41 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
   color-scheme: light;
   font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --canvas-bg: #f8fafc;
-  --canvas-gradient: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.08) 0%, transparent 60%), #f8fafc;
+  --canvas-bg: #f1f5f9;
+  --canvas-gradient: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%), radial-gradient(at 100% 0%, rgba(99, 102, 241, 0.10) 0px, transparent 50%), radial-gradient(at 50% 100%, rgba(14, 165, 233, 0.08) 0px, transparent 50%), #f1f5f9;
   --surface: 255 255 255;
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(203, 213, 225, 0.7);
   --glass-highlight: rgba(255, 255, 255, 0.95);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  --input-bg: rgba(0, 0, 0, 0.03);
-  --input-border: rgba(0, 0, 0, 0.12);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 12px 32px -4px rgba(15, 23, 42, 0.07);
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: #cbd5e1;
   --text: 15 23 42;
-  --text-muted: 100 116 139;
-  --border: 226 232 240;
-  --accent: 99 102 241;
+  --text-muted: 71 85 105;
+  --border: 203 213 225;
+  --accent: 16 185 129;
 }
 
 .dark {
   color-scheme: dark;
-  --canvas-bg: #0b0d14;
-  --canvas-gradient: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(99, 102, 241, 0.20) 0%, transparent 60%), #0b0d14;
+  --canvas-bg: #07090e;
+  --canvas-gradient: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.05) 50%, transparent 80%), #07090e;
   --surface: 15 23 42;
-  --glass-bg: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.09);
+  --glass-bg: rgba(15, 23, 42, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-highlight: rgba(255, 255, 255, 0.14);
-  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 40px rgba(0, 0, 0, 0.40);
-  --input-bg: rgba(255, 255, 255, 0.05);
-  --input-border: rgba(255, 255, 255, 0.09);
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 40px rgba(0, 0, 0, 0.60);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-border: rgba(255, 255, 255, 0.08);
   --text: 241 245 249;
   --text-muted: 148 163 184;
-  --border: 31 41 55;
-  --accent: 99 102 241;
+  --border: 30 41 59;
+  --accent: 16 185 129;
 }
 
 /* Hide scrollbars by default per theme spec */
@@ -57,7 +57,9 @@
   }
 
   body {
-    @apply m-0 bg-[var(--canvas-bg)] text-[rgb(var(--text))] antialiased selection:bg-indigo-500 selection:text-white;
+    margin: 0;
+    color: rgb(var(--text));
+    background-color: var(--canvas-bg);
     background: var(--canvas-gradient);
   }
 
@@ -96,55 +98,33 @@
     @apply rounded-2xl transition-all duration-200 hover:border-indigo-500/30;
   }
 
-  .glass-input {
+  .form-label {
+    @apply block mb-1.5 text-xs font-mono font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200;
+  }
+
+  .glass-input,
+  .form-input {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    @apply block w-full rounded-xl px-3.5 py-2.5 text-sm text-[rgb(var(--text))] placeholder:text-slate-500 transition-all duration-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none;
-  }
-
-  .app-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    box-shadow: var(--glass-shadow);
-    @apply rounded-3xl p-6 transition-all duration-200;
+    @apply block w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all duration-200 focus:border-emerald-500 focus:outline-none;
   }
 
   .btn-primary {
-    background: rgba(99, 102, 241, 0.22);
-    border: 1px solid rgba(99, 102, 241, 0.40);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-indigo-700 dark:text-indigo-200 transition-all duration-200 hover:bg-indigo-600 hover:text-white hover:shadow-indigo-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    background: #10b981;
+    color: #ffffff;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition-all duration-200 hover:bg-emerald-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer;
   }
 
   .btn-secondary {
     background: var(--input-bg);
     border: 1px solid var(--input-border);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-200 dark:hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent px-4 py-2.5 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-transparent px-3 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-[rgb(var(--text))];
-  }
-
-  .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600/90 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-rose-500/20 transition-all duration-200 hover:bg-rose-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
-  }
-
-  .form-label {
-    @apply mb-1.5 block text-xs font-mono font-medium tracking-wider text-slate-500 dark:text-slate-400 uppercase;
-  }
-
-  .form-input {
-    @apply glass-input;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent px-4 py-2 text-sm font-semibold text-[rgb(var(--text))] transition-all duration-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer;
   }
 
   .form-error {
@@ -161,6 +141,34 @@
 
   .alert-info {
     @apply flex items-start gap-3 rounded-2xl border border-indigo-500/30 bg-indigo-500/10 p-4 text-sm text-indigo-700 dark:text-indigo-300 backdrop-blur-md;
+  }
+
+  .kbd-badge {
+    @apply inline-flex items-center gap-0.5 rounded border border-slate-300 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-500 dark:text-slate-400 shadow-sm;
+  }
+
+  .status-pill,
+  .status-pill-success,
+  .status-pill-warning,
+  .status-pill-danger,
+  .status-pill-info {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border;
+  }
+
+  .status-pill-success {
+    @apply border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400;
+  }
+
+  .status-pill-warning {
+    @apply border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400;
+  }
+
+  .status-pill-danger {
+    @apply border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400;
+  }
+
+  .status-pill-info {
+    @apply border-indigo-500/20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400;
   }
 }
 

@@ -11,8 +11,8 @@ from app.repository.base import Base
 
 
 class InspectorType(str, enum.Enum):
-    INDIVIDUAL = "individual"
-    AGENCY_MEMBER = "agency_member"
+    INDIVIDUAL = "INDIVIDUAL"
+    AGENCY_MEMBER = "AGENCY_MEMBER"
 
 
 class Inspector(Base):
@@ -43,7 +43,11 @@ class Inspector(Base):
     license_number: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     inspector_type: Mapped[InspectorType] = mapped_column(
-        SAEnum(InspectorType, name="inspector_type_enum"),
+        SAEnum(
+            InspectorType,
+            name="inspector_type_enum",
+            values_callable=lambda e: [m.value for m in e],
+        ),
         nullable=False,
         default=InspectorType.INDIVIDUAL,
     )

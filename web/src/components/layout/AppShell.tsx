@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
+import { CommandPalette } from "./CommandPalette";
+import { Footer } from "./Footer";
 
 const IconGrid = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +29,22 @@ const IconClipboard = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+  </svg>
+);
+
+const IconReport = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
+const IconBrain = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2a5 5 0 0 1 5 5c0 1.5-.7 2.8-1.8 3.7.8.8 1.8 1.8 1.8 3.3a4.5 4.5 0 0 1-4.5 4.5H12" />
+    <path d="M12 22a5 5 0 0 1-5-5c0-1.5.7-2.8 1.8-3.7-.8-.8-1.8-1.8-1.8-3.3A4.5 4.5 0 0 1 11.5 5.5H12" />
   </svg>
 );
 
@@ -121,7 +139,9 @@ export function AppShell() {
   const { logout, user } = useAuth();
   const { resolvedTheme, setPreference } = useTheme();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   function toggleTheme() {
     setPreference(resolvedTheme === "dark" ? "light" : "dark");
@@ -133,155 +153,214 @@ export function AppShell() {
   }
 
   const userInitials = user?.email ? user.email.slice(0, 2).toUpperCase() : "IN";
+  const isDark = resolvedTheme === "dark";
 
   return (
     <div
-      className="flex h-full min-h-screen text-[rgb(var(--text))]"
+      className="flex flex-col min-h-screen text-[rgb(var(--text))]"
       style={{
-        background: resolvedTheme === "dark"
-          ? "radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.16) 0%, transparent 55%), #0b0d14"
-          : "radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,102,241,0.08) 0%, transparent 55%), #f8fafc",
+        background: isDark
+          ? "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16,185,129,0.14) 0%, rgba(6,182,212,0.04) 50%, transparent 80%), #07090e"
+          : "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16,185,129,0.06) 0%, transparent 60%), #f8fafc",
         fontFamily: "'Outfit', system-ui, sans-serif",
       }}
     >
       <Noise />
+      <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed left-0 top-0 h-full z-30 flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+      {/* Top Floating Command Navigation Bar */}
+      <header
+        className="sticky top-0 z-30 w-full border-b backdrop-blur-xl transition-colors"
         style={{
-          width: 240,
-          background: "var(--glass-bg)",
-          borderRight: "1px solid var(--glass-border)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          background: isDark ? "rgba(7, 9, 14, 0.88)" : "rgba(255, 255, 255, 0.92)",
+          borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)",
+          boxShadow: isDark ? "0 4px 30px rgba(0, 0, 0, 0.4)" : "0 2px 10px rgba(0, 0, 0, 0.03)",
         }}
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-6 border-b border-white/[0.06]">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-300"
-            style={{
-              background: resolvedTheme === "dark" ? "rgba(99,102,241,0.22)" : "rgba(99,102,241,0.15)",
-              border: "1px solid rgba(99,102,241,0.40)",
-              boxShadow: "0 0 16px rgba(99,102,241,0.25)",
-            }}
-          >
-            <IconShield />
-          </div>
-          <div>
-            <p className="text-[14px] font-bold tracking-[-0.02em] text-slate-900 dark:text-slate-100">DefectLoupe</p>
-            <p className="text-[10px] font-mono text-slate-500 dark:text-slate-500 tracking-wide font-medium">Inspector Suite</p>
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 px-3 py-5 flex flex-col gap-1">
-          <p className="text-[10px] font-mono font-bold tracking-[0.12em] uppercase text-slate-400 dark:text-slate-500 px-2 mb-2">Workspace</p>
-          <NavItem to="/dashboard" label="Dashboard" icon={<IconGrid />} onClick={() => setSidebarOpen(false)} />
-          <NavItem to="/clients" label="Clients" icon={<IconUsers />} onClick={() => setSidebarOpen(false)} />
-          <NavItem to="/properties" label="Properties" icon={<IconHome />} onClick={() => setSidebarOpen(false)} />
-          <NavItem to="/inspections" label="Inspections" icon={<IconClipboard />} onClick={() => setSidebarOpen(false)} />
-          <NavItem to="/profile" label="Profile" icon={<IconUser />} onClick={() => setSidebarOpen(false)} />
-          <NavItem to="/settings" label="Settings" icon={<IconSettings />} onClick={() => setSidebarOpen(false)} />
-        </nav>
-
-        {/* User row */}
-        <div className="px-3 py-4 border-t border-white/[0.06]">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl">
+        <div className="w-full px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          {/* FAR LEFT: Brand Logo */}
+          <NavLink to="/" className="flex items-center gap-2.5 text-decoration-none group shrink-0">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-indigo-700 dark:text-indigo-200 shrink-0"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-bold transition-all group-hover:scale-105"
               style={{
-                background: resolvedTheme === "dark" ? "rgba(99,102,241,0.25)" : "rgba(99,102,241,0.18)",
-                border: "1px solid rgba(99,102,241,0.40)",
+                background: isDark ? "rgba(16,185,129,0.18)" : "rgba(16,185,129,0.12)",
+                border: "1px solid rgba(16,185,129,0.35)",
+                boxShadow: "0 0 16px rgba(16,185,129,0.20)",
               }}
             >
-              {userInitials}
+              <IconShield />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-slate-900 dark:text-slate-200 truncate">{user?.email.split("@")[0] || "Inspector"}</p>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-medium">Solo Inspector</p>
+            <div className="flex flex-col">
+              <span
+                className="text-sm font-bold tracking-tight flex items-center gap-1.5"
+                style={{ color: isDark ? "#f8fafc" : "#0f172a" }}
+              >
+                DefectLoupe
+                <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold">
+                  Pro
+                </span>
+              </span>
             </div>
+          </NavLink>
+
+          {/* CENTER: Desktop Nav Links */}
+          <nav className="hidden lg:flex items-center justify-center gap-1 flex-1 px-4">
+            {[
+              { to: "/dashboard", label: "Dashboard", icon: <IconGrid /> },
+              { to: "/clients", label: "Clients", icon: <IconUsers /> },
+              { to: "/properties", label: "Properties", icon: <IconHome /> },
+              { to: "/inspections", label: "Inspections", icon: <IconClipboard /> },
+              { to: "/reports", label: "Reports & PDF", icon: <IconReport /> },
+              { to: "/knowledge-base", label: "AI Base", icon: <IconBrain /> },
+            ].map(({ to, label, icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold tracking-wide transition-all ${
+                    isActive
+                      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800/60 border border-transparent"
+                  }`
+                }
+              >
+                {icon}
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* FAR RIGHT: Search, Theme, Notifications, Account Icon */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Search Trigger Button */}
             <button
-              onClick={() => void handleLogout()}
-              className="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1 cursor-pointer"
-              title="Sign out"
+              onClick={() => setCmdOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all cursor-pointer border border-transparent bg-transparent hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
               type="button"
             >
-              <IconLogout />
+              <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span className="hidden xl:inline">Search...</span>
+              <kbd className="kbd-badge">Ctrl K</kbd>
             </button>
-          </div>
-        </div>
-      </aside>
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col lg:ml-[240px]">
-        {/* Top Header Bar */}
-        <header
-          className="sticky top-0 z-20 flex items-center justify-between px-8 py-4"
-          style={{
-            background: resolvedTheme === "dark" ? "rgba(11,13,20,0.7)" : "rgba(255,255,255,0.7)",
-            borderBottom: "1px solid var(--glass-border)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-          }}
-        >
-          <button className="lg:hidden text-slate-400 cursor-pointer" onClick={() => setSidebarOpen(!sidebarOpen)} type="button">
-            <IconMenu />
-          </button>
-          <div />
-
-          <div className="flex items-center gap-3">
             {/* Theme Toggle Button */}
             <button
-              aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
-              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)" }}
+              aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
+              className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors cursor-pointer text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-transparent bg-transparent hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
               onClick={toggleTheme}
-              title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+              title={`Switch to ${isDark ? "light" : "dark"} mode`}
               type="button"
             >
-              {resolvedTheme === "dark" ? (
+              {isDark ? (
                 <svg className="h-4 w-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               ) : (
-                <svg className="h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
             </button>
 
-            {/* Notification Indicator */}
+            {/* User Account Icon Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                className="flex items-center gap-2 p-1 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-800/40 transition-all cursor-pointer"
+                type="button"
+                title="Account Menu"
+              >
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-emerald-700 dark:text-emerald-400 shrink-0"
+                  style={{
+                    background: isDark ? "rgba(16,185,129,0.18)" : "rgba(16,185,129,0.12)",
+                    border: "1px solid rgba(16,185,129,0.35)",
+                  }}
+                >
+                  {userInitials}
+                </div>
+              </button>
+
+              {/* User Dropdown Menu */}
+              {userDropdownOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-2 z-50"
+                  onClick={() => setUserDropdownOpen(false)}
+                >
+                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800/80 mb-1">
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-200 truncate">{user?.email || "Inspector Profile"}</p>
+                    <p className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400">Solo Inspector</p>
+                  </div>
+                  <NavLink
+                    to="/profile"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <IconUser /> Profile Settings
+                  </NavLink>
+                  <NavLink
+                    to="/settings"
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    <IconSettings /> Workspace Config
+                  </NavLink>
+                  <button
+                    onClick={() => void handleLogout()}
+                    className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors text-left cursor-pointer"
+                    type="button"
+                  >
+                    <IconLogout /> Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Menu Toggle */}
             <button
-              className="relative w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)" }}
+              className="lg:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 cursor-pointer"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               type="button"
             >
-              <IconBell />
-              <span
-                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                style={{ background: "#6366f1", boxShadow: "0 0 6px rgba(99,102,241,0.8)" }}
-              />
+              <IconMenu />
             </button>
           </div>
-        </header>
+        </div>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto relative z-10 p-6 lg:p-8">
-          <Outlet />
-        </main>
-      </div>
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-800 bg-slate-900/95 p-4 space-y-2">
+            {[
+              { to: "/dashboard", label: "Dashboard", icon: <IconGrid /> },
+              { to: "/clients", label: "Clients", icon: <IconUsers /> },
+              { to: "/properties", label: "Properties", icon: <IconHome /> },
+              { to: "/inspections", label: "Inspections", icon: <IconClipboard /> },
+              { to: "/reports", label: "Reports & PDF", icon: <IconReport /> },
+              { to: "/knowledge-base", label: "AI Knowledge Base", icon: <IconBrain /> },
+              { to: "/profile", label: "Profile", icon: <IconUser /> },
+              { to: "/settings", label: "Settings", icon: <IconSettings /> },
+            ].map(({ to, label, icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800"
+              >
+                {icon}
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </header>
 
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 relative z-10">
+        <Outlet />
+      </main>
+
+      {/* Modern Footer */}
+      <Footer />
     </div>
   );
 }

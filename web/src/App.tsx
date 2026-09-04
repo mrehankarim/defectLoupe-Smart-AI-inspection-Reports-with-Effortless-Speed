@@ -15,6 +15,7 @@ import SettingsPage from "./pages/settings/SettingsPage";
 import VerifyReportPage from "./pages/reports/VerifyReportPage";
 import ReportViewerPage from "./pages/reports/ReportViewerPage";
 import KnowledgeBasePage from "./pages/reports/KnowledgeBasePage";
+import LandingPage from "./pages/landing/LandingPage";
 
 function ClientDetailRoute() {
   const { clientId = "" } = useParams();
@@ -24,13 +25,13 @@ function ClientDetailRoute() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/verify/:verify_token" element={<VerifyReportPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
-          <Route index element={<Navigate replace to="/dashboard" />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/clients" element={<LegacyPage><ClientsPage /></LegacyPage>} />
           <Route path="/clients/:clientId" element={<ClientDetailRoute />} />

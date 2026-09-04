@@ -99,17 +99,17 @@ export default function SignupPage() {
       {/* Brand Header Badge */}
       <div className="flex flex-col items-center mb-6">
         <div
-          className="w-12 h-12 rounded-2xl flex items-center justify-center text-indigo-500 dark:text-indigo-300 mb-3"
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-3"
           style={{
-            background: "rgba(99,102,241,0.22)",
-            border: "1px solid rgba(99,102,241,0.40)",
-            boxShadow: "0 0 24px rgba(99,102,241,0.35), inset 0 1px 0 rgba(255,255,255,0.12)",
+            background: "rgba(16,185,129,0.18)",
+            border: "1px solid rgba(16,185,129,0.35)",
+            boxShadow: "0 0 24px rgba(16,185,129,0.25)",
           }}
         >
           <IconShield />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Create your account</h1>
-        <p className="text-xs text-slate-500 mt-1">Join DefectLoupe as an inspector</p>
+        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Join DefectLoupe as an inspector</p>
       </div>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
@@ -229,9 +229,9 @@ export default function SignupPage() {
         </Button>
       </form>
 
-      <p className="text-center text-[13px] text-slate-500 mt-6">
+      <p className="text-center text-xs text-slate-600 dark:text-slate-400 mt-6 font-medium">
         Already have an account?{" "}
-        <Link to="/login" className="text-indigo-500 dark:text-indigo-400 hover:underline font-medium">
+        <Link to="/login" className="text-emerald-700 dark:text-emerald-400 hover:underline font-bold">
           Sign in
         </Link>
       </p>
