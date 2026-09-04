@@ -61,19 +61,11 @@ export default function KnowledgeBasePage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const resp = await fetch("/api/v1/rag/documents/upload", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ detail: "Upload failed" }));
-        throw new Error(err.detail || `Upload failed (${resp.status})`);
-      }
+      await api.upload("/rag/documents/upload", formData);
       showToast(`Uploaded: ${file.name}`);
       fetchDocuments();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Upload failed", "error");
+      showToast((err as ApiError).detail || "Upload failed", "error");
     } finally {
       setUploading(false);
     }

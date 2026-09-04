@@ -32,7 +32,7 @@ test_email = f"test-{uuid.uuid4().hex[:8]}@defectloupe.com"
 
 hashed = hash_password("test1234")
 db.execute(text(f"INSERT INTO users (id, email, hashed_password, is_active, email_verified) VALUES ('{user_id}', '{test_email}', '{hashed}', true, true)"))
-db.execute(text(f"INSERT INTO inspectors (id, user_id, first_name, last_name, inspector_type, is_active) VALUES ('{inspector_id}', '{user_id}', 'Test', 'User', 'individual', true)"))
+db.execute(text(f"INSERT INTO inspectors (id, user_id, first_name, last_name, inspector_type, is_active) VALUES ('{inspector_id}', '{user_id}', 'Test', 'User', 'INDIVIDUAL', true)"))
 db.execute(text(f"INSERT INTO inspection_areas (id, inspection_id, name, display_order) VALUES ('{area_id}', '{uuid.uuid4()}', 'Test Area', 1)"))
 db.commit()
 print(f"   Created user, inspector, area")

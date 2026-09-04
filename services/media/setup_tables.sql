@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS companies (
 );
 
 DO $$ BEGIN
-    CREATE TYPE inspector_type_enum AS ENUM ('individual', 'agency_member');
+    CREATE TYPE inspector_type_enum AS ENUM ('INDIVIDUAL', 'AGENCY_MEMBER');
 EXCEPTION WHEN duplicate_object THEN null;
 END $$;
 
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS inspectors (
     last_name TEXT NOT NULL,
     phone_number VARCHAR(20),
     license_number TEXT,
-    inspector_type inspector_type_enum NOT NULL DEFAULT 'individual',
+    inspector_type inspector_type_enum NOT NULL DEFAULT 'INDIVIDUAL',
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

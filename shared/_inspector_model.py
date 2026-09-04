@@ -16,8 +16,8 @@ from shared.base import Base
 
 
 class InspectorType(str, enum.Enum):
-    INDIVIDUAL = "individual"
-    AGENCY_MEMBER = "agency_member"
+    INDIVIDUAL = "INDIVIDUAL"
+    AGENCY_MEMBER = "AGENCY_MEMBER"
 
 
 class Inspector(Base):

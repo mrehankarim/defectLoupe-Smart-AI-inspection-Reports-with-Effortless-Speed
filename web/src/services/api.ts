@@ -13,7 +13,17 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
 }
 
 function canRefresh(path: string) {
-  return path === "/auth/me" || !path.startsWith("/auth/");
+  return path === "/auth/me" || path === "/inspectors/me" || (!path.startsWith("/auth/") && !path.startsWith("/inspectors/"));
+}
+
+function buildUrl(path: string): string {
+  if (path.startsWith("/auth/") || path.startsWith("/inspectors/") || path.startsWith("/auth")) {
+    return `${BASE_URL}${path}`;
+  }
+  if (path.startsWith("/api/v1/")) {
+    return `${BASE_URL}${path}`;
+  }
+  return `${BASE_URL}/api/v1${path}`;
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -48,7 +58,7 @@ async function parseError(response: Response): Promise<ApiError> {
 }
 
 async function refreshAccessToken() {
-  const response = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+  const response = await fetch(`${BASE_URL}/auth/refresh`, {
     method: "POST",
     credentials: "include",
   });
@@ -81,7 +91,8 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${BASE_URL}/api/v1${path}`, {
+  const url = buildUrl(path);
+  const response = await fetch(url, {
     method,
     headers,
     credentials: "include",
@@ -102,12 +113,39 @@ async function request<T>(
   return parseResponse<T>(response);
 }
 
+async function uploadRequest<T>(
+  path: string,
+  formData: FormData,
+  retryAfterRefresh = true,
+): Promise<T> {
+  const url = buildUrl(path);
+  const response = await fetch(url, {
+    method: "POST",
+    credentials: "include",
+    body: formData,
+  });
+
+  if (response.status === 401 && retryAfterRefresh && canRefresh(path)) {
+    if (await refreshSession()) {
+      return uploadRequest<T>(path, formData, false);
+    }
+    unauthorizedHandler?.();
+  }
+
+  if (!response.ok) {
+    throw await parseError(response);
+  }
+
+  return parseResponse<T>(response);
+}
+
 export const api = {
   get: <T>(path: string) => request<T>("GET", path),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
   patch: <T>(path: string, body: unknown) => request<T>("PATCH", path, body),
   put: <T>(path: string, body: unknown) => request<T>("PUT", path, body),
   delete: <T>(path: string) => request<T>("DELETE", path),
+  upload: <T>(path: string, formData: FormData) => uploadRequest<T>(path, formData),
 };
 
 /** Build query string from params object, skipping null/undefined */

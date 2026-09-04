@@ -5,6 +5,7 @@
  */
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { api, ApiError } from "../../services/api";
 
 interface VerificationResponse {
   valid: boolean;
@@ -39,15 +40,10 @@ export default function VerifyReportPage() {
   useEffect(() => {
     async function verify() {
       try {
-        const resp = await fetch(`/api/v1/reports/${verify_token}/verify`);
-        if (!resp.ok) {
-          setError(`Server returned ${resp.status}`);
-          return;
-        }
-        const json: VerificationResponse = await resp.json();
+        const json = await api.get<VerificationResponse>(`/reports/${verify_token}/verify`);
         setData(json);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Verification request failed");
+        setError((err as ApiError).detail || "Verification request failed");
       } finally {
         setLoading(false);
       }

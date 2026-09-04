@@ -9,13 +9,13 @@ import { InputField, SelectField, TextareaField } from "../../components/FormFie
 import { Card } from "../../components/Card";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  scheduled: "bg-yellow-100 text-yellow-700",
-  in_progress: "bg-blue-100 text-blue-700",
-  completed: "bg-green-100 text-green-700",
-  report_generated: "bg-purple-100 text-purple-700",
-  archived: "bg-gray-200 text-gray-600",
-  cancelled: "bg-red-100 text-red-700",
+  draft: "border-slate-700/60 bg-slate-800/60 text-slate-300 font-mono text-[11px]",
+  scheduled: "border-amber-500/30 bg-amber-500/10 text-amber-400 font-mono text-[11px]",
+  in_progress: "border-indigo-500/30 bg-indigo-500/10 text-indigo-400 font-mono text-[11px]",
+  completed: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 font-mono text-[11px]",
+  report_generated: "border-purple-500/30 bg-purple-500/10 text-purple-300 font-mono text-[11px]",
+  archived: "border-slate-700/40 bg-slate-900/60 text-slate-500 font-mono text-[11px]",
+  cancelled: "border-rose-500/30 bg-rose-500/10 text-rose-400 font-mono text-[11px]",
 };
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -56,6 +56,13 @@ export default function InspectionsPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [newAreaName, setNewAreaName] = useState("");
 
+  const [mediaData, setMediaData] = useState<any[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [uploadingPhotoAreaId, setUploadingPhotoAreaId] = useState<string | null>(null);
+  const [analyzingPhotoId, setAnalyzingPhotoId] = useState<string | null>(null);
+  const [photoAnalysis, setPhotoAnalysis] = useState<Record<string, any>>({});
+  const [newObsText, setNewObsText] = useState<{ [areaId: string]: string }>({});
+
   const fetchInspections = useCallback(async () => {
     setLoading(true);
     try {
@@ -88,10 +95,25 @@ export default function InspectionsPage() {
     }
   }, []);
 
+  const fetchMedia = useCallback(async (inspectionId: string) => {
+    setMediaLoading(true);
+    try {
+      const data = await api.get<any[]>(`/inspections/${inspectionId}/media`);
+      setMediaData(data);
+    } catch {
+      setMediaData([]);
+    } finally {
+      setMediaLoading(false);
+    }
+  }, []);
+
   useEffect(() => { fetchInspections(); }, [fetchInspections]);
   useEffect(() => {
-    if (selectedInspection) fetchAreas(selectedInspection.id);
-  }, [selectedInspection, fetchAreas]);
+    if (selectedInspection) {
+      fetchAreas(selectedInspection.id);
+      fetchMedia(selectedInspection.id);
+    }
+  }, [selectedInspection, fetchAreas, fetchMedia]);
 
   useEffect(() => {
     api.get<ListResponse<Property>>("/properties?limit=200")
@@ -131,6 +153,7 @@ export default function InspectionsPage() {
       await api.post(`/inspections/${selectedInspection.id}/areas`, { name: newAreaName });
       setNewAreaName("");
       fetchAreas(selectedInspection.id);
+      fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to add area", "error");
     }
@@ -140,7 +163,10 @@ export default function InspectionsPage() {
     if (!confirm("Delete this area?")) return;
     try {
       await api.delete(`/areas/${areaId}`);
-      if (selectedInspection) fetchAreas(selectedInspection.id);
+      if (selectedInspection) {
+        fetchAreas(selectedInspection.id);
+        fetchMedia(selectedInspection.id);
+      }
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to delete area", "error");
     }
@@ -168,8 +194,71 @@ export default function InspectionsPage() {
       await api.post(`/inspections/${selectedInspection.id}/areas/template`, { template_name: templateName });
       showToast("Template areas applied");
       fetchAreas(selectedInspection.id);
+      fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Template apply failed", "error");
+    }
+  }
+
+  async function handlePhotoUpload(areaId: string, file: File) {
+    setUploadingPhotoAreaId(areaId);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`/api/v1/areas/${areaId}/photos`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      showToast("Photo uploaded successfully");
+      if (selectedInspection) fetchMedia(selectedInspection.id);
+    } catch (err) {
+      showToast("Photo upload failed", "error");
+    } finally {
+      setUploadingPhotoAreaId(null);
+    }
+  }
+
+  async function handleAnalyzePhoto(photoId: string, photoUrl: string) {
+    setAnalyzingPhotoId(photoId);
+    try {
+      // Fetch image blob first to pass to analyze route
+      const imgRes = await fetch(photoUrl);
+      const blob = await imgRes.blob();
+      const formData = new FormData();
+      formData.append("file", blob, "photo.jpg");
+
+      const res = await fetch(`/api/v1/photos/${photoId}/analyze`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Analysis failed");
+      const analysis = await res.json();
+      setPhotoAnalysis((prev) => ({ ...prev, [photoId]: analysis }));
+      showToast("AI defect analysis complete");
+    } catch (err) {
+      showToast("AI analysis failed", "error");
+    } finally {
+      setAnalyzingPhotoId(null);
+    }
+  }
+
+  async function handleAddObservation(areaId: string) {
+    const text = newObsText[areaId];
+    if (!text || !text.trim()) return;
+    try {
+      await api.post("/observations", {
+        inspection_area_id: areaId,
+        observation_type: "text",
+        observation_text: text.trim(),
+      });
+      setNewObsText((prev) => ({ ...prev, [areaId]: "" }));
+      showToast("Observation added");
+      if (selectedInspection) fetchMedia(selectedInspection.id);
+    } catch (err) {
+      showToast((err as ApiError).detail || "Failed to add observation", "error");
     }
   }
 
@@ -294,20 +383,107 @@ export default function InspectionsPage() {
 
         {/* Photos Tab */}
         {activeTab === "photos" && (
-          <EmptyState
-            icon="📷"
-            title="Photos"
-            description="Photo management is handled by the media service. Photos will appear here once uploaded."
-          />
+          <div>
+            {mediaLoading ? (
+              <div className="text-center py-12 text-text-muted">Loading photos...</div>
+            ) : mediaData.length === 0 ? (
+              <EmptyState icon="📷" title="No inspection areas" description="Add areas first to upload photos" />
+            ) : (
+              <div className="space-y-6">
+                {mediaData.map((item) => (
+                  <Card key={item.area_id}>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="font-bold text-text-primary">{item.area_name}</h3>
+                      <label className="bg-brand-500 text-white text-xs px-3 py-1.5 rounded-lg cursor-pointer hover:bg-brand-600 font-medium">
+                        {uploadingPhotoAreaId === item.area_id ? "Uploading..." : "+ Upload Photo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) handlePhotoUpload(item.area_id, e.target.files[0]);
+                          }}
+                        />
+                      </label>
+                    </div>
+                    {item.photos.length === 0 ? (
+                      <p className="text-xs text-text-muted">No photos for this area yet.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        {item.photos.map((p: any) => (
+                          <div key={p.id} className="border border-border rounded-lg overflow-hidden bg-gray-50">
+                            <img src={p.photo_url} alt="Defect" className="w-full h-40 object-cover" />
+                            <div className="p-2.5">
+                              <button
+                                onClick={() => handleAnalyzePhoto(p.id, p.photo_url)}
+                                disabled={analyzingPhotoId === p.id}
+                                className="w-full bg-indigo-100 text-indigo-700 text-xs font-semibold py-1.5 rounded-md hover:bg-indigo-200"
+                              >
+                                {analyzingPhotoId === p.id ? "Analyzing AI..." : "🤖 AI Vision Analysis"}
+                              </button>
+                              {photoAnalysis[p.id] && (
+                                <div className="mt-2 text-xs bg-white p-2 rounded border border-indigo-100">
+                                  <p className="font-bold text-indigo-900">{photoAnalysis[p.id].defect_type || "Defect Detected"}</p>
+                                  <p className="text-gray-600 mt-0.5">{photoAnalysis[p.id].summary}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Observations Tab */}
         {activeTab === "observations" && (
-          <EmptyState
-            icon="📝"
-            title="Observations"
-            description="Text and voice observations will appear here once created through the inspection workflow."
-          />
+          <div>
+            {mediaLoading ? (
+              <div className="text-center py-12 text-text-muted">Loading observations...</div>
+            ) : mediaData.length === 0 ? (
+              <EmptyState icon="📝" title="No inspection areas" description="Add areas first to record observations" />
+            ) : (
+              <div className="space-y-6">
+                {mediaData.map((item) => (
+                  <Card key={item.area_id}>
+                    <h3 className="font-bold text-text-primary mb-3">{item.area_name}</h3>
+                    <div className="flex gap-2 mb-4">
+                      <input
+                        placeholder="Add text observation..."
+                        value={newObsText[item.area_id] || ""}
+                        onChange={(e) => setNewObsText({ ...newObsText, [item.area_id]: e.target.value })}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddObservation(item.area_id)}
+                        className="flex-1 px-3 py-2 border border-border rounded-lg text-xs outline-none focus:border-brand-500"
+                      />
+                      <Button size="sm" onClick={() => handleAddObservation(item.area_id)}>Add Note</Button>
+                    </div>
+
+                    {item.observations.length === 0 ? (
+                      <p className="text-xs text-text-muted">No observations recorded.</p>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {item.observations.map((obs: any) => (
+                          <div key={obs.id} className="py-2 text-xs">
+                            <span className="font-semibold uppercase text-brand-600 mr-2">[{obs.observation_type}]</span>
+                            <span className="text-text-primary">{obs.observation_text || "Voice note recorded"}</span>
+                            {obs.transcription && (
+                              <p className="mt-1 text-indigo-700 bg-indigo-50 p-2 rounded">
+                                🎙️ Transcript: {obs.transcription.text}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     );
