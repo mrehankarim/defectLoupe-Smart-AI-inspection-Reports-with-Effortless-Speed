@@ -35,6 +35,7 @@ import {
   Sparkles,
   ArrowRight,
   Trash2,
+  Edit2,
   Image as ImageIcon,
 } from "lucide-react-native";
 
@@ -56,6 +57,12 @@ export const InspectionDetailScreen: React.FC<{
   const [showAddAreaModal, setShowAddAreaModal] = useState(false);
   const [newAreaName, setNewAreaName] = useState("");
   const [addingArea, setAddingArea] = useState(false);
+
+  // Edit Area modal
+  const [showEditAreaModal, setShowEditAreaModal] = useState(false);
+  const [editingArea, setEditingArea] = useState<InspectionArea | null>(null);
+  const [editAreaName, setEditAreaName] = useState("");
+  const [updatingArea, setUpdatingArea] = useState(false);
 
   // State transitions
   const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -115,6 +122,22 @@ export const InspectionDetailScreen: React.FC<{
       Alert.alert("Error", getErrorMessage(err));
     } finally {
       setAddingArea(false);
+    }
+  };
+
+  const handleUpdateArea = async () => {
+    if (!editingArea || !editAreaName.trim()) return;
+    setUpdatingArea(true);
+    try {
+      await coreService.updateArea(editingArea.id, editAreaName.trim());
+      setShowEditAreaModal(false);
+      setEditingArea(null);
+      setEditAreaName("");
+      loadInspectionData();
+    } catch (err) {
+      Alert.alert("Error", getErrorMessage(err));
+    } finally {
+      setUpdatingArea(false);
     }
   };
 
@@ -396,12 +419,26 @@ export const InspectionDetailScreen: React.FC<{
                         </Text>
                       </View>
 
-                      <TouchableOpacity
-                        onPress={() => handleDeleteArea(area.id, area.name)}
-                        style={styles.deleteAreaBtn}
-                      >
-                        <Trash2 size={15} color={colors.danger} />
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setEditingArea(area);
+                            setEditAreaName(area.name);
+                            setShowEditAreaModal(true);
+                          }}
+                          style={styles.deleteAreaBtn}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Edit2 size={15} color={colors.accent} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleDeleteArea(area.id, area.name)}
+                          style={styles.deleteAreaBtn}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Trash2 size={15} color={colors.danger} />
+                        </TouchableOpacity>
+                      </View>
                     </View>
 
                     <View style={styles.areaBottomRow}>
@@ -532,6 +569,47 @@ export const InspectionDetailScreen: React.FC<{
                 title="Create Area"
                 onPress={handleAddArea}
                 loading={addingArea}
+                size="sm"
+              />
+            </View>
+          </GlassCard>
+        </View>
+      </Modal>
+
+      {/* Edit Area Modal */}
+      <Modal
+        visible={showEditAreaModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowEditAreaModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <GlassCard elevated style={styles.modalCard}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              Edit Walkthrough Zone
+            </Text>
+            <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>
+              Update room or area name
+            </Text>
+
+            <GlassInput
+              placeholder="e.g. Master Bedroom"
+              value={editAreaName}
+              onChangeText={setEditAreaName}
+              autoFocus
+            />
+
+            <View style={styles.modalActions}>
+              <GlassButton
+                title="Cancel"
+                onPress={() => setShowEditAreaModal(false)}
+                variant="outline"
+                size="sm"
+              />
+              <GlassButton
+                title="Save Changes"
+                onPress={handleUpdateArea}
+                loading={updatingArea}
                 size="sm"
               />
             </View>

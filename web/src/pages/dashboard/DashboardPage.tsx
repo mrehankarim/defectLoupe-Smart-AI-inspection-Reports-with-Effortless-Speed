@@ -43,7 +43,7 @@ export default function DashboardPage() {
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={() => navigate('/inspections')}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
             type="button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,7 +65,7 @@ export default function DashboardPage() {
       </div>
 
       {/* System Status Banner */}
-      <div className="glass-panel rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-indigo-500/10 dark:from-emerald-950/40 dark:to-slate-900/80">
+      <div className="glass-panel rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs border-emerald-500/30 bg-linear-to-r from-emerald-500/10 via-teal-500/5 to-indigo-500/10 dark:from-emerald-950/40 dark:to-slate-900/80">
         <div className="flex items-center gap-3">
           <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,7 +172,7 @@ export default function DashboardPage() {
           </div>
 
           {!stats?.inspections_by_status || Object.keys(stats.inspections_by_status).length === 0 ? (
-            <div className="p-8 text-center rounded-2xl bg-gradient-to-b from-slate-50 to-indigo-50/30 dark:from-slate-900/60 dark:to-slate-900/20 border border-slate-200 dark:border-slate-800">
+            <div className="p-8 text-center rounded-2xl bg-linear-to-b from-slate-50 to-indigo-50/30 dark:from-slate-900/60 dark:to-slate-900/20 border border-slate-200 dark:border-slate-800">
               <p className="text-sm text-slate-700 dark:text-slate-300 font-bold mb-3">No inspections recorded yet.</p>
               <button
                 onClick={() => navigate('/inspections')}

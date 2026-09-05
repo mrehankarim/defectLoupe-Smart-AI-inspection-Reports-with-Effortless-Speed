@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, buildQuery, ApiError } from "../../services/api";
 import { useToast } from "../../components/Layout";
@@ -69,13 +69,53 @@ export default function InspectionsPage() {
   const [createForm, setCreateForm] = useState({ property_id: "", title: "", notes: "" });
   const [properties, setProperties] = useState<Property[]>([]);
   const [newAreaName, setNewAreaName] = useState("");
-
   const [mediaData, setMediaData] = useState<any[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [uploadingPhotoAreaId, setUploadingPhotoAreaId] = useState<string | null>(null);
   const [analyzingPhotoId, setAnalyzingPhotoId] = useState<string | null>(null);
   const [photoAnalysis, setPhotoAnalysis] = useState<Record<string, any>>({});
   const [newObsText, setNewObsText] = useState<{ [areaId: string]: string }>({});
+
+  // Attachments when adding a new room
+  const [newAreaPhoto, setNewAreaPhoto] = useState<File | null>(null);
+  const [newAreaPhotoPreview, setNewAreaPhotoPreview] = useState<string | null>(null);
+  const [isRecordingNewAreaVoice, setIsRecordingNewAreaVoice] = useState(false);
+  const [newAreaAudioBlob, setNewAreaAudioBlob] = useState<Blob | null>(null);
+  const [newAreaAudioUrl, setNewAreaAudioUrl] = useState<string | null>(null);
+  const [newAreaVoiceText, setNewAreaVoiceText] = useState("");
+  const [newAreaVoiceDuration, setNewAreaVoiceDuration] = useState(0);
+  const [isCreatingArea, setIsCreatingArea] = useState(false);
+  const newAreaVoiceTimerRef = useRef<any>(null);
+  const newAreaMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const newAreaAudioChunksRef = useRef<BlobPart[]>([]);
+  const newAreaSpeechRecRef = useRef<any>(null);
+
+  // Dedicated Edit Area Modal state
+  const [editingArea, setEditingArea] = useState<Area | null>(null);
+  const [editAreaName, setEditAreaName] = useState("");
+  const [editAreaPhoto, setEditAreaPhoto] = useState<File | null>(null);
+  const [editAreaPhotoPreview, setEditAreaPhotoPreview] = useState<string | null>(null);
+  const [isRecordingEditVoice, setIsRecordingEditVoice] = useState(false);
+  const [editAreaAudioBlob, setEditAreaAudioBlob] = useState<Blob | null>(null);
+  const [editAreaAudioUrl, setEditAreaAudioUrl] = useState<string | null>(null);
+  const [editAreaVoiceText, setEditAreaVoiceText] = useState("");
+  const [editAreaVoiceDuration, setEditAreaVoiceDuration] = useState(0);
+  const [isSavingEditArea, setIsSavingEditArea] = useState(false);
+  const editAreaVoiceTimerRef = useRef<any>(null);
+  const editAreaMediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const editAreaAudioChunksRef = useRef<BlobPart[]>([]);
+  const editAreaSpeechRecRef = useRef<any>(null);
+
+  // Dedicated Safe Delete Confirmation Modal state
+  const [areaToDelete, setAreaToDelete] = useState<Area | null>(null);
+  const [isDeletingArea, setIsDeletingArea] = useState(false);
+
+  // Voice observation state (for Field Notes & Observations)
+  const [recordingAreaId, setRecordingAreaId] = useState<string | null>(null);
+  const [audioBlobForArea, setAudioBlobForArea] = useState<Record<string, Blob>>({});
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
+  const speechRecognitionRef = useRef<any>(null);
 
   const [reportStatus, setReportStatus] = useState<ReportStatusInfo | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -196,46 +236,369 @@ export default function InspectionsPage() {
     }
   }
 
+  // ── Handlers for Adding a Room with Attachments ──────────────────────
+  async function handleStartNewAreaVoice() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      newAreaAudioChunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) newAreaAudioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(newAreaAudioChunksRef.current, { type: mimeType });
+        setNewAreaAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setNewAreaAudioUrl(url);
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      recorder.start();
+      newAreaMediaRecorderRef.current = recorder;
+      setIsRecordingNewAreaVoice(true);
+      setNewAreaVoiceDuration(0);
+
+      newAreaVoiceTimerRef.current = setInterval(() => {
+        setNewAreaVoiceDuration((prev) => prev + 1);
+      }, 1000);
+
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.onresult = (e: any) => {
+          const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+          setNewAreaVoiceText(transcript);
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+        newAreaSpeechRecRef.current = recognition;
+      }
+      showToast("Recording room voice note... Speak now.", "info");
+    } catch {
+      showToast("Microphone access denied or unavailable", "error");
+    }
+  }
+
+  function handleStopNewAreaVoice() {
+    if (newAreaMediaRecorderRef.current && newAreaMediaRecorderRef.current.state !== "inactive") {
+      newAreaMediaRecorderRef.current.stop();
+    }
+    if (newAreaSpeechRecRef.current) {
+      try { newAreaSpeechRecRef.current.stop(); } catch {}
+    }
+    if (newAreaVoiceTimerRef.current) {
+      clearInterval(newAreaVoiceTimerRef.current);
+    }
+    setIsRecordingNewAreaVoice(false);
+    showToast("Room voice note captured!", "success");
+  }
+
+  function handleDiscardNewAreaVoice() {
+    if (newAreaAudioUrl) URL.revokeObjectURL(newAreaAudioUrl);
+    setNewAreaAudioBlob(null);
+    setNewAreaAudioUrl(null);
+    setNewAreaVoiceText("");
+    setNewAreaVoiceDuration(0);
+  }
+
+  function handleNewAreaPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
+      setNewAreaPhoto(file);
+      setNewAreaPhotoPreview(URL.createObjectURL(file));
+    }
+  }
+
+  function handleRemoveNewAreaPhoto() {
+    if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
+    setNewAreaPhoto(null);
+    setNewAreaPhotoPreview(null);
+  }
+
   async function handleAddArea() {
     if (!newAreaName.trim() || !selectedInspection) return;
+    setIsCreatingArea(true);
     try {
-      await api.post(`/inspections/${selectedInspection.id}/areas`, { name: newAreaName });
+      // 1. Create area
+      const createdArea = await api.post<Area>(`/inspections/${selectedInspection.id}/areas`, {
+        name: newAreaName.trim(),
+        display_order: areas.length + 1,
+      });
+
+      // 2. Upload photo if attached
+      if (newAreaPhoto && createdArea?.id) {
+        const photoFormData = new FormData();
+        photoFormData.append("file", newAreaPhoto);
+        await fetch(`/api/v1/areas/${createdArea.id}/photos`, {
+          method: "POST",
+          credentials: "include",
+          body: photoFormData,
+        });
+      }
+
+      // 3. Upload voice note or observation text if attached
+      if (createdArea?.id && (newAreaAudioBlob || newAreaVoiceText.trim())) {
+        if (newAreaAudioBlob) {
+          const obsFormData = new FormData();
+          obsFormData.append("area_id", createdArea.id);
+          const ext = newAreaAudioBlob.type.includes("webm") ? "webm" : "mp4";
+          obsFormData.append("audio", newAreaAudioBlob, `voice_obs_${Date.now()}.${ext}`);
+          if (newAreaVoiceText.trim()) {
+            obsFormData.append("observation_text", newAreaVoiceText.trim());
+          }
+          await api.upload("/observations", obsFormData);
+        } else if (newAreaVoiceText.trim()) {
+          await api.post("/observations", {
+            inspection_area_id: createdArea.id,
+            observation_type: "text",
+            observation_text: newAreaVoiceText.trim(),
+          });
+        }
+      }
+
+      // Reset form states
+      const addedName = newAreaName.trim();
       setNewAreaName("");
+      if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
+      setNewAreaPhoto(null);
+      setNewAreaPhotoPreview(null);
+      if (newAreaAudioUrl) URL.revokeObjectURL(newAreaAudioUrl);
+      setNewAreaAudioBlob(null);
+      setNewAreaAudioUrl(null);
+      setNewAreaVoiceText("");
+      setNewAreaVoiceDuration(0);
+
+      showToast(`Added room "${addedName}" successfully!`);
       fetchAreas(selectedInspection.id);
       fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to add area", "error");
+    } finally {
+      setIsCreatingArea(false);
     }
   }
 
-  async function handleDeleteArea(areaId: string) {
-    if (!confirm("Delete this area?")) return;
+  // ── Handlers for Editing a Room ──────────────────────────────────────
+  async function handleStartEditVoice() {
     try {
-      await api.delete(`/areas/${areaId}`);
-      if (selectedInspection) {
-        fetchAreas(selectedInspection.id);
-        fetchMedia(selectedInspection.id);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      editAreaAudioChunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) editAreaAudioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(editAreaAudioChunksRef.current, { type: mimeType });
+        setEditAreaAudioBlob(blob);
+        const url = URL.createObjectURL(blob);
+        setEditAreaAudioUrl(url);
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      recorder.start();
+      editAreaMediaRecorderRef.current = recorder;
+      setIsRecordingEditVoice(true);
+      setEditAreaVoiceDuration(0);
+
+      editAreaVoiceTimerRef.current = setInterval(() => {
+        setEditAreaVoiceDuration((prev) => prev + 1);
+      }, 1000);
+
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.onresult = (e: any) => {
+          const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+          setEditAreaVoiceText(transcript);
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+        editAreaSpeechRecRef.current = recognition;
       }
+      showToast("Recording observation voice note...", "info");
+    } catch {
+      showToast("Microphone access denied or unavailable", "error");
+    }
+  }
+
+  function handleStopEditVoice() {
+    if (editAreaMediaRecorderRef.current && editAreaMediaRecorderRef.current.state !== "inactive") {
+      editAreaMediaRecorderRef.current.stop();
+    }
+    if (editAreaSpeechRecRef.current) {
+      try { editAreaSpeechRecRef.current.stop(); } catch {}
+    }
+    if (editAreaVoiceTimerRef.current) {
+      clearInterval(editAreaVoiceTimerRef.current);
+    }
+    setIsRecordingEditVoice(false);
+    showToast("Voice observation recorded!", "success");
+  }
+
+  function handleDiscardEditVoice() {
+    if (editAreaAudioUrl) URL.revokeObjectURL(editAreaAudioUrl);
+    setEditAreaAudioBlob(null);
+    setEditAreaAudioUrl(null);
+    setEditAreaVoiceText("");
+    setEditAreaVoiceDuration(0);
+  }
+
+  function handleEditPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (editAreaPhotoPreview) URL.revokeObjectURL(editAreaPhotoPreview);
+      setEditAreaPhoto(file);
+      setEditAreaPhotoPreview(URL.createObjectURL(file));
+    }
+  }
+
+  function handleRemoveEditPhoto() {
+    if (editAreaPhotoPreview) URL.revokeObjectURL(editAreaPhotoPreview);
+    setEditAreaPhoto(null);
+    setEditAreaPhotoPreview(null);
+  }
+
+  async function handleSaveEditArea() {
+    if (!editingArea || !selectedInspection) return;
+    if (!editAreaName.trim()) {
+      showToast("Room name cannot be empty", "error");
+      return;
+    }
+    setIsSavingEditArea(true);
+    try {
+      // 1. Rename area if changed
+      if (editAreaName.trim() !== editingArea.name) {
+        await api.patch(`/inspections/${selectedInspection.id}/areas/${editingArea.id}`, {
+          name: editAreaName.trim(),
+        });
+      }
+
+      // 2. Upload photo if newly attached
+      if (editAreaPhoto) {
+        const photoFormData = new FormData();
+        photoFormData.append("file", editAreaPhoto);
+        await api.upload(`/areas/${editingArea.id}/photos`, photoFormData);
+      }
+
+      // 3. Upload voice note or observation text if newly attached
+      if (editAreaAudioBlob || editAreaVoiceText.trim()) {
+        if (editAreaAudioBlob) {
+          const obsFormData = new FormData();
+          obsFormData.append("area_id", editingArea.id);
+          const ext = editAreaAudioBlob.type.includes("webm") ? "webm" : "mp4";
+          obsFormData.append("audio", editAreaAudioBlob, `voice_obs_${Date.now()}.${ext}`);
+          if (editAreaVoiceText.trim()) {
+            obsFormData.append("observation_text", editAreaVoiceText.trim());
+          }
+          await api.upload("/observations", obsFormData);
+        } else if (editAreaVoiceText.trim()) {
+          await api.post("/observations", {
+            inspection_area_id: editingArea.id,
+            observation_type: "text",
+            observation_text: editAreaVoiceText.trim(),
+          });
+        }
+      }
+
+      showToast(`Updated room "${editAreaName.trim()}"`);
+      if (editAreaPhotoPreview) URL.revokeObjectURL(editAreaPhotoPreview);
+      if (editAreaAudioUrl) URL.revokeObjectURL(editAreaAudioUrl);
+      setEditingArea(null);
+      setEditAreaPhoto(null);
+      setEditAreaPhotoPreview(null);
+      setEditAreaAudioBlob(null);
+      setEditAreaAudioUrl(null);
+      setEditAreaVoiceText("");
+      setEditAreaVoiceDuration(0);
+
+      fetchAreas(selectedInspection.id);
+      fetchMedia(selectedInspection.id);
+    } catch (err) {
+      showToast((err as ApiError).detail || "Failed to update room", "error");
+    } finally {
+      setIsSavingEditArea(false);
+    }
+  }
+
+  // ── Safe Delete Handler (no flaky window.confirm) ────────────────────
+  async function handleConfirmDeleteArea() {
+    if (!areaToDelete || !selectedInspection) return;
+    setIsDeletingArea(true);
+    try {
+      await api.delete(`/inspections/${selectedInspection.id}/areas/${areaToDelete.id}`);
+      showToast(`Deleted room "${areaToDelete.name}"`);
+      const deletedId = areaToDelete.id;
+      setAreaToDelete(null);
+      if (editingArea?.id === deletedId) {
+        setEditingArea(null);
+      }
+      fetchAreas(selectedInspection.id);
+      fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to delete area", "error");
+    } finally {
+      setIsDeletingArea(false);
     }
   }
 
-  async function handleMoveArea(index: number, direction: "up" | "down") {
-    if (!selectedInspection) return;
-    const newOrder = [...areas];
-    const swapIdx = direction === "up" ? index - 1 : index + 1;
-    if (swapIdx < 0 || swapIdx >= newOrder.length) return;
-    [newOrder[index], newOrder[swapIdx]] = [newOrder[swapIdx], newOrder[index]];
+  async function handleStartVoiceObservation(areaId: string) {
     try {
-      await api.put(`/inspections/${selectedInspection.id}/areas/reorder`, {
-        area_ids: newOrder.map((a) => a.id),
-      });
-      fetchAreas(selectedInspection.id);
-    } catch (err) {
-      showToast((err as ApiError).detail || "Reorder failed", "error");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        setAudioBlobForArea((prev) => ({ ...prev, [areaId]: blob }));
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setRecordingAreaId(areaId);
+
+      // Real-time speech transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = "en-US";
+        recognition.onresult = (e: any) => {
+          const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join("");
+          setNewObsText((prev) => ({ ...prev, [areaId]: transcript }));
+        };
+        recognition.onerror = () => {};
+        recognition.start();
+        speechRecognitionRef.current = recognition;
+      }
+      showToast("Listening... Speak your observation notes.", "info");
+    } catch {
+      showToast("Microphone access denied or unavailable", "error");
     }
   }
+
+  function handleStopVoiceObservation(areaId: string) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    if (speechRecognitionRef.current) {
+      try { speechRecognitionRef.current.stop(); } catch {}
+    }
+    setRecordingAreaId(null);
+    showToast("Voice recorded! Click 'Save Note' to save.", "success");
+  }
+
+
 
   async function handleApplyTemplate(templateName: string) {
     if (!selectedInspection) return;
@@ -314,16 +677,41 @@ export default function InspectionsPage() {
   }
 
   async function handleAddObservation(areaId: string) {
-    const text = newObsText[areaId];
-    if (!text || !text.trim()) return;
+    const text = (newObsText[areaId] || "").trim();
+    const recordedBlob = audioBlobForArea[areaId];
+
+    if (!text && !recordedBlob) {
+      showToast("Please type or speak an observation note first", "info");
+      return;
+    }
+
     try {
-      await api.post("/observations", {
-        inspection_area_id: areaId,
-        observation_type: "text",
-        observation_text: text.trim(),
-      });
+      if (recordedBlob) {
+        // Multipart voice observation to /api/v1/observations
+        const formData = new FormData();
+        formData.append("area_id", areaId);
+        const ext = recordedBlob.type.includes("webm") ? "webm" : "mp4";
+        formData.append("audio", recordedBlob, `voice_obs_${Date.now()}.${ext}`);
+        if (text) formData.append("observation_text", text);
+
+        await api.upload("/observations", formData);
+        showToast("Voice observation & audio recording saved!");
+        setAudioBlobForArea((prev) => {
+          const next = { ...prev };
+          delete next[areaId];
+          return next;
+        });
+      } else {
+        // Text observation to /api/v1/observations
+        await api.post("/observations", {
+          inspection_area_id: areaId,
+          observation_type: "text",
+          observation_text: text,
+        });
+        showToast("Field note saved!");
+      }
+
       setNewObsText((prev) => ({ ...prev, [areaId]: "" }));
-      showToast("Observation added");
       if (selectedInspection) fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to add observation", "error");
@@ -406,21 +794,310 @@ export default function InspectionsPage() {
     }
   }
 
+  async function handleResetReport() {
+    if (!selectedInspection) return;
+    try {
+      await api.post(`/inspections/${selectedInspection.id}/report/reset`);
+      showToast("Report status reset. You can now generate a fresh report.");
+    } catch {
+      showToast("Report generation cancelled locally.");
+    } finally {
+      setIsGeneratingReport(false);
+      fetchReportStatus(selectedInspection.id);
+    }
+  }
+
   function handleExportCSV() {
     const q = buildQuery({ status: statusFilter || null });
     window.open(`/api/v1/inspections/export/csv${q}`, "_blank");
   }
 
   const PROPERTY_IMAGES = [
-    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1605146769289-440113cc3d00?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=800&q=80",
   ];
+
+  // Keyword-to-defect-image map for area cards
+  const AREA_DEFECT_IMAGES: Record<string, string> = {
+    roof:       "https://images.unsplash.com/photo-1632823469850-2f77dd9c7f93?auto=format&fit=crop&w=400&q=80",
+    attic:      "https://images.unsplash.com/photo-1632823469850-2f77dd9c7f93?auto=format&fit=crop&w=400&q=80",
+    foundation: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=400&q=80",
+    basement:   "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=400&q=80",
+    kitchen:    "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=400&q=80",
+    bathroom:   "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=400&q=80",
+    electrical: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80",
+    hvac:       "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=80",
+    plumbing:   "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=400&q=80",
+    garage:     "https://images.unsplash.com/photo-1558618047-f8f65ea06b23?auto=format&fit=crop&w=400&q=80",
+    window:     "https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=400&q=80",
+    door:       "https://images.unsplash.com/photo-1509644851169-2acc08aa25b5?auto=format&fit=crop&w=400&q=80",
+    floor:      "https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=400&q=80",
+    wall:       "https://images.unsplash.com/photo-1604754742629-3e5728249d73?auto=format&fit=crop&w=400&q=80",
+    exterior:   "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=400&q=80",
+    lobby:      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80",
+    fire:       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=400&q=80",
+    default:    "https://images.unsplash.com/photo-1581092921461-eab62e97a780?auto=format&fit=crop&w=400&q=80",
+  };
+
+  function getAreaImage(name: string): string {
+    const lower = name.toLowerCase();
+    for (const [key, url] of Object.entries(AREA_DEFECT_IMAGES)) {
+      if (key !== "default" && lower.includes(key)) return url;
+    }
+    return AREA_DEFECT_IMAGES.default;
+  }
+
+  /* ── Modals for Editing and Deleting Areas ──────────────────────── */
+  function renderAreaModals() {
+    return (
+      <>
+        {/* Edit Room Modal */}
+        {editingArea && (
+          <Modal title={`Edit Room: ${editingArea.name}`} onClose={() => setEditingArea(null)} wide>
+            <div className="space-y-5">
+              {/* Room Name */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Room / Area Name:
+                </label>
+                <input
+                  type="text"
+                  value={editAreaName}
+                  onChange={(e) => setEditAreaName(e.target.value)}
+                  placeholder="e.g. Master Bedroom, Guest Bathroom..."
+                  className="w-full px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500 shadow-sm"
+                />
+              </div>
+
+              {/* Photos in this room */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                    Defect Photos in this Room
+                  </span>
+                  <label className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-1">
+                    <span>+ Add / Replace Photo</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleEditPhotoSelect}
+                    />
+                  </label>
+                </div>
+
+                {/* Newly selected photo preview */}
+                {editAreaPhotoPreview && (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={editAreaPhotoPreview}
+                        alt="New upload"
+                        className="w-12 h-12 object-cover rounded-lg border border-emerald-300 dark:border-emerald-700 shrink-0"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-emerald-800 dark:text-emerald-200">
+                          New Photo Selected (will upload on save)
+                        </p>
+                        <p className="text-[10px] text-emerald-600 font-mono">
+                          {editAreaPhoto?.name} • {editAreaPhoto ? Math.round(editAreaPhoto.size / 1024) : 0} KB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveEditPhoto}
+                      className="text-emerald-700 dark:text-emerald-300 hover:text-rose-600 p-1 text-sm font-bold cursor-pointer"
+                    >
+                      &times; Remove
+                    </button>
+                  </div>
+                )}
+
+                {/* Existing room photos */}
+                {(() => {
+                  const roomMedia = (mediaData || []).find((m: any) => m.area_id === editingArea.id);
+                  const existingPhotos = roomMedia?.photos || [];
+                  if (existingPhotos.length === 0 && !editAreaPhotoPreview) {
+                    return (
+                      <p className="text-xs text-slate-400 italic py-2">
+                        No photos attached to this room yet. Click "+ Add / Replace Photo" above to attach one.
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      {existingPhotos.map((p: any) => (
+                        <div key={p.id} className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 aspect-video bg-slate-900">
+                          <img src={p.photo_url} alt="Room photo" className="w-full h-full object-cover" />
+                          <span className="absolute bottom-1 left-1 px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-black/75 text-white">
+                            Attached
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Voice Observations in this room */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide">
+                    Voice Note & Observations
+                  </span>
+                  <button
+                    type="button"
+                    onClick={isRecordingEditVoice ? handleStopEditVoice : handleStartEditVoice}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                      isRecordingEditVoice
+                        ? "bg-rose-500 text-white animate-pulse"
+                        : "text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/40"
+                    }`}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <span>
+                      {isRecordingEditVoice
+                        ? `Stop (${Math.floor(editAreaVoiceDuration / 60)}:${(editAreaVoiceDuration % 60).toString().padStart(2, "0")})`
+                        : "+ Record Voice Note"}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Live recording indicator */}
+                {isRecordingEditVoice && (
+                  <div className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2 animate-pulse">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="font-semibold">Recording voice note for this room... Speak now. Click "Stop" when done.</span>
+                  </div>
+                )}
+
+                {/* Audio preview if newly recorded */}
+                {editAreaAudioBlob && !isRecordingEditVoice && (
+                  <div className="flex items-center justify-between p-2 px-3 rounded-xl border border-purple-200 dark:border-purple-800/70 bg-purple-50/70 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300">
+                    <div className="flex items-center gap-2">
+                      <span>🎙️</span>
+                      <div>
+                        <p className="text-xs font-bold">New Voice Note Captured</p>
+                        <p className="text-[10px] text-purple-500 font-mono">
+                          {Math.round(editAreaAudioBlob.size / 1024)} KB audio (will save on submit)
+                        </p>
+                      </div>
+                    </div>
+                    {editAreaAudioUrl && (
+                      <audio controls src={editAreaAudioUrl} className="h-6 w-36" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDiscardEditVoice}
+                      className="text-purple-400 hover:text-rose-500 p-1 font-bold cursor-pointer"
+                    >
+                      &times; Discard
+                    </button>
+                  </div>
+                )}
+
+                {/* Field note input */}
+                <input
+                  type="text"
+                  value={editAreaVoiceText}
+                  onChange={(e) => setEditAreaVoiceText(e.target.value)}
+                  placeholder="Add or update field observation note for this room..."
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  onClick={() => {
+                    setAreaToDelete(editingArea);
+                  }}
+                >
+                  Delete Room
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setEditingArea(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="success"
+                    size="sm"
+                    disabled={isSavingEditArea || !editAreaName.trim()}
+                    onClick={handleSaveEditArea}
+                  >
+                    {isSavingEditArea ? "Saving Changes..." : "Save Changes"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        )}
+
+        {/* Delete Room Confirmation Modal (Unblockable & Safe) */}
+        {areaToDelete && (
+          <Modal title="Delete Inspection Room" onClose={() => setAreaToDelete(null)}>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 text-rose-800 dark:text-rose-200 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-sm">
+                  <svg className="w-5 h-5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  Delete Room & Attached Data
+                </div>
+                <p className="text-xs text-rose-700 dark:text-rose-300 leading-relaxed">
+                  Are you sure you want to permanently delete{" "}
+                  <strong className="font-bold text-slate-900 dark:text-slate-100 underline decoration-rose-500">
+                    {areaToDelete.name}
+                  </strong>
+                  ? This will remove this walkthrough room and all its attached defect photos, voice notes, and AI findings from this inspection.
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setAreaToDelete(null)}
+                  className="flex-1"
+                  disabled={isDeletingArea}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="danger"
+                  onClick={handleConfirmDeleteArea}
+                  className="flex-1"
+                  disabled={isDeletingArea}
+                >
+                  {isDeletingArea ? "Deleting Room..." : "Yes, Delete Room"}
+                </Button>
+              </div>
+            </div>
+          </Modal>
+        )}
+      </>
+    );
+  }
 
   /* ── Detail View ──────────────────────────────────────────────── */
   if (selectedInspection) {
@@ -430,7 +1107,8 @@ export default function InspectionsPage() {
     const coverImage = PROPERTY_IMAGES[propIndex >= 0 ? propIndex % PROPERTY_IMAGES.length : 0];
 
     return (
-      <div className="space-y-6">
+      <>
+        <div className="space-y-6">
         <button
           onClick={() => { setSelectedInspection(null); setActiveTab("areas"); }}
           className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1.5 text-xs font-bold bg-transparent border-none cursor-pointer"
@@ -476,22 +1154,31 @@ export default function InspectionsPage() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full md:w-auto">
             {/* Report Actions */}
             {isGeneratingReport || reportStatus?.status === "queued" || reportStatus?.status === "processing" ? (
-              <button
-                disabled
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600/80 cursor-wait text-center flex items-center justify-center gap-2 shadow-sm animate-pulse"
-              >
-                <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                </svg>
-                Generating PDF Report...
-              </button>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  disabled
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600/80 cursor-wait text-center flex items-center justify-center gap-2 shadow-sm animate-pulse"
+                >
+                  <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  Generating PDF Report...
+                </button>
+                <button
+                  onClick={handleResetReport}
+                  className="px-2.5 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/40 border border-rose-200 dark:border-rose-800 cursor-pointer transition-colors"
+                  title="Cancel or reset stuck report generation"
+                >
+                  Reset
+                </button>
+              </div>
             ) : reportStatus?.status === "ready" ? (
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   onClick={handleDownloadPdf}
                   disabled={downloadingPdf}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
                   title="Download inspection PDF report"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -543,7 +1230,7 @@ export default function InspectionsPage() {
             ) : (
               <button
                 onClick={handleGenerateReport}
-                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -569,12 +1256,12 @@ export default function InspectionsPage() {
 
         {/* Navigation Tabs */}
         <div className="border-b border-slate-200 dark:border-slate-800">
-          <div className="flex gap-6">
+          <div className="flex gap-6 overflow-x-auto custom-scrollbar pb-1">
             {(["areas", "photos", "observations"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-3 text-xs sm:text-sm font-bold border-b-2 capitalize transition-colors bg-transparent cursor-pointer flex items-center gap-2 ${
+                className={`pb-3 text-xs sm:text-sm font-bold border-b-2 capitalize transition-colors bg-transparent cursor-pointer flex items-center gap-2 shrink-0 ${
                   activeTab === tab
                     ? "border-emerald-500 text-emerald-600 dark:text-emerald-400"
                     : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -590,42 +1277,191 @@ export default function InspectionsPage() {
 
         {/* Areas Tab */}
         {activeTab === "areas" && (
-          <div className="space-y-4">
-            {/* Quick Room Add Toolbar */}
-            <div className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
-              <div className="flex gap-2">
-                <input
-                  placeholder="Type custom room name (e.g. Master Bedroom, Attic, Garage)..."
-                  value={newAreaName}
-                  onChange={(e) => setNewAreaName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddArea()}
-                  className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-500"
-                />
-                <Button variant="success" onClick={handleAddArea} disabled={!newAreaName.trim()}>
-                  + Add Room
-                </Button>
+          <div className="tab-scroll-container custom-scrollbar space-y-4">
+            {/* Room Add Toolbar with Photo and Voice Capture */}
+            <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-4 shadow-sm">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  {/* Text input */}
+                  <input
+                    placeholder="Type room name (e.g. Master Bedroom, Kitchen, Roof)..."
+                    value={newAreaName}
+                    onChange={(e) => setNewAreaName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !isRecordingNewAreaVoice && handleAddArea()}
+                    className="flex-1 min-w-50 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-500 shadow-sm"
+                  />
+
+                  <Button
+                    variant="success"
+                    onClick={handleAddArea}
+                    disabled={!newAreaName.trim() || isCreatingArea}
+                    className="shrink-0"
+                  >
+                    {isCreatingArea ? (
+                      <span className="flex items-center gap-1.5">
+                        <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                        </svg>
+                        Adding...
+                      </span>
+                    ) : newAreaPhoto && newAreaAudioBlob ? (
+                      "+ Add Room (Photo & Voice)"
+                    ) : newAreaPhoto ? (
+                      "+ Add Room (with Photo)"
+                    ) : newAreaAudioBlob ? (
+                      "+ Add Room (with Voice)"
+                    ) : (
+                      "+ Add Room"
+                    )}
+                  </Button>
+                </div>
+
+                {/* Attachments Section: Picture & Voice Recording */}
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  {/* Photo Attachment Button */}
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:border-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer shadow-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                      <circle cx="12" cy="13" r="4" />
+                    </svg>
+                    <span>{newAreaPhoto ? "Change Picture" : "Attach Picture"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleNewAreaPhotoSelect}
+                    />
+                  </label>
+
+                  {/* Voice Recording Button */}
+                  <button
+                    type="button"
+                    onClick={isRecordingNewAreaVoice ? handleStopNewAreaVoice : handleStartNewAreaVoice}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                      isRecordingNewAreaVoice
+                        ? "bg-rose-500 border-rose-500 text-white animate-pulse"
+                        : "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60"
+                    }`}
+                    title={isRecordingNewAreaVoice ? "Click to stop recording" : "Record voice observation for this room"}
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                    <span>
+                      {isRecordingNewAreaVoice
+                        ? `Stop Rec (${Math.floor(newAreaVoiceDuration / 60)}:${(newAreaVoiceDuration % 60).toString().padStart(2, "0")})`
+                        : newAreaAudioBlob
+                        ? "Re-record Voice"
+                        : "Record Voice Note"}
+                    </span>
+                  </button>
+
+                  <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
+                    Attach photos & voice notes directly to this room
+                  </span>
+                </div>
+
+                {/* Live Recording Indicator */}
+                {isRecordingNewAreaVoice && (
+                  <div className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2 animate-pulse">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="font-semibold">
+                      Listening to observation... Speak now. Click "Stop Rec" when done.
+                    </span>
+                  </div>
+                )}
+
+                {/* Attached Media Previews */}
+                {(newAreaPhotoPreview || newAreaAudioBlob || newAreaVoiceText) && (
+                  <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+                    <div className="text-[11px] font-mono font-bold uppercase text-slate-400">
+                      Attached with this room:
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Attached Photo Preview */}
+                      {newAreaPhotoPreview && (
+                        <div className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 shadow-xs">
+                          <img
+                            src={newAreaPhotoPreview}
+                            alt="Room specimen"
+                            className="w-10 h-10 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-32.5">
+                              {newAreaPhoto?.name}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-mono">
+                              {newAreaPhoto ? `${Math.round(newAreaPhoto.size / 1024)} KB` : ""}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleRemoveNewAreaPhoto}
+                            className="text-slate-400 hover:text-rose-600 p-1 rounded-md cursor-pointer ml-1"
+                            title="Remove picture"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Attached Voice Note Preview */}
+                      {newAreaAudioBlob && !isRecordingNewAreaVoice && (
+                        <div className="flex items-center gap-2.5 p-2 px-3 rounded-xl border border-purple-200 dark:border-purple-800/70 bg-purple-50/70 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-xs">
+                          <span className="text-sm">🎙️</span>
+                          <div>
+                            <p className="text-xs font-bold">Voice Note Ready</p>
+                            <p className="text-[10px] text-purple-500 font-mono">
+                              {Math.round(newAreaAudioBlob.size / 1024)} KB audio
+                            </p>
+                          </div>
+                          {newAreaAudioUrl && (
+                            <audio controls src={newAreaAudioUrl} className="h-6 w-32 max-w-35" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={handleDiscardNewAreaVoice}
+                            className="text-purple-400 hover:text-rose-500 p-1 cursor-pointer font-bold"
+                            title="Discard audio"
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Speech / Note Preview Field */}
+                    {(newAreaVoiceText || isRecordingNewAreaVoice) && (
+                      <div className="pt-1">
+                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
+                          Observation Field Note:
+                        </label>
+                        <input
+                          type="text"
+                          value={newAreaVoiceText}
+                          onChange={(e) => setNewAreaVoiceText(e.target.value)}
+                          placeholder="Type or review speech-transcribed notes for this room..."
+                          className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Intuitive Single-Click Room Presets */}
-              <div className="flex gap-1.5 flex-wrap items-center pt-1">
+              <div className="flex gap-1.5 flex-wrap items-center pt-2 border-t border-slate-200 dark:border-slate-800">
                 <span className="text-xs font-mono font-bold text-slate-500 uppercase">Quick Add:</span>
                 {["Kitchen", "Bathroom", "Foundation / Basement", "Roof & Attic", "Electrical Panel", "HVAC"].map((room) => (
                   <button
                     key={room}
-                    onClick={async () => {
-                      try {
-                        await api.post(`/inspections/${selectedInspection.id}/areas`, {
-                          name: room,
-                          display_order: areas.length + 1,
-                        });
-                        showToast(`Added ${room}`);
-                        fetchAreas(selectedInspection.id);
-                        fetchMedia(selectedInspection.id);
-                      } catch {
-                        showToast(`Failed to add ${room}`, "error");
-                      }
+                    onClick={() => {
+                      setNewAreaName(room);
                     }}
                     className="px-2.5 py-1 rounded-lg text-xs font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer"
+                    title={`Fill "${room}" into room name field`}
                   >
                     + {room}
                   </button>
@@ -651,47 +1487,80 @@ export default function InspectionsPage() {
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {areas.map((area, idx) => (
+                {areas.map((area, idx) => {
+                  const areaImg = getAreaImage(area.name);
+                  const roomMedia = (mediaData || []).find((m: any) => m.area_id === area.id);
+                  const photoCount = roomMedia?.photos?.length || 0;
+                  const obsCount = roomMedia?.observations?.length || 0;
+
+                  return (
                   <div
                     key={area.id}
-                    className="flex justify-between items-center border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl px-4 py-3 hover:border-emerald-500/40 transition-colors shadow-sm"
+                    className="flex items-center border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl overflow-hidden hover:border-emerald-500/40 transition-colors shadow-sm gap-0"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold flex items-center justify-center">
+                    {/* Defect thumbnail */}
+                    <div className="w-16 h-16 shrink-0 overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                      <img src={areaImg} alt={area.name} className="w-full h-full object-cover" loading="lazy" />
+                      {photoCount > 0 && (
+                        <span className="absolute bottom-0 right-0 px-1 py-0.2 bg-black/75 text-white text-[9px] font-mono font-bold rounded-tl">
+                          {photoCount}📷
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-1 min-w-0 px-3 py-2">
+                      <span className="w-5 h-5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
                         {idx + 1}
                       </span>
-                      <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm">{area.name}</span>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm truncate block">
+                          {area.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {photoCount} photo(s) • {obsCount} note(s)
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
+
+                    <div className="flex items-center gap-1.5 shrink-0 pr-2.5">
                       <button
-                        onClick={() => handleMoveArea(idx, "up")}
-                        disabled={idx === 0}
-                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
-                        title="Move up"
+                        type="button"
+                        onClick={() => {
+                          setEditingArea(area);
+                          setEditAreaName(area.name);
+                          setEditAreaPhoto(null);
+                          setEditAreaPhotoPreview(null);
+                          setEditAreaAudioBlob(null);
+                          setEditAreaAudioUrl(null);
+                          setEditAreaVoiceText("");
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 border border-slate-200 dark:border-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Edit room, photo & voice notes"
                       >
-                        ▲
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        <span>Edit</span>
                       </button>
                       <button
-                        onClick={() => handleMoveArea(idx, "down")}
-                        disabled={idx === areas.length - 1}
-                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 disabled:opacity-20 cursor-pointer"
-                        title="Move down"
-                      >
-                        ▼
-                      </button>
-                      <button
-                        onClick={() => handleDeleteArea(area.id)}
-                        className="p-1 text-rose-400 hover:text-rose-600 ml-1 cursor-pointer text-xs"
+                        type="button"
+                        onClick={() => setAreaToDelete(area)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-transparent hover:border-rose-200 dark:hover:border-rose-900/50 cursor-pointer transition-colors"
                         title="Delete room"
                       >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="6" x2="6" y2="18" />
-                          <line x1="6" y1="6" x2="18" y2="18" />
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                         </svg>
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -699,7 +1568,7 @@ export default function InspectionsPage() {
 
         {/* Photos Tab */}
         {activeTab === "photos" && (
-          <div>
+          <div className="tab-scroll-container custom-scrollbar">
             {mediaLoading && displayAreas.length === 0 ? (
               <div className="text-center py-12 text-slate-500">Loading defect photos...</div>
             ) : displayAreas.length === 0 ? (
@@ -724,25 +1593,118 @@ export default function InspectionsPage() {
               <div className="space-y-6">
                 {displayAreas.map((item) => (
                   <div key={item.area_id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">{item.area_name}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm">
+                          <img
+                            src={getAreaImage(item.area_name)}
+                            alt={item.area_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">{item.area_name}</h3>
+                          <p className="text-xs text-slate-400">{item.photos.length} photo(s) captured</p>
+                        </div>
                       </div>
-                      <label className="bg-emerald-600 text-white text-xs px-3.5 py-1.5 rounded-xl cursor-pointer hover:bg-emerald-500 font-bold transition-colors">
-                        {uploadingPhotoAreaId === item.area_id ? "Uploading..." : "+ Upload Defect Photo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) handlePhotoUpload(item.area_id, e.target.files[0]);
+                      <div className="flex items-center gap-2 flex-wrap self-start sm:self-auto">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const foundArea = areas.find((a) => a.id === item.area_id) || { id: item.area_id, name: item.area_name, display_order: 0 };
+                            setEditingArea(foundArea);
+                            setEditAreaName(foundArea.name);
+                            setEditAreaPhoto(null);
+                            setEditAreaPhotoPreview(null);
+                            setEditAreaAudioBlob(null);
+                            setEditAreaAudioUrl(null);
+                            setEditAreaVoiceText("");
                           }}
-                        />
-                      </label>
+                          className="px-2.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title="Edit room, photo & voice notes"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const foundArea = areas.find((a) => a.id === item.area_id) || { id: item.area_id, name: item.area_name, display_order: 0 };
+                            setAreaToDelete(foundArea);
+                          }}
+                          className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shadow-xs"
+                          title="Delete room"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" /><path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                        <label className="bg-emerald-600 text-white text-xs px-3.5 py-2 rounded-xl cursor-pointer hover:bg-emerald-500 font-bold transition-colors flex items-center gap-1.5 shadow-sm">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          {uploadingPhotoAreaId === item.area_id ? "Uploading..." : "+ Upload Defect Photo"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) handlePhotoUpload(item.area_id, e.target.files[0]);
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     {item.photos.length === 0 ? (
-                      <p className="text-xs text-slate-500 py-2">No photos captured for this room yet.</p>
+                      <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 p-4 flex flex-col sm:flex-row items-center gap-4">
+                        <div className="relative w-full sm:w-44 h-28 rounded-xl overflow-hidden shrink-0 shadow-sm border border-slate-200 dark:border-slate-700 bg-slate-900">
+                          <img
+                            src={getAreaImage(item.area_name)}
+                            alt={item.area_name}
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded text-[9px] font-mono font-bold bg-black/75 text-white backdrop-blur-sm">
+                            {item.area_name} Specimen
+                          </span>
+                        </div>
+                        <div className="flex-1 space-y-2 text-center sm:text-left">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                              No defect photos uploaded yet for {item.area_name}
+                            </h4>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              Upload a photo of this area from your camera or files to detect structural defects, severity rating, and code remediation recommendations.
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 justify-center sm:justify-start">
+                            <label className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-sm">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                              </svg>
+                              Upload Photo for this Area
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) handlePhotoUpload(item.area_id, e.target.files[0]);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {item.photos.map((p: any) => (
@@ -807,7 +1769,7 @@ export default function InspectionsPage() {
 
         {/* Observations Tab */}
         {activeTab === "observations" && (
-          <div>
+          <div className="tab-scroll-container custom-scrollbar">
             {mediaLoading && displayAreas.length === 0 ? (
               <div className="text-center py-12 text-slate-500">Loading observations...</div>
             ) : displayAreas.length === 0 ? (
@@ -832,40 +1794,180 @@ export default function InspectionsPage() {
               <div className="space-y-6">
                 {displayAreas.map((item: any) => (
                   <Card key={item.area_id}>
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="font-bold text-slate-900 dark:text-slate-100">{item.area_name}</h3>
-                      <span className="text-xs text-slate-500">{(item.observations || []).length} observation(s)</span>
+                    <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 shadow-sm">
+                          <img
+                            src={getAreaImage(item.area_name)}
+                            alt={item.area_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-slate-100">{item.area_name}</h3>
+                          <span className="text-xs text-slate-400">{(item.observations || []).length} observation(s)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const foundArea = areas.find((a) => a.id === item.area_id) || { id: item.area_id, name: item.area_name, display_order: 0 };
+                            setEditingArea(foundArea);
+                            setEditAreaName(foundArea.name);
+                            setEditAreaPhoto(null);
+                            setEditAreaPhotoPreview(null);
+                            setEditAreaAudioBlob(null);
+                            setEditAreaAudioUrl(null);
+                            setEditAreaVoiceText("");
+                          }}
+                          className="px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title="Edit room, photo & voice notes"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const foundArea = areas.find((a) => a.id === item.area_id) || { id: item.area_id, name: item.area_name, display_order: 0 };
+                            setAreaToDelete(foundArea);
+                          }}
+                          className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors cursor-pointer shadow-xs"
+                          title="Delete room"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                            <path d="M10 11v6" /><path d="M14 11v6" />
+                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="flex gap-2 mb-4">
-                      <input
-                        placeholder={`Record field note for ${item.area_name}...`}
-                        value={newObsText[item.area_id] || ""}
-                        onChange={(e) => setNewObsText({ ...newObsText, [item.area_id]: e.target.value })}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddObservation(item.area_id)}
-                        className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
-                      />
-                      <Button size="sm" onClick={() => handleAddObservation(item.area_id)}>
-                        Save Note
-                      </Button>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <input
+                          placeholder={
+                            recordingAreaId === item.area_id
+                              ? `Listening to voice note for ${item.area_name}...`
+                              : `Type or speak field note for ${item.area_name}...`
+                          }
+                          value={newObsText[item.area_id] || ""}
+                          onChange={(e) => setNewObsText({ ...newObsText, [item.area_id]: e.target.value })}
+                          onKeyDown={(e) => e.key === "Enter" && handleAddObservation(item.area_id)}
+                          className="flex-1 min-w-45 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
+                        />
+
+                        {/* Voice Note Record button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (recordingAreaId === item.area_id) {
+                              handleStopVoiceObservation(item.area_id);
+                            } else {
+                              handleStartVoiceObservation(item.area_id);
+                            }
+                          }}
+                          className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 shadow-sm ${
+                            recordingAreaId === item.area_id
+                              ? "bg-rose-500 border-rose-500 text-white animate-pulse"
+                              : "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60"
+                          }`}
+                          title={recordingAreaId === item.area_id ? "Stop recording voice note" : "Record voice note for this room"}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                          </svg>
+                          {recordingAreaId === item.area_id ? "Stop Rec" : "Voice Note"}
+                        </button>
+
+                        <Button
+                          size="sm"
+                          variant="success"
+                          onClick={() => handleAddObservation(item.area_id)}
+                          disabled={!newObsText[item.area_id]?.trim() && !audioBlobForArea[item.area_id]}
+                        >
+                          Save Note
+                        </Button>
+                      </div>
+
+                      {/* Live Recording feedback */}
+                      {recordingAreaId === item.area_id && (
+                        <div className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2 animate-pulse">
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
+                          <span className="font-mono font-bold">Recording voice note live... Speak now. Click "Stop Rec" when done.</span>
+                        </div>
+                      )}
+
+                      {/* Audio captured ready badge */}
+                      {audioBlobForArea[item.area_id] && recordingAreaId !== item.area_id && (
+                        <div className="flex items-center justify-between text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 rounded-xl px-3.5 py-2">
+                          <div className="flex items-center gap-2">
+                            <span>🎙️ Audio recorded ({Math.round(audioBlobForArea[item.area_id].size / 1024)} KB) — will be attached as voice observation</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAudioBlobForArea((prev) => {
+                                const next = { ...prev };
+                                delete next[item.area_id];
+                                return next;
+                              });
+                            }}
+                            className="text-slate-400 hover:text-rose-500 cursor-pointer text-xs font-semibold"
+                            title="Discard audio"
+                          >
+                            &times; Discard
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      {(item.observations || []).map((obs: any) => (
-                        <div key={obs.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-start justify-between gap-3 text-xs">
-                          <div>
-                            <span className="inline-block px-1.5 py-0.5 rounded font-mono text-[9px] uppercase bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold mr-2">
-                              {obs.observation_type}
-                            </span>
-                            <span className="text-slate-800 dark:text-slate-200 font-medium">
-                              {obs.observation_text || "[Audio Observation Recorded]"}
-                            </span>
-                          </div>
-                          <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                            {new Date(obs.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </span>
-                        </div>
-                      ))}
+                      {(item.observations || []).length === 0 ? (
+                        <p className="text-xs text-slate-400 italic py-2">No observations recorded for this room yet.</p>
+                      ) : (
+                        (item.observations || []).map((obs: any) => {
+                          const isVoice = obs.observation_type === "voice" || Boolean(obs.audio_url);
+                          return (
+                            <div key={obs.id} className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                              <div className="space-y-1.5 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {isVoice ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-[9px] uppercase font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                      </svg>
+                                      Voice Note
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono text-[9px] uppercase font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                      Field Note
+                                    </span>
+                                  )}
+                                  <span className="text-[10px] text-slate-400">
+                                    {new Date(obs.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                </div>
+                                <p className="text-slate-800 dark:text-slate-200 font-medium text-xs">
+                                  {obs.observation_text || (isVoice ? "Audio recording attached" : "Observation recorded")}
+                                </p>
+                                {obs.audio_url && (
+                                  <div className="pt-1">
+                                    <audio controls src={obs.audio_url} className="h-7 w-full max-w-70" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </Card>
                 ))}
@@ -874,8 +1976,12 @@ export default function InspectionsPage() {
           </div>
         )}
       </div>
-    );
-  }
+
+      {/* Area Edit & Delete Modals */}
+      {renderAreaModals()}
+    </>
+  );
+}
 
   /* ── Inspection List View ────────────────────────────────────────── */
   return (
@@ -892,7 +1998,7 @@ export default function InspectionsPage() {
       />
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6 items-center">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -910,22 +2016,26 @@ export default function InspectionsPage() {
           placeholder="Search inspection title..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-500"
+          className="flex-1 min-w-45 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-500"
         />
-        <input
-          type="date"
-          value={dateFrom}
-          onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-          title="From date"
-        />
-        <input
-          type="date"
-          value={dateTo}
-          onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-          title="To date"
-        />
+        {/* Date range — single row with from/to */}
+        <div className="flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 bg-white dark:bg-slate-900">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="text-xs outline-none bg-transparent text-slate-700 dark:text-slate-300"
+            title="From date"
+          />
+          <span className="text-slate-400 text-xs font-mono">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="text-xs outline-none bg-transparent text-slate-700 dark:text-slate-300"
+            title="To date"
+          />
+        </div>
       </div>
 
       {/* Content */}
@@ -968,7 +2078,7 @@ export default function InspectionsPage() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent sm:hidden" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent sm:hidden" />
                   <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase bg-black/60 text-white backdrop-blur-md">
                     {property?.property_type || "Inspection"}
                   </span>
@@ -1038,6 +2148,9 @@ export default function InspectionsPage() {
           </form>
         </Modal>
       )}
+
+      {/* Area Edit & Delete Modals */}
+      {renderAreaModals()}
     </>
   );
 }

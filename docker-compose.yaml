@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/area-templates`) || PathPrefix(`/api/v1/templates`) || PathPrefix(`/api/v1/demo`)"
+      - "traefik.http.routers.core.rule=PathPrefix(`/api/v1/clients`) || PathPrefix(`/api/v1/properties`) || PathPrefix(`/api/v1/inspections`) || PathPrefix(`/api/v1/dashboard`) || PathPrefix(`/api/v1/area-templates`) || PathPrefix(`/api/v1/templates`) || PathPrefix(`/api/v1/demo`) || PathPrefix(`/api/v1/areas`)"
       - "traefik.http.routers.core.priority=10"
       - "traefik.http.services.core.loadbalancer.server.port=8000"
     env_file:
@@ -80,6 +80,9 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       ACCESS_TOKEN_SECRET: defectloupe-hackathon-jwt-secret-key-32b
       CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80"
+    volumes:
+      - ./services/core/app:/app/app
+      - ./shared:/app/shared
     depends_on:
       db:
         condition: service_healthy
@@ -99,7 +102,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/areas`) || PathPrefix(`/api/v1/media`) || PathRegexp(`^/api/v1/inspections/[^/]+/media/?$`)"
+      - "traefik.http.routers.media.rule=PathPrefix(`/api/v1/photos`) || PathPrefix(`/api/v1/observations`) || PathPrefix(`/api/v1/transcriptions`) || PathPrefix(`/api/v1/media`) || PathRegexp(`^/api/v1/inspections/[^/]+/media/?$`) || PathRegexp(`^/api/v1/areas/[^/]+/photos`) || PathRegexp(`^/api/v1/areas/[^/]+/observations`)"
       - "traefik.http.routers.media.priority=60"
       - "traefik.http.services.media.loadbalancer.server.port=8000"
     env_file:
@@ -111,6 +114,8 @@ services:
       UPLOAD_DIR: /data/uploads
     volumes:
       - defect-loupe-uploads:/data/uploads
+      - ./services/media/app:/app/app
+      - ./shared:/app/shared
     depends_on:
       db:
         condition: service_healthy
@@ -146,6 +151,8 @@ services:
     volumes:
       - defect-loupe-reports:/app/reports
       - defect-loupe-hf-cache:/root/.cache/huggingface
+      - ./services/ai/app:/app/app
+      - ./shared:/app/shared
     depends_on:
       db:
         condition: service_healthy
@@ -183,6 +190,8 @@ services:
     volumes:
       - defect-loupe-reports:/app/reports
       - defect-loupe-hf-cache:/root/.cache/huggingface
+      - ./services/ai/app:/app/app
+      - ./shared:/app/shared
     depends_on:
       db:
         condition: service_healthy

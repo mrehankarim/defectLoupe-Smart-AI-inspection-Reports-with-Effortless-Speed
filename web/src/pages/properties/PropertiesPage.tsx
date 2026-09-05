@@ -145,7 +145,7 @@ export default function PropertiesPage() {
           placeholder="Search by address or city..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] px-4 py-2.5 border border-border rounded-lg text-sm outline-none
+          className="flex-1 min-w-50 px-4 py-2.5 border border-border rounded-lg text-sm outline-none
             focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-colors"
         />
       </div>
@@ -175,14 +175,14 @@ export default function PropertiesPage() {
             const client = clients.find((c) => c.id === p.client_id);
             const typeKey = (p.property_type || "residential").toLowerCase();
             const imagePool = [
-              "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-              "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
-              "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-              "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1605146769289-440113cc3d00?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=800&q=80",
               "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-              "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80",
               "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80",
-              "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80",
+              "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=800&q=80",
             ];
             const coverImage = imagePool[idx % imagePool.length];
 
@@ -199,7 +199,7 @@ export default function PropertiesPage() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/75 via-transparent to-black/20" />
                   <div className="absolute top-3 left-3">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-black/60 text-white border border-white/20 backdrop-blur-md">
                       {p.property_type}

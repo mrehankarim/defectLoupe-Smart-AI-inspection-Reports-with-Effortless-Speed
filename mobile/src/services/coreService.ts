@@ -157,6 +157,17 @@ export const coreService = {
     return res.data;
   },
 
+  async updateArea(
+    areaId: string,
+    name: string
+  ): Promise<InspectionArea> {
+    const res = await apiClient.patch<InspectionArea>(
+      `/api/v1/areas/${areaId}`,
+      { name }
+    );
+    return res.data;
+  },
+
   async deleteArea(areaId: string): Promise<void> {
     await apiClient.delete(`/api/v1/areas/${areaId}`);
   },

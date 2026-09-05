@@ -323,7 +323,7 @@ export default function ProfilePage() {
             { action: "New client added", subject: "Sara Malik", time: "5 days ago", color: "#6366f1" },
             { action: "Voice note transcribed", subject: "INS-039 · Bathroom area", time: "6 days ago", color: "#f59e0b" },
           ].map(({ action, subject, time, color }) => (
-            <div key={subject} className="flex items-center gap-4 py-3 border-b border-white/[0.04] last:border-0">
+            <div key={subject} className="flex items-center gap-4 py-3 border-b border-white/4 last:border-0">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color, boxShadow: `0 0 6px ${color}80` }} />
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] text-slate-700 dark:text-slate-300">

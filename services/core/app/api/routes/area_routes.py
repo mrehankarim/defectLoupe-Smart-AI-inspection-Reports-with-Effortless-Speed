@@ -8,6 +8,7 @@ from shared.db_config import get_db
 from shared.auth_deps import get_current_inspector
 from app.api.dtos.area_dto import (
     CreateAreaRequest,
+    UpdateAreaRequest,
     ReorderAreasRequest,
     AreaResponse,
     AreaTemplateRequest,
@@ -66,13 +67,36 @@ def reorder_areas(
 
 
 @router.delete("/api/v1/areas/{area_id}", summary="Remove an area from an inspection")
+@router.delete("/api/v1/inspections/{inspection_id}/areas/{area_id}", summary="Remove an area from an inspection (nested)")
 def delete_area(
     area_id: UUID,
+    inspection_id: UUID | None = None,
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
 ):
     """Remove an area from an inspection."""
     return area_service.delete_area(area_id, inspector, db)
+
+
+@router.patch(
+    "/api/v1/areas/{area_id}",
+    response_model=AreaResponse,
+    summary="Update (rename) an area",
+)
+@router.patch(
+    "/api/v1/inspections/{inspection_id}/areas/{area_id}",
+    response_model=AreaResponse,
+    summary="Update (rename) an area (nested)",
+)
+def update_area(
+    area_id: UUID,
+    data: UpdateAreaRequest,
+    inspection_id: UUID | None = None,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Rename or update notes for an inspection area."""
+    return area_service.update_area(area_id, data, inspector, db)
 
 
 # ── Templates ─────────────────────────────────────────────────────────────

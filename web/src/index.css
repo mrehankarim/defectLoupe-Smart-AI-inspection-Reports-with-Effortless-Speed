@@ -46,6 +46,79 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Explicit Custom Scrollbars ────────────────────────── */
+.custom-scrollbar,
+.tab-scroll-container,
+.scrollbar-visible {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.45) rgba(0, 0, 0, 0.04) !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.tab-scroll-container::-webkit-scrollbar,
+.scrollbar-visible::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+  height: 8px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.tab-scroll-container::-webkit-scrollbar-track,
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-radius: 9999px !important;
+  margin: 3px 0 !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.tab-scroll-container::-webkit-scrollbar-thumb,
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45) !important;
+  border-radius: 9999px !important;
+  border: 2px solid transparent !important;
+  background-clip: padding-box !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.tab-scroll-container::-webkit-scrollbar-thumb:hover,
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.75) !important;
+  background-clip: padding-box !important;
+}
+
+.dark .custom-scrollbar,
+.dark .tab-scroll-container,
+.dark .scrollbar-visible {
+  scrollbar-color: rgba(148, 163, 184, 0.35) rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track,
+.dark .tab-scroll-container::-webkit-scrollbar-track,
+.dark .scrollbar-visible::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb,
+.dark .tab-scroll-container::-webkit-scrollbar-thumb,
+.dark .scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35) !important;
+  background-clip: padding-box !important;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .tab-scroll-container::-webkit-scrollbar-thumb:hover,
+.dark .scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.75) !important;
+  background-clip: padding-box !important;
+}
+
+.tab-scroll-container {
+  overflow-y: auto !important;
+  max-height: calc(100vh - 275px);
+  min-height: 420px;
+  padding-right: 6px;
+}
+
 @layer base {
   * {
     @apply border-[rgb(var(--border))];

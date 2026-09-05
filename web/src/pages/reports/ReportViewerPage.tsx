@@ -35,6 +35,7 @@ export default function ReportViewerPage() {
   const [reportJson, setReportJson] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
   const [showJson, setShowJson] = useState(false);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
 
   const showToast = (message: string, type: "error" | "success" = "success") =>
@@ -45,6 +46,7 @@ export default function ReportViewerPage() {
     setLoading(true);
     setReportJson(null);
     setShowJson(false);
+    setShowPdfPreview(false);
     try {
       const data = await api.get<ReportStatus>(
         `/inspections/${id.trim()}/report/status`
@@ -110,7 +112,13 @@ export default function ReportViewerPage() {
 
   function handleDownloadPdf() {
     if (!inspectionId.trim()) return;
-    window.open(`/api/v1/inspections/${inspectionId.trim()}/report/pdf`, "_blank");
+    // Create a temporary anchor and trigger click — browser downloads without auto-opening
+    const a = document.createElement("a");
+    a.href = `/api/v1/inspections/${inspectionId.trim()}/report/pdf`;
+    a.download = `inspection-report-${inspectionId.trim().slice(0, 8)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   async function handleGenerateReport() {
@@ -130,7 +138,7 @@ export default function ReportViewerPage() {
   return (
     <div className="p-4 sm:p-6 space-y-6">
       {toast && (
-        <div className={`fixed top-4 right-4 ${toast.type === "error" ? "bg-red-600" : "bg-green-600"} text-white px-4 py-3 rounded-lg shadow-lg z-[100] max-w-sm`}>
+        <div className={`fixed top-4 right-4 ${toast.type === "error" ? "bg-red-600" : "bg-green-600"} text-white px-4 py-3 rounded-lg shadow-lg z-100 max-w-sm`}>
           <div className="flex justify-between items-center gap-3">
             <span className="text-sm">{toast.message}</span>
             <button onClick={() => setToast(null)} className="text-white/80 hover:text-white font-bold">&times;</button>
@@ -239,24 +247,39 @@ export default function ReportViewerPage() {
             <button
               onClick={handleGenerateReport}
               disabled={loading}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm"
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 text-sm font-medium"
             >
-              Generate Report
+              {loading ? "Working..." : "Generate Report"}
             </button>
-            <button
-              onClick={handleDownloadPdf}
-              disabled={reportStatus.status !== "ready"}
-              className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              Download PDF
-            </button>
-            <button
-              onClick={handleFetchJson}
-              disabled={reportStatus.status !== "ready"}
-              className="bg-gray-100 border border-[rgb(var(--border))] px-4 py-2 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              View JSON
-            </button>
+            {reportStatus.status === "ready" && (
+              <>
+                <button
+                  onClick={() => setShowPdfPreview((v) => !v)}
+                  className="bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 px-4 py-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-medium flex items-center gap-2 cursor-pointer"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {showPdfPreview ? "Hide Preview" : "Preview PDF"}
+                </button>
+                <button
+                  onClick={handleDownloadPdf}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-500 text-sm font-medium flex items-center gap-2 cursor-pointer shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download PDF
+                </button>
+                <button
+                  onClick={handleFetchJson}
+                  className="bg-gray-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 text-sm font-medium cursor-pointer"
+                >
+                  View JSON
+                </button>
+              </>
+            )}
           </div>
 
           {/* Error Message */}
@@ -268,13 +291,21 @@ export default function ReportViewerPage() {
             </div>
           )}
 
-          {/* PDF Preview */}
-          {reportStatus.status === "ready" && reportStatus.pdf_url && (
-            <div className="p-5 border-t border-[rgb(var(--border))]">
-              <h3 className="text-sm font-medium mb-3">PDF Preview</h3>
-              <div className="border border-[rgb(var(--border))] rounded-lg overflow-hidden" style={{ height: "600px" }}>
+          {/* PDF Preview — only shown when user explicitly clicks "Preview PDF" */}
+          {reportStatus.status === "ready" && showPdfPreview && (
+            <div className="p-5 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">PDF Preview</h3>
+                <button
+                  onClick={() => setShowPdfPreview(false)}
+                  className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  Close Preview
+                </button>
+              </div>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden" style={{ height: "700px" }}>
                 <iframe
-                  src={`/api/v1/inspections/${inspectionId.trim()}/report/pdf`}
+                  src={`/api/v1/inspections/${inspectionId.trim()}/report/pdf#toolbar=0`}
                   className="w-full h-full"
                   title="Report PDF Preview"
                 />

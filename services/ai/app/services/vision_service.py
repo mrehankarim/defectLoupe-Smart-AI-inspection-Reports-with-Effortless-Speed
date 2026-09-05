@@ -88,7 +88,7 @@ def _call_gemini_rest(image_bytes: bytes, mime_type: str) -> dict:
         ],
         "generationConfig": {
             "temperature": 0.2,
-            "maxOutputTokens": 1024,
+            "maxOutputTokens": 512,
             "responseMimeType": "application/json",
         },
     }

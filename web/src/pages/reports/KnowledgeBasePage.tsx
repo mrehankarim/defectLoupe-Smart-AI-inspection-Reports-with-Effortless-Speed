@@ -21,6 +21,27 @@ interface SearchResult {
   score: number;
 }
 
+interface RagSynthesis {
+  answer: string;
+  code_references: string[];
+  violation_thresholds: string | null;
+  remediation_protocol: string | null;
+  severity: string | null;
+}
+
+interface RagSearchResponse {
+  query: string | null;
+  synthesis: RagSynthesis | null;
+  results: SearchResult[];
+}
+
+const SEVERITY_STYLES: Record<string, string> = {
+  Critical: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
+  High: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
+  Medium: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+  Low: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+};
+
 const SUGGESTED_QUERIES = [
   { label: "Concrete Shear Crack", query: "concrete shear crack deflection limits" },
   { label: "Electrical Panel Double-Tapping", query: "double tapping breaker neutral bus isolation" },
@@ -37,10 +58,12 @@ export default function KnowledgeBasePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeQuery, setActiveQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [synthesis, setSynthesis] = useState<RagSynthesis | null>(null);
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [expandedSources, setExpandedSources] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -111,13 +134,16 @@ export default function KnowledgeBasePage() {
     setActiveQuery(q);
     setHasSearched(true);
     setSearchResults([]);
+    setSynthesis(null);
+    setExpandedSources(false);
 
     try {
-      const data = await api.post<{ results: SearchResult[] }>("/rag/search", {
+      const data = await api.post<RagSearchResponse>("/rag/search", {
         query: q,
-        limit: 8,
+        limit: 6,
       });
       setSearchResults(data.results || []);
+      setSynthesis(data.synthesis || null);
     } catch (err) {
       showToast((err as ApiError).detail || "Vector search failed", "error");
     } finally {
@@ -157,7 +183,7 @@ export default function KnowledgeBasePage() {
         <div
           className={`fixed top-5 right-5 ${
             toast.type === "error" ? "bg-rose-600 border-rose-700" : "bg-emerald-600 border-emerald-700"
-          } text-white px-4 py-3 rounded-xl shadow-2xl z-[200] max-w-md flex items-center justify-between gap-4 border animate-in fade-in slide-in-from-top-2`}
+          } text-white px-4 py-3 rounded-xl shadow-2xl z-200 max-w-md flex items-center justify-between gap-4 border animate-in fade-in slide-in-from-top-2`}
         >
           <span className="text-xs sm:text-sm font-medium">{toast.message}</span>
           <button onClick={() => setToast(null)} className="text-white/80 hover:text-white font-bold text-lg leading-none">
@@ -167,7 +193,7 @@ export default function KnowledgeBasePage() {
       )}
 
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-slate-900 via-slate-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-linear-to-r from-slate-900 via-slate-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl">
         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
@@ -264,7 +290,7 @@ export default function KnowledgeBasePage() {
               </div>
             </div>
 
-            <div className="max-h-[460px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+            <div className="max-h-115 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
               {docsLoading ? (
                 <div className="p-8 text-center text-xs text-slate-400 space-y-2">
                   <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto" />
@@ -360,10 +386,10 @@ export default function KnowledgeBasePage() {
                     <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Semantic Vector Query Console
+                    AI Engineering Advisory Console
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Calculates cosine similarity distance across all embedded technical standard chunks
+                    Vector search → Gemini 2.5 Flash synthesis → Structured engineering advisory
                   </p>
                 </div>
               </div>
@@ -402,14 +428,14 @@ export default function KnowledgeBasePage() {
                   {searching ? (
                     <>
                       <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Searching...
+                      Analyzing...
                     </>
                   ) : (
                     <>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
-                      Execute Query
+                      Get Advisory
                     </>
                   )}
                 </button>
@@ -433,16 +459,16 @@ export default function KnowledgeBasePage() {
             </div>
 
             {/* Results Body */}
-            <div className="p-5 flex-1 min-h-[400px]">
+            <div className="p-5 flex-1 min-h-100">
               {searching ? (
                 <div className="py-16 text-center space-y-4">
                   <div className="w-10 h-10 border-3 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mx-auto" />
                   <div>
                     <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Querying PgVector Knowledge Graph...
+                      Querying Vector Index &amp; Synthesizing Advisory...
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Generating dense embedding & ranking top cosine similarity matches
+                      Retrieving relevant standards → Gemini 2.5 Flash engineering analysis
                     </p>
                   </div>
                 </div>
@@ -455,15 +481,16 @@ export default function KnowledgeBasePage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
-                      Interactive RAG Semantic Search
+                      AI Engineering Advisory System
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
-                      Type any question or click one of the suggested engineering queries above to perform
-                      dense vector search across all standard building manuals and remediation specifications.
+                      Ask any field inspection question. The system retrieves relevant building code excerpts
+                      via vector search, then Gemini synthesizes a structured advisory with specific code
+                      references, violation thresholds, and remediation protocols.
                     </p>
                   </div>
                 </div>
-              ) : searchResults.length === 0 ? (
+              ) : !synthesis && searchResults.length === 0 ? (
                 <div className="py-12 px-4 text-center max-w-md mx-auto space-y-3">
                   <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,7 +499,7 @@ export default function KnowledgeBasePage() {
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                      No vector chunks matched "{activeQuery}"
+                      No matching standards for "{activeQuery}"
                     </h3>
                     <p className="text-xs text-slate-400 mt-1 leading-relaxed">
                       Try broadening your search terms, selecting a suggested query above, or uploading a relevant manual.
@@ -480,74 +507,149 @@ export default function KnowledgeBasePage() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Results Header */}
+                <div className="space-y-5">
+                  {/* Query Header */}
                   <div className="flex items-center justify-between text-xs pb-2 border-b border-slate-100 dark:border-slate-800">
                     <span className="font-mono text-slate-500 dark:text-slate-400">
-                      Ranked results for:{" "}
+                      Advisory for:{" "}
                       <span className="font-bold text-slate-800 dark:text-slate-200">"{activeQuery}"</span>
                     </span>
-                    <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                      {searchResults.length} chunk(s) retrieved
-                    </span>
+                    {searchResults.length > 0 && (
+                      <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        {searchResults.length} source(s) retrieved
+                      </span>
+                    )}
                   </div>
 
-                  {/* Results Cards List */}
-                  <div className="space-y-3.5">
-                    {searchResults.map((result, idx) => {
-                      const relevancePct = Math.min(Math.max(Math.round(((result.score - 0.1) / 0.6) * 100), 20), 99);
-                      const isHigh = relevancePct >= 70;
-                      const isMed = relevancePct >= 50;
-
-                      return (
-                        <div
-                          key={result.id || idx}
-                          className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/60 hover:border-emerald-500/40 hover:shadow-md transition-all space-y-2.5"
-                        >
-                          {/* Card Top: Rank, File, Score, Copy Button */}
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-800 text-[10px] font-mono font-bold flex items-center justify-center text-slate-700 dark:text-slate-300">
-                                #{idx + 1}
-                              </span>
-                              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 truncate max-w-[220px]">
-                                {result.filename}
-                              </span>
+                  {/* ── GEMINI LLM SYNTHESIS CARD ─────────────────────────── */}
+                  {synthesis && (() => {
+                    const sevStyle = SEVERITY_STYLES[synthesis.severity || ""] || SEVERITY_STYLES["Medium"];
+                    return (
+                      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                        {/* Dark header */}
+                        <div className="flex items-center justify-between px-4 py-3 bg-linear-to-r from-indigo-950 via-slate-900 to-slate-950 border-b border-slate-700/50">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                              </svg>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                                  isHigh
-                                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                    : isMed
-                                    ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30"
-                                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                                }`}
-                              >
-                                {relevancePct}% Relevance <span className="opacity-60 text-[9px]">({result.score.toFixed(3)})</span>
-                              </span>
-                              <button
-                                onClick={() => handleCopySnippet(result.id, result.chunk_text)}
-                                className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
-                                title="Copy excerpt to clipboard"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                {copiedId === result.id ? "Copied!" : "Copy"}
-                              </button>
-                            </div>
+                            <span className="text-xs font-bold text-slate-100">Gemini Engineering Advisory</span>
+                            <span className="text-[9px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">gemini-2.5-flash</span>
                           </div>
+                          {synthesis.severity && (
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${sevStyle}`}>
+                              {synthesis.severity} Severity
+                            </span>
+                          )}
+                        </div>
 
-                          {/* Excerpt Body */}
-                          <p className="text-xs sm:text-[13px] text-slate-800 dark:text-slate-200 font-sans leading-relaxed whitespace-pre-line bg-white dark:bg-slate-900/80 p-3 rounded-lg border border-slate-100 dark:border-slate-800/80">
-                            {result.chunk_text}
+                        {/* Main answer */}
+                        <div className="p-4 bg-slate-50 dark:bg-slate-900/80">
+                          <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                            {synthesis.answer}
                           </p>
                         </div>
-                      );
-                    })}
-                  </div>
+
+                        {/* 3-col detail grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
+                          <div className="p-4 min-w-0 overflow-hidden">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                              Code References
+                            </p>
+                            {synthesis.code_references.length > 0 ? (
+                              <ul className="space-y-1.5">
+                                {synthesis.code_references.map((ref, i) => {
+                                  const cleanLabel = ref.replace(/\.md$/i, "").replace(/\.txt$/i, "").replace(/_/g, " ");
+                                  return (
+                                    <li
+                                      key={i}
+                                      className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-500/8 px-2.5 py-1.5 rounded-lg border border-indigo-500/20 break-words [overflow-wrap:anywhere] leading-snug block"
+                                      title={ref}
+                                    >
+                                      {cleanLabel}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 italic">No specific codes cited</p>
+                            )}
+                          </div>
+                          <div className="p-4 min-w-0 overflow-hidden">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                              Violation Thresholds
+                            </p>
+                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed break-words [overflow-wrap:anywhere]">
+                              {synthesis.violation_thresholds || "Not specified for this query."}
+                            </p>
+                          </div>
+                          <div className="p-4 min-w-0 overflow-hidden">
+                            <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                              <svg className="w-3 h-3 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                              Remediation Protocol
+                            </p>
+                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed break-words [overflow-wrap:anywhere]">
+                              {synthesis.remediation_protocol || "Follow standard inspection protocols."}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* ── COLLAPSIBLE SOURCE CHUNKS ─────────────────────────── */}
+                  {searchResults.length > 0 && (
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                      <button
+                        onClick={() => setExpandedSources((v) => !v)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors text-left cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <svg className="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg>
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Supporting Source Excerpts</span>
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">{searchResults.length} chunk(s)</span>
+                        </div>
+                        <svg className={`w-4 h-4 text-slate-400 transition-transform ${expandedSources ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      {expandedSources && (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                          {searchResults.map((result, idx) => {
+                            const relevancePct = Math.min(Math.max(Math.round(((result.score - 0.1) / 0.6) * 100), 20), 99);
+                            const isHigh = relevancePct >= 70;
+                            const isMed = relevancePct >= 50;
+                            return (
+                              <div key={result.id || idx} className="p-4 bg-white dark:bg-slate-900/40 space-y-2">
+                                <div className="flex items-center justify-between gap-2 flex-wrap">
+                                  <div className="flex items-center gap-2">
+                                    <span className="w-5 h-5 rounded-md bg-slate-100 dark:bg-slate-800 text-[10px] font-mono font-bold flex items-center justify-center text-slate-600 dark:text-slate-300">#{idx + 1}</span>
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 truncate max-w-50">{result.filename}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${ isHigh ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30" : isMed ? "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/30" : "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30" }`}>
+                                      {relevancePct}% <span className="opacity-60 text-[9px]">({result.score.toFixed(3)})</span>
+                                    </span>
+                                    <button onClick={() => handleCopySnippet(result.id, result.chunk_text)} className="px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer" title="Copy excerpt">
+                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                      {copiedId === result.id ? "Copied!" : "Copy"}
+                                    </button>
+                                  </div>
+                                </div>
+                                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line bg-slate-50 dark:bg-slate-900/80 p-3 rounded-lg border border-slate-100 dark:border-slate-800/80">
+                                  {result.chunk_text}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

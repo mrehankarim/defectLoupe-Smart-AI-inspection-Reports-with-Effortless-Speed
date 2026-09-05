@@ -414,7 +414,7 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
                           {item.shortcut.map((key, kIdx) => (
                             <kbd
                               key={kIdx}
-                              className={`min-w-[18px] h-5 px-1.5 flex items-center justify-center rounded text-[10px] font-mono font-semibold transition-colors ${
+                              className={`min-w-4.5 h-5 px-1.5 flex items-center justify-center rounded text-[10px] font-mono font-semibold transition-colors ${
                                 isSelected
                                   ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                                   : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80"
@@ -437,16 +437,16 @@ export function CommandPalette({ isOpen, onClose }: CommandPaletteProps) {
         <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800/80 text-[11px] font-mono text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-3">
             <span className="flex items-center gap-1">
-              <kbd className="min-w-[16px] h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↑</kbd>
-              <kbd className="min-w-[16px] h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↓</kbd>
+              <kbd className="min-w-4 h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↑</kbd>
+              <kbd className="min-w-4 h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↓</kbd>
               <span className="text-[10px] ml-1">Navigate</span>
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="min-w-[16px] h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↵</kbd>
+              <kbd className="min-w-4 h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">↵</kbd>
               <span className="text-[10px] ml-1">Select</span>
             </span>
-            <span className="flex items-center gap-1 hidden sm:inline-flex">
-              <kbd className="min-w-[16px] h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">esc</kbd>
+            <span className="hidden sm:inline-flex items-center gap-1">
+              <kbd className="min-w-4 h-4 px-1 rounded bg-slate-200/80 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-[10px]">esc</kbd>
               <span className="text-[10px] ml-1">Close</span>
             </span>
           </div>

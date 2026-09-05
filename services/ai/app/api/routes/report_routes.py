@@ -17,6 +17,8 @@ from app.repository.report_job import ReportJob, ReportStatus
 from app.api.dtos.report_dto import ReportJobResponse, ReportStatusResponse
 from app.workers.report_worker import generate_report_task
 
+from datetime import datetime, timezone
+
 router = APIRouter(prefix="/api/v1", tags=["Report Generation"])
 
 
@@ -32,6 +34,20 @@ def generate_report(
     db: Session = Depends(get_db),
 ):
     """Create a ReportJob and trigger async PDF generation via Celery."""
+    # Cancel any previous queued or processing jobs for this inspection
+    stale_jobs = db.execute(
+        select(ReportJob)
+        .where(ReportJob.inspection_id == inspection_id)
+        .where(ReportJob.status.in_([ReportStatus.QUEUED, ReportStatus.PROCESSING]))
+    ).scalars().all()
+    now = datetime.now(timezone.utc)
+    for sj in stale_jobs:
+        sj.status = ReportStatus.FAILED
+        sj.error_message = "Superseded by a new report generation request."
+        sj.completed_at = now
+    if stale_jobs:
+        db.commit()
+
     job = ReportJob(
         inspection_id=inspection_id,
         status=ReportStatus.QUEUED,
@@ -52,6 +68,7 @@ def generate_report(
         except Exception as exc:
             job.status = ReportStatus.FAILED
             job.error_message = str(exc)[:2000]
+            job.completed_at = datetime.now(timezone.utc)
             db.commit()
 
     return ReportJobResponse(
@@ -73,7 +90,7 @@ def report_status(
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
 ):
-    """Return the status of the most recent report job."""
+    """Return the status of the most recent report job, with automatic timeout."""
     job = db.execute(
         select(ReportJob)
         .where(ReportJob.inspection_id == inspection_id)
@@ -84,12 +101,51 @@ def report_status(
     if job is None:
         raise HTTPException(status_code=404, detail="No report job found for this inspection.")
 
+    # Auto-timeout: if a job is in QUEUED or PROCESSING for more than 90 seconds, fail it
+    if job.status in (ReportStatus.QUEUED, ReportStatus.PROCESSING) and job.created_at:
+        now = datetime.now(timezone.utc)
+        created_at = job.created_at
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        elapsed_seconds = (now - created_at).total_seconds()
+        if elapsed_seconds > 90:
+            job.status = ReportStatus.FAILED
+            job.error_message = "Report generation timed out. Please click Retry to generate again."
+            job.completed_at = now
+            db.commit()
+
     return ReportStatusResponse(
         job_id=job.id,
         status=job.status.value,
         pdf_url=job.pdf_url,
         error_message=job.error_message,
     )
+
+
+@router.post(
+    "/inspections/{inspection_id}/report/reset",
+    summary="Reset any stuck report generation jobs for an inspection",
+)
+def reset_report(
+    inspection_id: str,
+    inspector=Depends(get_current_inspector),
+    db: Session = Depends(get_db),
+):
+    """Cancel/reset any queued or processing report jobs for this inspection."""
+    jobs = db.execute(
+        select(ReportJob)
+        .where(ReportJob.inspection_id == inspection_id)
+        .where(ReportJob.status.in_([ReportStatus.QUEUED, ReportStatus.PROCESSING]))
+    ).scalars().all()
+
+    now = datetime.now(timezone.utc)
+    for j in jobs:
+        j.status = ReportStatus.FAILED
+        j.error_message = "Generation was reset by user."
+        j.completed_at = now
+    
+    db.commit()
+    return {"message": "Report status reset successfully", "reset_count": len(jobs)}
 
 
 @router.get(

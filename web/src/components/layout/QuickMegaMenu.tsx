@@ -374,7 +374,7 @@ export function QuickMegaMenu({
                   >
                     {/* Icon Tile */}
                     <div
-                      className={`w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${item.accentColor}`}
+                      className={`w-10 h-10 rounded-xl bg-linear-to-br flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${item.accentColor}`}
                     >
                       {item.icon}
                     </div>

@@ -19,8 +19,19 @@ class SearchResultItem(BaseModel):
     score: float = Field(description="Similarity score (1 - cosine distance)")
 
 
+class RagSynthesis(BaseModel):
+    """Structured LLM engineering synthesis generated from RAG context."""
+    answer: str = Field(description="Direct synthesized answer to the query")
+    code_references: list[str] = Field(default_factory=list, description="Specific standards or code sections cited")
+    violation_thresholds: str | None = Field(default=None, description="Measurable thresholds triggering defects or violations")
+    remediation_protocol: str | None = Field(default=None, description="Recommended remediation or repair protocol")
+    severity: str | None = Field(default=None, description="Defect severity: Low, Medium, High, or Critical")
+
+
 class RagSearchResponse(BaseModel):
-    """Response wrapper for the search endpoint."""
+    """Response wrapper for the search endpoint with LLM synthesis and retrieved sources."""
+    query: str | None = None
+    synthesis: RagSynthesis | None = None
     results: list[SearchResultItem]
 
 

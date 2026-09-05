@@ -255,10 +255,10 @@ export function AppShell() {
               title="Open Navigation Hub & Tools"
             >
               {/* Three Lines / Hamburger Icon with micro-animation */}
-              <div className="flex flex-col justify-center items-center gap-[3px] w-4 h-4">
-                <span className="w-4 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-3 transition-all duration-200" />
-                <span className="w-3 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-4 transition-all duration-200" />
-                <span className="w-4 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-2.5 transition-all duration-200" />
+              <div className="flex flex-col justify-center items-center gap-0.75 w-4 h-4">
+                <span className="w-4 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-3 transition-all duration-200" />
+                <span className="w-3 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-4 transition-all duration-200" />
+                <span className="w-4 h-0.5 rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-2.5 transition-all duration-200" />
               </div>
               <span className="font-semibold text-slate-800 dark:text-slate-100">Menu</span>
             </button>

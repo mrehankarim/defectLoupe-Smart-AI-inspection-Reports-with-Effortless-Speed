@@ -165,7 +165,7 @@ export default function LandingPage() {
 
             <button
               onClick={() => navigate("/dashboard")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-md shadow-emerald-500/20 transition-all cursor-pointer"
               type="button"
             >
               Enter Workspace →
@@ -182,7 +182,7 @@ export default function LandingPage() {
             {/* Hero Title */}
             <h1 className="text-3xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-slate-900 dark:text-slate-50 leading-[1.12]">
               Professional Property Inspection Reports with{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 dark:from-emerald-400 dark:via-teal-400 dark:to-indigo-400">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-600 via-teal-600 to-indigo-600 dark:from-emerald-400 dark:via-teal-400 dark:to-indigo-400">
                 Effortless Precision
               </span>
             </h1>
@@ -196,7 +196,7 @@ export default function LandingPage() {
             <div className="mt-6 flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
               <button
                 onClick={() => navigate("/dashboard")}
-                className="px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
+                className="px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold text-white bg-linear-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
                 type="button"
               >
                 Launch Command Dashboard
@@ -231,7 +231,7 @@ export default function LandingPage() {
           </div>
 
           {/* Right Column: 3D Interactive Center-Pinned Defect Specimen Card */}
-          <div className="lg:col-span-5 [perspective:1200px]">
+          <div className="lg:col-span-5 perspective-distant">
             <div
               className="relative w-full cursor-pointer select-none"
               onMouseMove={handleCardMouseMove}
@@ -291,11 +291,11 @@ export default function LandingPage() {
                 {/* Architecture Visual Preview */}
                 <div className="my-3.5 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
                   <img
-                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+                    src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"
                     alt="Highland Ridge Residence Inspection View"
                     className="w-full h-44 object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-linear-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
                   <div className="absolute bottom-3 left-3 text-white">
                     <p className="text-xs font-semibold">742 Evergreen Terrace, Sector 4</p>
                     <p className="text-[11px] text-slate-200 opacity-90">Structural, Envelope & Electrical Assessment</p>
@@ -465,7 +465,7 @@ export default function LandingPage() {
                 {/* Visual Texture / Photo */}
                 <div className="h-48 w-full rounded-xl relative overflow-hidden bg-slate-900">
                   <img
-                    src="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1000&q=80"
+                    src="https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=1000&q=80"
                     alt="Structural concrete audit"
                     className="w-full h-full object-cover opacity-75 contrast-125"
                   />
@@ -589,7 +589,7 @@ export default function LandingPage() {
                   {[28, 45, 62, 35, 80, 95, 70, 40, 85, 100, 75, 50, 90, 65, 45, 85, 92, 60, 38, 70, 88, 52, 30, 65, 78, 42, 25, 60, 82, 55, 30, 48, 70, 35, 20].map((h, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-gradient-to-t from-teal-500 to-emerald-400 rounded-full transition-all duration-300"
+                      className="flex-1 bg-linear-to-t from-teal-500 to-emerald-400 rounded-full transition-all duration-300"
                       style={{ height: `${h}%`, opacity: i > 25 ? 0.35 : 0.9 }}
                     />
                   ))}
@@ -652,7 +652,7 @@ export default function LandingPage() {
         </div>
 
         {/* Vertical Timeline Stepper */}
-        <div className="relative pl-6 sm:pl-10 space-y-8 before:content-[''] before:absolute before:left-3 sm:before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-emerald-500 before:via-teal-500 before:to-indigo-600">
+        <div className="relative pl-6 sm:pl-10 space-y-8 before:content-[''] before:absolute before:left-3 sm:before:left-5 before:top-4 before:bottom-4 before:w-0.5 before:bg-linear-to-b before:from-emerald-500 before:via-teal-500 before:to-indigo-600">
           {/* Step 1 */}
           <div className="relative group">
             {/* Step Marker */}

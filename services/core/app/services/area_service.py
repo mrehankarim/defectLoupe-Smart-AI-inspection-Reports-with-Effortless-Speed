@@ -12,6 +12,7 @@ from app.repository.client import Client
 from app.repository.property import Property
 from app.api.dtos.area_dto import (
     CreateAreaRequest,
+    UpdateAreaRequest,
     AreaResponse,
 )
 
@@ -138,6 +139,25 @@ def delete_area(
     db.delete(area)
     db.commit()
     return {"message": "Area deleted successfully"}
+
+
+def update_area(
+    area_id: UUID,
+    data: UpdateAreaRequest,
+    inspector,
+    db: Session,
+) -> AreaResponse:
+    """Rename or update an inspection area."""
+    area = db.get(InspectionArea, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    _check_inspection_access(area.inspection_id, inspector, db)
+
+    if data.name is not None:
+        area.name = data.name
+    db.commit()
+    db.refresh(area)
+    return AreaResponse.model_validate(area)
 
 
 def create_areas_from_template(

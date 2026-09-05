@@ -89,7 +89,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
 // Setting Row Primitive
 function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-4 border-b border-white/[0.05] last:border-0">
+    <div className="flex items-center justify-between gap-6 py-4 border-b border-white/5 last:border-0">
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-medium text-slate-900 dark:text-slate-200">{label}</p>
         {description && <p className="text-[12px] text-slate-500 dark:text-slate-500 mt-0.5">{description}</p>}

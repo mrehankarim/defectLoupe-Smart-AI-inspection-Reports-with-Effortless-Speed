@@ -21,17 +21,52 @@ def _fetch_inspection_metadata(
     inspection_id: UUID,
     auth_token: str,
     core_url: str,
+    db: Session | None = None,
 ) -> dict:
-    """Fetch inspection full-context from the core-service."""
+    """Fetch inspection full-context from the core-service, or fallback to direct DB query."""
     url = f"{core_url}/api/v1/inspections/{inspection_id}/full-context"
     headers = {"Cookie": f"access_token={auth_token}"} if auth_token else {}
+    meta = {}
     try:
-        resp = httpx.get(url, headers=headers, timeout=15.0)
-        resp.raise_for_status()
-        return resp.json()
+        resp = httpx.get(url, headers=headers, timeout=10.0)
+        if resp.status_code == 200:
+            meta = resp.json()
     except Exception as exc:
-        logger.warning("Could not fetch inspection metadata: %s", exc)
-        return {}
+        logger.warning("Could not fetch inspection metadata via HTTP: %s", exc)
+
+    # Fallback to direct DB query if HTTP returned empty or failed
+    if (not meta or not meta.get("property_address")) and db is not None:
+        try:
+            from sqlalchemy import text
+            row = db.execute(
+                text("""
+                    SELECT i.title, i.notes, i.created_at,
+                           p.address, p.city, p.state, p.zip_code,
+                           (insp.first_name || ' ' || insp.last_name) as inspector_name,
+                           c.name as company_name
+                    FROM inspections i
+                    LEFT JOIN properties p ON i.property_id = p.id
+                    LEFT JOIN inspectors insp ON i.inspector_id = insp.id
+                    LEFT JOIN companies c ON insp.company_id = c.id
+                    WHERE i.id = :id
+                """),
+                {"id": str(inspection_id)},
+            ).mappings().first()
+            if row:
+                addr_parts = [row.get("address"), row.get("city"), row.get("state"), row.get("zip_code")]
+                full_addr = ", ".join(p for p in addr_parts if p) or "Address not available"
+                meta = {
+                    "company_name": row.get("company_name") or "DefectLoupe",
+                    "property_address": full_addr,
+                    "inspection_date": row.get("created_at").strftime("%Y-%m-%d") if row.get("created_at") else datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+                    "inspector_name": row.get("inspector_name") or "Inspector",
+                    "observations": row.get("notes") or "",
+                    "title": row.get("title") or "Inspection Report",
+                }
+        except Exception as db_exc:
+            logger.warning("DB fallback for inspection metadata failed: %s", db_exc)
+
+    return meta
 
 
 def _fetch_photo_findings(
@@ -93,8 +128,8 @@ def gather_inspection_context(
     import os
     core_url = os.getenv("CORE_SERVICE_URL", "http://localhost:8002")
 
-    # 1. Fetch inspection metadata from core-service
-    meta = _fetch_inspection_metadata(inspection_id, auth_token, core_url)
+    # 1. Fetch inspection metadata from core-service (or direct DB fallback)
+    meta = _fetch_inspection_metadata(inspection_id, auth_token, core_url, db=db)
 
     # 2. Photo findings from local DB
     findings = _fetch_photo_findings(inspection_id, db)

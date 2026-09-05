@@ -9,6 +9,12 @@ class CreateAreaRequest(BaseModel):
     display_order: int | None = None
 
 
+class UpdateAreaRequest(BaseModel):
+    """Partial update — only provided fields are changed."""
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    notes: str | None = None
+
+
 class ReorderAreasRequest(BaseModel):
     """A list of area IDs in the desired display order."""
     area_ids: list[UUID]

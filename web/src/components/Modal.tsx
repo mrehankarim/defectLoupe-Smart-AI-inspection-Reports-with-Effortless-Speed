@@ -31,7 +31,7 @@ export default function Modal({ title, onClose, children, wide }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[150] overflow-y-auto bg-black/65 backdrop-blur-sm flex min-h-full items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-6"
+      className="fixed inset-0 z-150 overflow-y-auto bg-black/65 backdrop-blur-sm flex min-h-full items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-6"
       onMouseDown={onClose}
       role="dialog"
       aria-modal="true"
@@ -57,7 +57,7 @@ export default function Modal({ title, onClose, children, wide }: ModalProps) {
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0">{children}</div>
+        <div className="px-6 py-5 overflow-y-auto flex-1 min-h-0 custom-scrollbar">{children}</div>
       </section>
     </div>
   );

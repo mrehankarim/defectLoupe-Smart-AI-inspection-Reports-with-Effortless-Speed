@@ -103,7 +103,7 @@ export function AuthPageLayout({ children }: { children: ReactNode }) {
       </header>
 
       {/* Main Glass Card Form Body */}
-      <main className="relative z-10 w-full max-w-[460px] mx-auto my-auto py-6">
+      <main className="relative z-10 w-full max-w-115 mx-auto my-auto py-6">
         <div className="glass-panel rounded-3xl p-7 sm:p-8">
           {children}
         </div>

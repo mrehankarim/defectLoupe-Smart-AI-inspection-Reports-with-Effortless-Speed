@@ -13,6 +13,7 @@ from app.api.dtos.rag_dto import (
     DocumentUploadResponse,
     RagSearchRequest,
     RagSearchResponse,
+    RagSynthesis,
     SearchResultItem,
 )
 from app.services import rag_service
@@ -52,21 +53,27 @@ async def upload_document(
 @router.post(
     "/search",
     response_model=RagSearchResponse,
-    summary="Search the knowledge base using vector similarity",
+    summary="Search the knowledge base using vector similarity and LLM synthesis",
 )
 def search_documents(
     body: RagSearchRequest,
     inspector=Depends(get_current_inspector),
     db: Session = Depends(get_db),
 ):
-    """Perform cosine-distance search scoped to the inspector's tenant."""
+    """Perform cosine-distance search + Gemini LLM synthesis over retrieved standards."""
     results = rag_service.search_knowledge_base(
         query=body.query,
         company_id=inspector.company_id,
         db=db,
         limit=body.limit,
     )
+    synthesis_dict = rag_service.synthesize_rag_response(
+        query=body.query,
+        retrieved_chunks=results,
+    )
     return RagSearchResponse(
+        query=body.query,
+        synthesis=RagSynthesis(**synthesis_dict) if synthesis_dict else None,
         results=[SearchResultItem(**r) for r in results],
     )
 
