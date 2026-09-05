@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { CommandPalette } from "./CommandPalette";
 import { Footer } from "./Footer";
+import { QuickMegaMenu } from "./QuickMegaMenu";
 
 const IconGrid = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -141,6 +142,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   function toggleTheme() {
@@ -167,6 +169,12 @@ export function AppShell() {
     >
       <Noise />
       <CommandPalette isOpen={cmdOpen} onClose={() => setCmdOpen(false)} />
+      <QuickMegaMenu
+        isOpen={megaMenuOpen}
+        onClose={() => setMegaMenuOpen(false)}
+        onOpenSearch={() => setCmdOpen(true)}
+        isDark={isDark}
+      />
 
       {/* Top Floating Command Navigation Bar */}
       <header
@@ -232,17 +240,28 @@ export function AppShell() {
 
           {/* FAR RIGHT: Search, Theme, Notifications, Account Icon */}
           <div className="flex items-center gap-2.5 shrink-0">
-            {/* Search Trigger Button */}
+            {/* Elegant Menu Launcher (Three Lines Icon) */}
             <button
-              onClick={() => setCmdOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-all cursor-pointer border border-transparent bg-transparent hover:bg-slate-200/60 dark:hover:bg-slate-800/60"
+              onClick={() => setMegaMenuOpen(true)}
+              className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 transition-all cursor-pointer border shadow-xs group"
+              style={{
+                background: isDark
+                  ? "rgba(16, 185, 129, 0.08)"
+                  : "rgba(16, 185, 129, 0.06)",
+                borderColor: isDark
+                  ? "rgba(16, 185, 129, 0.25)"
+                  : "rgba(16, 185, 129, 0.3)",
+              }}
               type="button"
+              title="Open Navigation Hub & Tools"
             >
-              <svg className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span className="hidden xl:inline">Search...</span>
-              <kbd className="kbd-badge">Ctrl K</kbd>
+              {/* Three Lines / Hamburger Icon with micro-animation */}
+              <div className="flex flex-col justify-center items-center gap-[3px] w-4 h-4">
+                <span className="w-4 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-3 transition-all duration-200" />
+                <span className="w-3 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-4 transition-all duration-200" />
+                <span className="w-4 h-[2px] rounded-full bg-emerald-600 dark:bg-emerald-400 group-hover:w-2.5 transition-all duration-200" />
+              </div>
+              <span className="font-semibold text-slate-800 dark:text-slate-100">Menu</span>
             </button>
 
             {/* Theme Toggle Button */}
