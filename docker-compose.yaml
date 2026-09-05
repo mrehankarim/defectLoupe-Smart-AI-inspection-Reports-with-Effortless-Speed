@@ -141,6 +141,8 @@ services:
       ACCESS_TOKEN_SECRET: defectloupe-hackathon-secret
       CORE_SERVICE_URL: http://core:8000
       MEDIA_SERVICE_URL: http://media:8000
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
     depends_on:
       db:
         condition: service_healthy

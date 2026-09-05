@@ -53,7 +53,7 @@ def _get_config() -> tuple[str, str, str]:
     global _GEMINI_API_KEY, _GEMINI_MODEL, _GEMINI_URL
     if _GEMINI_API_KEY is None:
         _GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-        _GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+        _GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         _GEMINI_URL = (
             f"https://generativelanguage.googleapis.com/v1beta/"
             f"models/{_GEMINI_MODEL}:generateContent"
@@ -162,10 +162,11 @@ def _call_gemini_sdk(image_bytes: bytes, mime_type: str) -> dict:
 
 
 def _call_gemini(image_bytes: bytes, mime_type: str) -> dict:
-    """Try the SDK first; fall back to REST on import errors."""
+    """Try the SDK first; fall back to REST on error."""
     try:
         return _call_gemini_sdk(image_bytes, mime_type)
-    except (ImportError, AttributeError):
+    except Exception as exc:
+        logger.warning("Gemini SDK call failed (%s); attempting direct REST fallback", exc)
         return _call_gemini_rest(image_bytes, mime_type)
 
 
