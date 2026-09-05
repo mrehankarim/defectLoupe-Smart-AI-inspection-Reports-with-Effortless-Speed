@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "DefectLoupe",
+    "slug": "defectloupe-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#07090e",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.defectloupe.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "DefectLoupe requires camera access to capture high-resolution property inspection defect photos.",
+        "NSMicrophoneUsageDescription": "DefectLoupe requires microphone access to record inspector voice notes for automated AI transcription.",
+        "NSPhotoLibraryUsageDescription": "DefectLoupe requires photo library access to upload inspection images."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#07090e"
+      },
+      "package": "com.defectloupe.mobile",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow DefectLoupe to access your photos to attach inspection defect images."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow DefectLoupe to access your microphone to record voice inspection observations."
+        }
+      ]
+    ]
+  }
+}

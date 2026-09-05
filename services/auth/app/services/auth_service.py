@@ -159,6 +159,8 @@ def login_user(
         message="Login successful",
         access_token_expires_at=access_exp,
         refresh_token_expires_at=refresh_exp,
+        access_token=access_token,
+        refresh_token=refresh_token,
     )
 
 
@@ -243,6 +245,8 @@ def refresh_tokens(
         message="Tokens refreshed",
         access_token_expires_at=access_exp,
         refresh_token_expires_at=refresh_exp,
+        access_token=new_access_token,
+        refresh_token=new_refresh_token,
     )
 
 
@@ -253,6 +257,10 @@ def get_current_user(
 ) -> User:
     """FastAPI dependency: extract and validate the logged-in user from cookie."""
     token = request.cookies.get(ACCESS_COOKIE)
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

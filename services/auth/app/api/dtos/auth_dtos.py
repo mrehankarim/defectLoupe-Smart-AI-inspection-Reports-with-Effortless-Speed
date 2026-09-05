@@ -41,6 +41,9 @@ class TokenResponse(BaseModel):
     message: str
     access_token_expires_at: datetime
     refresh_token_expires_at: datetime
+    access_token: str | None = None
+    refresh_token: str | None = None
+    token_type: str = "bearer"
 
 
 class LogoutResponse(BaseModel):
