@@ -93,7 +93,6 @@ export function Footer() {
         <div className="pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-slate-600 dark:text-slate-400">
           <p>© 2026 DefectLoupe. All rights reserved.</p>
           <div className="flex items-center gap-4">
-            <span className="hidden sm:inline">Built with React Vite & Tailwind CSS</span>
             <button
               onClick={scrollToTop}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-200/80 dark:bg-slate-800/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer font-medium"
