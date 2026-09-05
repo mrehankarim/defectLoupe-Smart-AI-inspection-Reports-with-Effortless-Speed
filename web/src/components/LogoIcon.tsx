@@ -37,10 +37,6 @@ export default function LogoIcon({ className = "w-5 h-5", size = 20 }: LogoIconP
         d="M11 4C9.895 4 9 4.895 9 6V19C9 20.105 9.895 21 11 21H18C22.418 21 26 17.418 26 13C26 8.582 22.418 4 18 4H11ZM13.5 8H17.5C20.261 8 22.5 10.239 22.5 13C22.5 15.761 20.261 18 17.5 18H13.5V8Z"
         fill="url(#dl-icon-d)"
       />
-
-      {/* Optical Inspection Reticle Core */}
-      <circle cx="17.5" cy="13" r="2.2" fill="#10B981" />
-      <circle cx="17.5" cy="13" r="3.6" stroke="#10B981" strokeWidth="1" strokeDasharray="1.5 1.5" />
     </svg>
   );
 }
