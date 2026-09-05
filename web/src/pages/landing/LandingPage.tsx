@@ -115,255 +115,265 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-16 max-w-7xl mx-auto text-center">
-        {/* Eyebrow Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-700 dark:text-emerald-400 font-bold mb-6 shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          Field Inspection Suite • Forensic Defect Auditing & Verified PDF Reports
-        </div>
+      {/* Hero Section: 2-Column Layout */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-8 sm:pt-14 pb-16 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          {/* Left Column: Copy & Actions */}
+          <div className="lg:col-span-7 flex flex-col items-start text-left">
+            {/* Eyebrow Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-700 dark:text-emerald-400 font-bold mb-5 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Field Inspection Suite • Forensic Defect Auditing & Verified PDF Reports
+            </div>
 
-        {/* Hero Title */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50 max-w-4xl mx-auto leading-[1.15]">
-          Professional Property Inspection Reports with{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 dark:from-emerald-400 dark:via-teal-400 dark:to-indigo-400">
-            Effortless Precision
-          </span>
-        </h1>
+            {/* Hero Title */}
+            <h1 className="text-3xl sm:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-slate-900 dark:text-slate-50 leading-[1.12]">
+              Professional Property Inspection Reports with{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 dark:from-emerald-400 dark:via-teal-400 dark:to-indigo-400">
+                Effortless Precision
+              </span>
+            </h1>
 
-        {/* Hero Subtitle */}
-        <p className="mt-5 text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-medium">
-          Built for chartered surveyors, structural auditors, and field inspectors. Transform tedious site walkthroughs, defect photos, and audio notes into certified, tamper-evident inspection reports in minutes.
-        </p>
+            {/* Hero Subtitle */}
+            <p className="mt-5 text-sm sm:text-base lg:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium max-w-2xl">
+              Built for chartered surveyors, structural auditors, and field inspectors. Conduct room-by-room walkthroughs, capture high-res defect photos, cross-reference municipal building codes, and generate certified, tamper-evident inspection reports in minutes.
+            </p>
 
-        {/* Hero CTA Buttons */}
-        <div className="mt-7 flex flex-wrap items-center justify-center gap-3.5">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
-            type="button"
-          >
-            Launch Command Dashboard
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
-          </button>
-          <button
-            onClick={() => navigate("/inspections")}
-            className="px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-all cursor-pointer"
-            type="button"
-          >
-            Start Field Walkthrough
-          </button>
-        </div>
+            {/* Key Benefits Pills */}
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-mono text-slate-600 dark:text-slate-400">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                ✓ Optical Defect Metrology (mm)
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 font-semibold">
+                ✓ IBC & ASTM Standard Match
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-500/20 font-semibold">
+                ✓ Public QR Hash Verification
+              </span>
+            </div>
 
-        {/* 3D Flap / Flip Forensic Specimen Card */}
-        <div className="mt-12 max-w-3xl mx-auto [perspective:1400px]">
-          <div className="group relative w-full cursor-pointer select-none">
-            {/* The 3D Flipping Container */}
-            <div
-              className="relative w-full rounded-3xl transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] shadow-2xl"
-              style={{ minHeight: "380px" }}
-            >
-              {/* FRONT FACE: Structural Field Inspection Specimen */}
-              <div
-                className="w-full rounded-3xl p-5 sm:p-6 text-left border [backface-visibility:hidden] flex flex-col justify-between"
-                style={{
-                  background: isDark
-                    ? "linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 14, 0.98))"
-                    : "linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.95))",
-                  borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(203, 213, 225, 0.9)",
-                }}
+            {/* Hero CTA Buttons */}
+            <div className="mt-7 flex flex-wrap items-center gap-3.5 w-full sm:w-auto">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:opacity-95 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer flex items-center gap-2"
+                type="button"
               >
-                {/* Specimen Header */}
-                <div className="flex items-center justify-between border-b pb-3.5"
-                  style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 font-mono text-xs font-bold">
-                      DL
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-                          SPECIMEN #DL-2026-8894
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                          CRITICAL · SEVERITY 4/5
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        1428 Elm Ridge Pkwy · Sub-Grade Foundation East Wall
-                      </p>
-                    </div>
-                  </div>
-                  <div className="hidden sm:flex flex-col items-end text-right">
-                    <span className="text-[11px] font-mono text-slate-400">TIMESTAMP</span>
-                    <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-                      04-SEP-2026 · 14:32 EST
-                    </span>
-                  </div>
-                </div>
+                Launch Command Dashboard
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </button>
+              <button
+                onClick={() => navigate("/inspections")}
+                className="px-6 py-3.5 rounded-2xl text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 bg-white/90 dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-sm transition-all cursor-pointer"
+                type="button"
+              >
+                Start Field Walkthrough
+              </button>
+            </div>
 
-                {/* Tactile Photo / Optical Inspection Visualizer */}
-                <div className="my-4 relative rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-800 bg-slate-950/90 p-4 font-mono text-xs">
-                  {/* Visual simulation of foundation crack with target reticle */}
-                  <div className="relative h-44 rounded-xl bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center overflow-hidden border border-slate-800">
-                    {/* Grid overlay */}
-                    <div
-                      className="absolute inset-0 opacity-20"
-                      style={{
-                        backgroundImage: "linear-gradient(#10b981 1px, transparent 1px), linear-gradient(90deg, #10b981 1px, transparent 1px)",
-                        backgroundSize: "24px 24px",
-                      }}
+            {/* Trust Metrics Bar */}
+            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 grid grid-cols-3 gap-6 w-full max-w-lg">
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">1,200+</div>
+                <div className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400">Audits Done</div>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">&lt; 2 min</div>
+                <div className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400">PDF Generation</div>
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">100%</div>
+                <div className="text-[11px] font-mono uppercase text-slate-500 dark:text-slate-400">QR Verifiable</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Interactive 3D Flapping Defect Specimen Card */}
+          <div className="lg:col-span-5 [perspective:1400px]">
+            <div className="group relative w-full cursor-pointer select-none">
+              {/* 3D Flipping Card */}
+              <div
+                className="relative w-full rounded-3xl transition-transform duration-700 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)] shadow-2xl"
+                style={{ minHeight: "440px" }}
+              >
+                {/* FRONT FACE: Real Structural Defect Inspection Photo */}
+                <div
+                  className="w-full rounded-3xl p-5 sm:p-6 text-left border [backface-visibility:hidden] flex flex-col justify-between"
+                  style={{
+                    background: isDark
+                      ? "linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(7, 9, 14, 0.98))"
+                      : "linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96))",
+                    borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(203, 213, 225, 0.9)",
+                  }}
+                >
+                  {/* Specimen Header */}
+                  <div
+                    className="flex items-center justify-between border-b pb-3.5"
+                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 font-mono text-xs font-bold shrink-0">
+                        DL
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                            SPECIMEN #DL-2026-8894
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+                            CRITICAL · RISK 4/5
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          1428 Elm Ridge Pkwy · Basement Foundation Wall
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Real Photo Visual with Optical Scan Overlay */}
+                  <div className="my-3.5 relative rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-800 shadow-md group-hover:shadow-lg transition-shadow">
+                    {/* Actual Real Concrete Shear Crack Image from Unsplash */}
+                    <img
+                      src="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=800&q=80"
+                      alt="Real Concrete Shear Crack Defect"
+                      className="w-full h-44 object-cover"
                     />
 
-                    {/* Defect Fracture Graphic */}
-                    <svg className="w-full h-full absolute inset-0 opacity-80" viewBox="0 0 500 200">
-                      <path
-                        d="M 50 140 Q 120 110, 180 130 T 260 80 T 360 95 T 450 40"
-                        fill="none"
-                        stroke="#f43f5e"
-                        strokeWidth="3.5"
-                        strokeDasharray="4 2"
-                      />
-                      <circle cx="260" cy="80" r="14" fill="none" stroke="#f43f5e" strokeWidth="1.5" />
-                      <circle cx="260" cy="80" r="4" fill="#f43f5e" />
-                    </svg>
+                    {/* Calibrated Optical Reticle Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
 
-                    {/* Target Crosshair & Callout */}
-                    <div className="relative z-10 px-4 py-2 rounded-xl bg-slate-900/90 border border-rose-500/50 backdrop-blur-md shadow-xl flex items-center gap-3 text-slate-100">
-                      <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                    {/* Coordinate Callout */}
+                    <div className="absolute top-2.5 right-2.5 px-2 py-1 rounded-md bg-black/75 border border-white/20 text-[10px] font-mono text-emerald-400 font-bold backdrop-blur-md">
+                      METRIC CALIPER: 1:1
+                    </div>
+
+                    {/* Defect Bounding Tag on photo */}
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 p-2.5 rounded-xl bg-slate-950/85 border border-rose-500/60 backdrop-blur-md text-slate-100 flex items-center justify-between">
                       <div>
-                        <div className="text-[11px] font-bold text-rose-400">Shear Stress Fracture Detected</div>
-                        <div className="text-[10px] text-slate-400">Aperture: 4.8mm • Propagation: Active • Moisture: 72% RH</div>
+                        <div className="text-[11px] font-bold text-rose-400 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping inline-block" />
+                          Foundation Shear Fracture (Active)
+                        </div>
+                        <div className="text-[10px] text-slate-300 font-mono mt-0.5">
+                          Aperture: 4.8mm • Propagation: Active • RH: 72%
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">
+                        Class IV
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Flap Trigger */}
+                  <div
+                    className="pt-2.5 border-t flex items-center justify-between text-xs text-slate-500 dark:text-slate-400"
+                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
+                  >
+                    <span className="flex items-center gap-1.5 font-medium text-[11px]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      Inspector ID: #INSP-402
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 group-hover:underline text-[11px]">
+                      Hover card to flap diagnosis
+                      <svg className="w-3.5 h-3.5 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                {/* BACK FACE: Engineering Remediation & Building Code Report */}
+                <div
+                  className="absolute inset-0 w-full h-full rounded-3xl p-5 sm:p-6 text-left border [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between"
+                  style={{
+                    background: isDark
+                      ? "linear-gradient(145deg, rgba(10, 15, 28, 0.98), rgba(6, 9, 16, 0.99))"
+                      : "linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.99))",
+                    borderColor: isDark ? "rgba(16, 185, 129, 0.35)" : "rgba(16, 185, 129, 0.5)",
+                  }}
+                >
+                  {/* Back Header */}
+                  <div
+                    className="flex items-center justify-between border-b pb-3"
+                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span className="font-mono text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                        Forensic Remediation Audit
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
+                      VERIFIED SCAN
+                    </span>
+                  </div>
+
+                  {/* Real Remediation Findings */}
+                  <div className="my-2 space-y-2.5 font-sans text-xs">
+                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[9px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block mb-0.5">
+                        FORENSIC DEFECT SUMMARY
+                      </span>
+                      <p className="text-slate-800 dark:text-slate-200 font-medium leading-snug">
+                        Differential settlement resulting in 4.8mm shear fracture along east foundation footing with active moisture seepage.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+                        <span className="text-[9px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block">
+                          BUILDING CODE
+                        </span>
+                        <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 block mt-0.5">
+                          IBC 2024 §1807.1
+                        </span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Shear stress wall limits</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
+                        <span className="text-[9px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block">
+                          REPAIR CODE
+                        </span>
+                        <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                          ASTM C881-20
+                        </span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">Epoxy resin injection</span>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Metadata Bar below photo */}
-                  <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
-                    <span className="flex items-center gap-1.5">
-                      <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Verified Inspector Observation Attached
-                    </span>
-                    <span className="font-mono text-emerald-400 font-bold">CALIBRATED SCAN: 1:1 METRIC</span>
-                  </div>
-                </div>
-
-                {/* Card Bottom: Flap Prompt */}
-                <div className="pt-2 border-t flex items-center justify-between text-xs text-slate-500 dark:text-slate-400"
-                  style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
-                >
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    Inspector ID: #INSP-402 (M. Rehan Karim)
-                  </span>
-                  <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400 group-hover:underline">
-                    Hover to flap & inspect forensic diagnosis
-                    <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </span>
-                </div>
-              </div>
-
-              {/* BACK FACE (Flapped / Flipped 180°): Engineering Diagnosis & Compliance */}
-              <div
-                className="absolute inset-0 w-full h-full rounded-3xl p-5 sm:p-6 text-left border [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col justify-between"
-                style={{
-                  background: isDark
-                    ? "linear-gradient(145deg, rgba(10, 15, 28, 0.98), rgba(6, 9, 16, 0.99))"
-                    : "linear-gradient(145deg, rgba(248, 250, 252, 0.98), rgba(255, 255, 255, 0.99))",
-                  borderColor: isDark ? "rgba(16, 185, 129, 0.35)" : "rgba(16, 185, 129, 0.5)",
-                }}
-              >
-                {/* Back Header */}
-                <div className="flex items-center justify-between border-b pb-3.5"
-                  style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                    <span className="font-mono text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                      Forensic Diagnostic & Remediation Report
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-bold">
-                    OFFICIAL SPECIFICATION
-                  </span>
-                </div>
-
-                {/* Back Body: Real Diagnostic Details */}
-                <div className="my-3 space-y-3 font-sans text-xs">
-                  {/* Diagnostic Finding */}
-                  <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-                    <span className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block mb-1">
-                      DIAGNOSTIC SUMMARY
-                    </span>
-                    <p className="text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
-                      Differential foundation settlement producing 4.8mm diagonal shear stress fracture along reinforced retaining wall with hydrostatic seepage.
-                    </p>
-                  </div>
-
-                  {/* Standard & Code Cross-Reference */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block mb-1">
-                        BUILDING CODE MATCH
-                      </span>
-                      <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 block">
-                        IBC 2024 §1807.1
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                        Foundation wall deflection limits
-                      </span>
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block mb-1">
-                        REMEDIATION STANDARD
-                      </span>
-                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 block">
-                        ASTM C881-20
-                      </span>
-                      <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 block">
-                        Epoxy resin pressure injection
+                    <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
+                      <div>
+                        <span className="text-[9px] font-mono uppercase text-emerald-800 dark:text-emerald-300 font-bold block">
+                          REMEDIATION ESTIMATE
+                        </span>
+                        <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
+                          Structural underpinning & moisture sealing
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
+                        $3,400 - $4,800
                       </span>
                     </div>
                   </div>
 
-                  {/* Recommended Action & Cost */}
-                  <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
-                    <div>
-                      <span className="text-[10px] font-mono uppercase text-emerald-800 dark:text-emerald-300 font-bold block">
-                        RECOMMENDED REMEDIATION
-                      </span>
-                      <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-                        Polyurethane waterproofing seal + underpinning stabilization
-                      </span>
-                    </div>
-                    <div className="text-right pl-3 shrink-0">
-                      <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase block">ESTIMATE</span>
-                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">$3,400 - $4,800</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Back Footer */}
-                <div className="pt-2 border-t flex items-center justify-between text-xs"
-                  style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
-                >
-                  <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
-                    PDF Signature: SHA-256 Verified
-                  </span>
-                  <button
-                    onClick={() => navigate("/inspections")}
-                    className="px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
+                  {/* Back Footer */}
+                  <div
+                    className="pt-2 border-t flex items-center justify-between text-xs"
+                    style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
                   >
-                    Open Inspection Workspace →
-                  </button>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      SHA-256: 9e4f...21b0
+                    </span>
+                    <button
+                      onClick={() => navigate("/inspections")}
+                      className="px-3 py-1.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
+                    >
+                      Inspect Specimen →
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
