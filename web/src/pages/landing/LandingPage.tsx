@@ -626,9 +626,9 @@ export default function LandingPage() {
       </section>
 
       {/* Architectural Audit Deliverable Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <section className="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         <div
-          className="rounded-3xl p-8 sm:p-14 border shadow-xl relative overflow-hidden"
+          className="rounded-2xl p-6 sm:p-8 border shadow-lg relative overflow-hidden"
           style={{
             background: isDark
               ? "linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 14, 0.98))"
@@ -636,48 +636,48 @@ export default function LandingPage() {
             borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(203, 213, 225, 0.9)",
           }}
         >
-          <div className="max-w-3xl mx-auto text-center">
-            <span className="text-xs font-mono uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-400 mb-3 block">
+          <div className="max-w-2xl mx-auto text-center">
+            <span className="text-[11px] font-mono uppercase tracking-wider font-bold text-emerald-600 dark:text-emerald-400 mb-1.5 block">
               Architectural & Engineering Audits
             </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2.5">
               A Standard of Precision for Modern Property Auditing
             </h2>
-            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-8 max-w-2xl mx-auto">
+            <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm leading-relaxed mb-5 max-w-xl mx-auto">
               Standardized room protocols, cryptographic report seals, and automated building standard cross-checks built for certified survey teams and asset managers.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => navigate("/dashboard")}
-                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-md shadow-emerald-600/20 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                 type="button"
               >
                 Launch DefectLoupe Workspace
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
                 </svg>
               </button>
               <button
                 onClick={() => navigate("/knowledge-base")}
-                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-800 dark:text-slate-200 bg-transparent border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 bg-transparent border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
                 type="button"
               >
                 Inspect Building Standards
               </button>
             </div>
-            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                IBC & ASTM Engineering Citations
+                IBC & ASTM Citations
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Cryptographically Sealed PDFs
+                Sealed PDFs
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Air-gapped & On-premise Deployable
+                Air-gapped Deployable
               </span>
             </div>
           </div>
