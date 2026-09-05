@@ -251,25 +251,25 @@ export function QuickMegaMenu({
   })).filter((sec) => sec.items.length > 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 px-4 bg-black/60 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-2 sm:pt-6 pb-3 px-3 sm:px-4 bg-black/65 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
       <div
         ref={menuRef}
-        className="w-full max-w-5xl rounded-3xl border shadow-2xl overflow-hidden transition-all duration-200 animate-in zoom-in-95"
+        className="w-full max-w-5xl rounded-2xl sm:rounded-3xl border shadow-2xl overflow-hidden transition-all duration-200 animate-in zoom-in-95 flex flex-col max-h-[94vh] sm:max-h-[90vh]"
         style={{
           background: isDark
-            ? "rgba(10, 13, 20, 0.94)"
-            : "rgba(255, 255, 255, 0.97)",
+            ? "rgba(10, 13, 20, 0.96)"
+            : "rgba(255, 255, 255, 0.98)",
           borderColor: isDark
             ? "rgba(255, 255, 255, 0.12)"
             : "rgba(226, 232, 240, 0.95)",
           boxShadow: isDark
-            ? "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 35px rgba(16, 185, 129, 0.15)"
-            : "0 20px 40px -10px rgba(0, 0, 0, 0.1)",
+            ? "0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 40px rgba(16, 185, 129, 0.12)"
+            : "0 20px 45px -10px rgba(0, 0, 0, 0.12)",
         }}
       >
         {/* Header Bar */}
         <div
-          className="px-6 py-4 border-b flex items-center justify-between gap-4"
+          className="px-4 sm:px-6 py-3.5 border-b flex items-center justify-between gap-3 shrink-0"
           style={{
             borderColor: isDark
               ? "rgba(255, 255, 255, 0.08)"
@@ -336,9 +336,9 @@ export function QuickMegaMenu({
         </div>
 
         {/* Body: Horizontal Rows / Line-Wise Sections */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto space-y-6">
+        <div className="p-4 sm:p-5 flex-1 min-h-0 overflow-y-auto space-y-4 sm:space-y-5">
           {filteredSections.map((sec, idx) => (
-            <div key={idx} className="space-y-3">
+            <div key={idx} className="space-y-2.5">
               {/* Row Header Line */}
               <div className="flex items-center justify-between border-b pb-1.5"
                 style={{
@@ -357,13 +357,13 @@ export function QuickMegaMenu({
               </div>
 
               {/* Horizontal Line-Wise Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
                 {sec.items.map((item, itemIdx) => (
                   <button
                     key={itemIdx}
                     onClick={() => handleSelect(item)}
                     type="button"
-                    className="flex flex-row items-center gap-3.5 p-3.5 rounded-2xl border text-left transition-all duration-200 group cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+                    className="flex flex-row items-center gap-3 p-3 rounded-2xl border text-left transition-all duration-200 group cursor-pointer hover:scale-[1.015] hover:shadow-lg"
                     style={{
                       background: isDark
                         ? "rgba(18, 24, 38, 0.55)"
@@ -375,14 +375,14 @@ export function QuickMegaMenu({
                   >
                     {/* Icon Tile */}
                     <div
-                      className={`w-11 h-11 rounded-xl bg-gradient-to-br flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 shadow-sm ${item.accentColor}`}
+                      className={`w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center border shrink-0 transition-transform group-hover:scale-105 shadow-sm ${item.accentColor}`}
                     >
                       {item.icon}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1.5">
+                      <div className="flex items-center justify-between gap-1">
                         <span className="text-xs font-bold tracking-tight text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                           {item.title}
                         </span>
@@ -422,7 +422,7 @@ export function QuickMegaMenu({
 
         {/* Footer Info */}
         <div
-          className="px-6 py-3 border-t flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400"
+          className="px-4 sm:px-6 py-2.5 border-t flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0"
           style={{
             borderColor: isDark
               ? "rgba(255, 255, 255, 0.08)"
