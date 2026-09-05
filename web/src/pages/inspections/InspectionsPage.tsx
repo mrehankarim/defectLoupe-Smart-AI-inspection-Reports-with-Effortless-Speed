@@ -76,19 +76,7 @@ export default function InspectionsPage() {
   const [photoAnalysis, setPhotoAnalysis] = useState<Record<string, any>>({});
   const [newObsText, setNewObsText] = useState<{ [areaId: string]: string }>({});
 
-  // Attachments when adding a new room
-  const [newAreaPhoto, setNewAreaPhoto] = useState<File | null>(null);
-  const [newAreaPhotoPreview, setNewAreaPhotoPreview] = useState<string | null>(null);
-  const [isRecordingNewAreaVoice, setIsRecordingNewAreaVoice] = useState(false);
-  const [newAreaAudioBlob, setNewAreaAudioBlob] = useState<Blob | null>(null);
-  const [newAreaAudioUrl, setNewAreaAudioUrl] = useState<string | null>(null);
-  const [newAreaVoiceText, setNewAreaVoiceText] = useState("");
-  const [newAreaVoiceDuration, setNewAreaVoiceDuration] = useState(0);
   const [isCreatingArea, setIsCreatingArea] = useState(false);
-  const newAreaVoiceTimerRef = useRef<any>(null);
-  const newAreaMediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const newAreaAudioChunksRef = useRef<BlobPart[]>([]);
-  const newAreaSpeechRecRef = useRef<any>(null);
 
   // Dedicated Edit Area Modal state
   const [editingArea, setEditingArea] = useState<Area | null>(null);
@@ -236,145 +224,20 @@ export default function InspectionsPage() {
     }
   }
 
-  // ── Handlers for Adding a Room with Attachments ──────────────────────
-  async function handleStartNewAreaVoice() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      newAreaAudioChunksRef.current = [];
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
-      const recorder = new MediaRecorder(stream, { mimeType });
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) newAreaAudioChunksRef.current.push(e.data);
-      };
-      recorder.onstop = () => {
-        const blob = new Blob(newAreaAudioChunksRef.current, { type: mimeType });
-        setNewAreaAudioBlob(blob);
-        const url = URL.createObjectURL(blob);
-        setNewAreaAudioUrl(url);
-        stream.getTracks().forEach((t) => t.stop());
-      };
-      recorder.start();
-      newAreaMediaRecorderRef.current = recorder;
-      setIsRecordingNewAreaVoice(true);
-      setNewAreaVoiceDuration(0);
-
-      newAreaVoiceTimerRef.current = setInterval(() => {
-        setNewAreaVoiceDuration((prev) => prev + 1);
-      }, 1000);
-
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = "en-US";
-        recognition.onresult = (e: any) => {
-          const transcript = Array.from(e.results).map((r: any) => r[0].transcript).join("");
-          setNewAreaVoiceText(transcript);
-        };
-        recognition.onerror = () => {};
-        recognition.start();
-        newAreaSpeechRecRef.current = recognition;
-      }
-      showToast("Recording room voice note... Speak now.", "info");
-    } catch {
-      showToast("Microphone access denied or unavailable", "error");
-    }
-  }
-
-  function handleStopNewAreaVoice() {
-    if (newAreaMediaRecorderRef.current && newAreaMediaRecorderRef.current.state !== "inactive") {
-      newAreaMediaRecorderRef.current.stop();
-    }
-    if (newAreaSpeechRecRef.current) {
-      try { newAreaSpeechRecRef.current.stop(); } catch {}
-    }
-    if (newAreaVoiceTimerRef.current) {
-      clearInterval(newAreaVoiceTimerRef.current);
-    }
-    setIsRecordingNewAreaVoice(false);
-    showToast("Room voice note captured!", "success");
-  }
-
-  function handleDiscardNewAreaVoice() {
-    if (newAreaAudioUrl) URL.revokeObjectURL(newAreaAudioUrl);
-    setNewAreaAudioBlob(null);
-    setNewAreaAudioUrl(null);
-    setNewAreaVoiceText("");
-    setNewAreaVoiceDuration(0);
-  }
-
-  function handleNewAreaPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
-      setNewAreaPhoto(file);
-      setNewAreaPhotoPreview(URL.createObjectURL(file));
-    }
-  }
-
-  function handleRemoveNewAreaPhoto() {
-    if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
-    setNewAreaPhoto(null);
-    setNewAreaPhotoPreview(null);
-  }
-
+  // ── Handler for Adding a Room ─────────────────────────────────────────
   async function handleAddArea() {
     if (!newAreaName.trim() || !selectedInspection) return;
     setIsCreatingArea(true);
     try {
-      // 1. Create area
-      const createdArea = await api.post<Area>(`/inspections/${selectedInspection.id}/areas`, {
+      await api.post<Area>(`/inspections/${selectedInspection.id}/areas`, {
         name: newAreaName.trim(),
         display_order: areas.length + 1,
       });
 
-      // 2. Upload photo if attached
-      if (newAreaPhoto && createdArea?.id) {
-        const photoFormData = new FormData();
-        photoFormData.append("file", newAreaPhoto);
-        await fetch(`/api/v1/areas/${createdArea.id}/photos`, {
-          method: "POST",
-          credentials: "include",
-          body: photoFormData,
-        });
-      }
-
-      // 3. Upload voice note or observation text if attached
-      if (createdArea?.id && (newAreaAudioBlob || newAreaVoiceText.trim())) {
-        if (newAreaAudioBlob) {
-          const obsFormData = new FormData();
-          obsFormData.append("area_id", createdArea.id);
-          const ext = newAreaAudioBlob.type.includes("webm") ? "webm" : "mp4";
-          obsFormData.append("audio", newAreaAudioBlob, `voice_obs_${Date.now()}.${ext}`);
-          if (newAreaVoiceText.trim()) {
-            obsFormData.append("observation_text", newAreaVoiceText.trim());
-          }
-          await api.upload("/observations", obsFormData);
-        } else if (newAreaVoiceText.trim()) {
-          await api.post("/observations", {
-            inspection_area_id: createdArea.id,
-            observation_type: "text",
-            observation_text: newAreaVoiceText.trim(),
-          });
-        }
-      }
-
-      // Reset form states
       const addedName = newAreaName.trim();
       setNewAreaName("");
-      if (newAreaPhotoPreview) URL.revokeObjectURL(newAreaPhotoPreview);
-      setNewAreaPhoto(null);
-      setNewAreaPhotoPreview(null);
-      if (newAreaAudioUrl) URL.revokeObjectURL(newAreaAudioUrl);
-      setNewAreaAudioBlob(null);
-      setNewAreaAudioUrl(null);
-      setNewAreaVoiceText("");
-      setNewAreaVoiceDuration(0);
-
       showToast(`Added room "${addedName}" successfully!`);
       fetchAreas(selectedInspection.id);
-      fetchMedia(selectedInspection.id);
     } catch (err) {
       showToast((err as ApiError).detail || "Failed to add area", "error");
     } finally {
@@ -818,7 +681,7 @@ export default function InspectionsPage() {
     "https://images.unsplash.com/photo-1572120360610-d971b9d7767c?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=800&q=80",
   ];
@@ -1104,7 +967,9 @@ export default function InspectionsPage() {
     const insp = selectedInspection;
     const property = properties.find((p) => p.id === insp.property_id);
     const propIndex = properties.findIndex((p) => p.id === insp.property_id);
-    const coverImage = PROPERTY_IMAGES[propIndex >= 0 ? propIndex % PROPERTY_IMAGES.length : 0];
+    const coverImage = property?.address?.includes("14248")
+      ? "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+      : PROPERTY_IMAGES[propIndex >= 0 ? propIndex % PROPERTY_IMAGES.length : 0];
 
     return (
       <>
@@ -1287,7 +1152,7 @@ export default function InspectionsPage() {
                     placeholder="Type room name (e.g. Master Bedroom, Kitchen, Roof)..."
                     value={newAreaName}
                     onChange={(e) => setNewAreaName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && !isRecordingNewAreaVoice && handleAddArea()}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddArea()}
                     className="flex-1 min-w-50 px-4 py-2.5 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm outline-none bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:border-emerald-500 shadow-sm"
                   />
 
@@ -1305,150 +1170,11 @@ export default function InspectionsPage() {
                         </svg>
                         Adding...
                       </span>
-                    ) : newAreaPhoto && newAreaAudioBlob ? (
-                      "+ Add Room (Photo & Voice)"
-                    ) : newAreaPhoto ? (
-                      "+ Add Room (with Photo)"
-                    ) : newAreaAudioBlob ? (
-                      "+ Add Room (with Voice)"
                     ) : (
                       "+ Add Room"
                     )}
                   </Button>
                 </div>
-
-                {/* Attachments Section: Picture & Voice Recording */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  {/* Photo Attachment Button */}
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:border-emerald-500 hover:text-emerald-600 transition-colors cursor-pointer shadow-sm">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                    <span>{newAreaPhoto ? "Change Picture" : "Attach Picture"}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleNewAreaPhotoSelect}
-                    />
-                  </label>
-
-                  {/* Voice Recording Button */}
-                  <button
-                    type="button"
-                    onClick={isRecordingNewAreaVoice ? handleStopNewAreaVoice : handleStartNewAreaVoice}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                      isRecordingNewAreaVoice
-                        ? "bg-rose-500 border-rose-500 text-white animate-pulse"
-                        : "bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60"
-                    }`}
-                    title={isRecordingNewAreaVoice ? "Click to stop recording" : "Record voice observation for this room"}
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                    <span>
-                      {isRecordingNewAreaVoice
-                        ? `Stop Rec (${Math.floor(newAreaVoiceDuration / 60)}:${(newAreaVoiceDuration % 60).toString().padStart(2, "0")})`
-                        : newAreaAudioBlob
-                        ? "Re-record Voice"
-                        : "Record Voice Note"}
-                    </span>
-                  </button>
-
-                  <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">
-                    Attach photos & voice notes directly to this room
-                  </span>
-                </div>
-
-                {/* Live Recording Indicator */}
-                {isRecordingNewAreaVoice && (
-                  <div className="flex items-center gap-2 text-xs text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800 rounded-xl px-3.5 py-2 animate-pulse">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping shrink-0" />
-                    <span className="font-semibold">
-                      Listening to observation... Speak now. Click "Stop Rec" when done.
-                    </span>
-                  </div>
-                )}
-
-                {/* Attached Media Previews */}
-                {(newAreaPhotoPreview || newAreaAudioBlob || newAreaVoiceText) && (
-                  <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
-                    <div className="text-[11px] font-mono font-bold uppercase text-slate-400">
-                      Attached with this room:
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
-                      {/* Attached Photo Preview */}
-                      {newAreaPhotoPreview && (
-                        <div className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 shadow-xs">
-                          <img
-                            src={newAreaPhotoPreview}
-                            alt="Room specimen"
-                            className="w-10 h-10 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-32.5">
-                              {newAreaPhoto?.name}
-                            </p>
-                            <p className="text-[10px] text-slate-400 font-mono">
-                              {newAreaPhoto ? `${Math.round(newAreaPhoto.size / 1024)} KB` : ""}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={handleRemoveNewAreaPhoto}
-                            className="text-slate-400 hover:text-rose-600 p-1 rounded-md cursor-pointer ml-1"
-                            title="Remove picture"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Attached Voice Note Preview */}
-                      {newAreaAudioBlob && !isRecordingNewAreaVoice && (
-                        <div className="flex items-center gap-2.5 p-2 px-3 rounded-xl border border-purple-200 dark:border-purple-800/70 bg-purple-50/70 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-xs">
-                          <span className="text-sm">🎙️</span>
-                          <div>
-                            <p className="text-xs font-bold">Voice Note Ready</p>
-                            <p className="text-[10px] text-purple-500 font-mono">
-                              {Math.round(newAreaAudioBlob.size / 1024)} KB audio
-                            </p>
-                          </div>
-                          {newAreaAudioUrl && (
-                            <audio controls src={newAreaAudioUrl} className="h-6 w-32 max-w-35" />
-                          )}
-                          <button
-                            type="button"
-                            onClick={handleDiscardNewAreaVoice}
-                            className="text-purple-400 hover:text-rose-500 p-1 cursor-pointer font-bold"
-                            title="Discard audio"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Speech / Note Preview Field */}
-                    {(newAreaVoiceText || isRecordingNewAreaVoice) && (
-                      <div className="pt-1">
-                        <label className="block text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1">
-                          Observation Field Note:
-                        </label>
-                        <input
-                          type="text"
-                          value={newAreaVoiceText}
-                          onChange={(e) => setNewAreaVoiceText(e.target.value)}
-                          placeholder="Type or review speech-transcribed notes for this room..."
-                          className="w-full px-3 py-1.5 border border-slate-300 dark:border-slate-700 rounded-lg text-xs bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 outline-none focus:border-emerald-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Intuitive Single-Click Room Presets */}
@@ -2062,7 +1788,9 @@ export default function InspectionsPage() {
           {inspections.map((insp, idx) => {
             const property = properties.find((p) => p.id === insp.property_id);
             const propIndex = properties.findIndex((p) => p.id === insp.property_id);
-            const coverImage = PROPERTY_IMAGES[propIndex >= 0 ? propIndex % PROPERTY_IMAGES.length : idx % PROPERTY_IMAGES.length];
+            const coverImage = property?.address?.includes("14248")
+              ? "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+              : PROPERTY_IMAGES[propIndex >= 0 ? propIndex % PROPERTY_IMAGES.length : idx % PROPERTY_IMAGES.length];
 
             return (
               <div
