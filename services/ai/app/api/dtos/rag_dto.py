@@ -29,6 +29,7 @@ class DocumentResponse(BaseModel):
     id: UUID
     filename: str
     created_at: datetime
+    chunk_count: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -119,7 +119,9 @@ def search_knowledge_base(
     )
 
     if company_id is not None:
-        stmt = stmt.where(DocumentChunk.company_id == company_id)
+        stmt = stmt.where(
+            (DocumentChunk.company_id == company_id) | (DocumentChunk.company_id.is_(None))
+        )
 
     results = db.execute(stmt).all()
 
@@ -144,15 +146,23 @@ def list_documents(
             DocumentChunk.filename,
             sa_func.min(cast(DocumentChunk.id, Text)).label("id"),
             sa_func.min(DocumentChunk.created_at).label("created_at"),
+            sa_func.count(DocumentChunk.id).label("chunk_count"),
         )
         .group_by(DocumentChunk.filename)
         .order_by(sa_func.min(DocumentChunk.created_at).desc())
     )
     if company_id is not None:
-        stmt = stmt.filter(DocumentChunk.company_id == company_id)
+        stmt = stmt.filter(
+            (DocumentChunk.company_id == company_id) | (DocumentChunk.company_id.is_(None))
+        )
 
     return [
-        {"id": row.id, "filename": row.filename, "created_at": row.created_at}
+        {
+            "id": row.id,
+            "filename": row.filename,
+            "created_at": row.created_at,
+            "chunk_count": int(row.chunk_count),
+        }
         for row in stmt.all()
     ]
 
