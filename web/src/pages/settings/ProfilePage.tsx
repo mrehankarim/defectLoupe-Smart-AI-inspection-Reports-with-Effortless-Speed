@@ -184,7 +184,10 @@ export default function ProfilePage() {
               className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 text-[13px] font-medium px-3 py-1.5 rounded-xl"
               style={{ background: "rgba(34,197,94,0.10)", border: "1px solid rgba(34,197,94,0.22)" }}
             >
-              ✓ Saved
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Saved
             </span>
           )}
           {editing ? (

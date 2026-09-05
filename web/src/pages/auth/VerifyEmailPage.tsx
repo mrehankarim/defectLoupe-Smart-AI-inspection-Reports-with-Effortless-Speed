@@ -87,8 +87,9 @@ export default function VerifyEmailPage() {
             {email ? `We sent a verification link to ${email}.` : "Use the verification link sent to your email to activate your account."}
           </p>
           <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/60 dark:border-indigo-900/40 dark:bg-indigo-950/30 p-3 text-left">
-            <p className="text-xs text-indigo-800 dark:text-indigo-300">
-              💡 <strong>Dev Note:</strong> In local testing, if `DEV_AUTO_VERIFY=true` is enabled, your account is already verified and you can log in immediately.
+            <p className="text-xs text-indigo-800 dark:text-indigo-300 flex items-start gap-1.5">
+              <span className="font-mono text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0">Dev Note</span>
+              <span>In local testing, if `DEV_AUTO_VERIFY=true` is enabled, your account is already verified and you can log in immediately.</span>
             </p>
           </div>
           <Link className="btn-primary mt-6 w-full font-bold justify-center" to="/login">

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface CommandItem {
@@ -7,19 +7,135 @@ interface CommandItem {
   category: "Navigation" | "Quick Action";
   path: string;
   shortcut?: string;
-  icon: string;
+  icon: React.ReactNode;
 }
 
 const COMMANDS: CommandItem[] = [
-  { id: "landing", label: "Landing Page", category: "Navigation", path: "/", shortcut: "G L", icon: "🌐" },
-  { id: "dash", label: "Dashboard", category: "Navigation", path: "/dashboard", shortcut: "G D", icon: "📊" },
-  { id: "clients", label: "Clients Directory", category: "Navigation", path: "/clients", shortcut: "G C", icon: "👥" },
-  { id: "props", label: "Properties Portfolio", category: "Navigation", path: "/properties", shortcut: "G P", icon: "🏠" },
-  { id: "inspect", label: "Inspections Studio", category: "Navigation", path: "/inspections", shortcut: "G I", icon: "📋" },
-  { id: "reports", label: "Reports & PDF Exports", category: "Navigation", path: "/reports", shortcut: "G R", icon: "📄" },
-  { id: "kb", label: "AI Knowledge Base & RAG", category: "Navigation", path: "/knowledge-base", shortcut: "G K", icon: "🧠" },
-  { id: "profile", label: "Inspector Profile", category: "Navigation", path: "/profile", shortcut: "G S", icon: "👤" },
-  { id: "settings", label: "System Settings", category: "Navigation", path: "/settings", icon: "⚙️" },
+  {
+    id: "landing",
+    label: "Landing Page",
+    category: "Navigation",
+    path: "/",
+    shortcut: "G L",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+  },
+  {
+    id: "dash",
+    label: "Dashboard",
+    category: "Navigation",
+    path: "/dashboard",
+    shortcut: "G D",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="7" height="9" x="3" y="3" rx="1" />
+        <rect width="7" height="5" x="14" y="3" rx="1" />
+        <rect width="7" height="9" x="14" y="12" rx="1" />
+        <rect width="7" height="5" x="3" y="16" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    id: "clients",
+    label: "Clients Directory",
+    category: "Navigation",
+    path: "/clients",
+    shortcut: "G C",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+      </svg>
+    ),
+  },
+  {
+    id: "props",
+    label: "Properties Portfolio",
+    category: "Navigation",
+    path: "/properties",
+    shortcut: "G P",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+  {
+    id: "inspect",
+    label: "Inspections Studio",
+    category: "Navigation",
+    path: "/inspections",
+    shortcut: "G I",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="8" height="4" x="8" y="2" rx="1" />
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <path d="m9 14 2 2 4-4" />
+      </svg>
+    ),
+  },
+  {
+    id: "reports",
+    label: "Reports & PDF Exports",
+    category: "Navigation",
+    path: "/reports",
+    shortcut: "G R",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+  },
+  {
+    id: "kb",
+    label: "AI Knowledge Base & RAG",
+    category: "Navigation",
+    path: "/knowledge-base",
+    shortcut: "G K",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <ellipse cx="12" cy="5" rx="9" ry="3" />
+        <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+        <path d="M3 12A9 3 0 0 0 21 12" />
+      </svg>
+    ),
+  },
+  {
+    id: "profile",
+    label: "Inspector Profile",
+    category: "Navigation",
+    path: "/profile",
+    shortcut: "G S",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+  },
+  {
+    id: "settings",
+    label: "System Settings",
+    category: "Navigation",
+    path: "/settings",
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    ),
+  },
 ];
 
 interface CommandPaletteProps {

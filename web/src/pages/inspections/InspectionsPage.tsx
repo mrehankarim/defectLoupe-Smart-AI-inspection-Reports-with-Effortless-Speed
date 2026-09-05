@@ -357,9 +357,13 @@ export default function InspectionsPage() {
                   showToast("Report generation triggered");
                 }
               }}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5"
             >
-              ⚡ Generate PDF Report
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Generate PDF Report
             </button>
             <div className="flex gap-1.5 flex-wrap">
               {(VALID_TRANSITIONS[insp.status] || []).map((s) => (
@@ -388,9 +392,9 @@ export default function InspectionsPage() {
                     : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
                 }`}
               >
-                {tab === "areas" && "📋 Inspection Rooms & Areas"}
-                {tab === "photos" && "📸 Defect Photo Gallery & AI Scanner"}
-                {tab === "observations" && "🎙️ Field Notes & Dictation"}
+                {tab === "areas" && "Inspection Rooms & Areas"}
+                {tab === "photos" && "Defect Photo Gallery & Scanner"}
+                {tab === "observations" && "Field Notes & Observations"}
               </button>
             ))}
           </div>
@@ -444,7 +448,15 @@ export default function InspectionsPage() {
               <div className="text-center py-12 text-slate-500">Loading areas...</div>
             ) : areas.length === 0 ? (
               <EmptyState
-                icon="📋"
+                icon={
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="18" height="18" x="3" y="3" rx="2" />
+                      <path d="M3 9h18" />
+                      <path d="M9 21V9" />
+                    </svg>
+                  </div>
+                }
                 title="No inspection rooms yet"
                 description="Click a Quick Add room above or type a custom area name to begin your walkthrough"
               />
@@ -483,7 +495,10 @@ export default function InspectionsPage() {
                         className="p-1 text-rose-400 hover:text-rose-600 ml-1 cursor-pointer text-xs"
                         title="Delete room"
                       >
-                        ✕
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
                       </button>
                     </div>
                   </div>
@@ -499,7 +514,18 @@ export default function InspectionsPage() {
             {mediaLoading ? (
               <div className="text-center py-12 text-slate-500">Loading defect photos...</div>
             ) : mediaData.length === 0 ? (
-              <EmptyState icon="📷" title="No inspection areas" description="Add rooms in the Areas tab first to attach defect photos" />
+              <EmptyState
+                icon={
+                  <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                      <circle cx="12" cy="13" r="3" />
+                    </svg>
+                  </div>
+                }
+                title="No inspection areas"
+                description="Add rooms in the Areas tab first to attach defect photos"
+              />
             ) : (
               <div className="space-y-6">
                 {mediaData.map((item) => (
@@ -540,7 +566,17 @@ export default function InspectionsPage() {
                                 disabled={analyzingPhotoId === p.id}
                                 className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
                               >
-                                {analyzingPhotoId === p.id ? "Analyzing with Gemini AI..." : "🤖 Live Gemini Vision Analysis"}
+                                {analyzingPhotoId === p.id ? (
+                                  "Analyzing with Vision Engine..."
+                                ) : (
+                                  <>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="11" cy="11" r="8" />
+                                      <path d="m21 21-4.3-4.3" />
+                                    </svg>
+                                    Run Gemini Vision Analysis
+                                  </>
+                                )}
                               </button>
 
                               {photoAnalysis[p.id] && (
@@ -581,7 +617,18 @@ export default function InspectionsPage() {
             {mediaLoading ? (
               <div className="text-center py-12 text-slate-500">Loading observations...</div>
             ) : mediaData.length === 0 ? (
-              <EmptyState icon="📝" title="No inspection areas" description="Add areas first to record observations" />
+              <EmptyState
+                icon={
+                  <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                    </svg>
+                  </div>
+                }
+                title="No inspection areas"
+                description="Add areas first to record observations"
+              />
             ) : (
               <div className="space-y-6">
                 {mediaData.map((item: any) => (
@@ -689,7 +736,14 @@ export default function InspectionsPage() {
         </div>
       ) : inspections.length === 0 ? (
         <EmptyState
-          icon="🔍"
+          icon={
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-500">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
+            </div>
+          }
           title="No inspections found"
           description="Create your first inspection or adjust your search filters"
           action={<Button onClick={() => setShowCreate(true)}>+ New Inspection</Button>}

@@ -119,7 +119,14 @@ export default function ClientsPage() {
         </div>
       ) : clients.length === 0 ? (
         <EmptyState
-          icon="👤"
+          icon={
+            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </div>
+          }
           title="No clients yet"
           description='Click "+ New Client" to add your first client'
           action={<Button onClick={openCreate}>+ New Client</Button>}

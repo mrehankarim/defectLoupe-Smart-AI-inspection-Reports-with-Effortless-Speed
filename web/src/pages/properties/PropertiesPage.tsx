@@ -157,7 +157,14 @@ export default function PropertiesPage() {
         </div>
       ) : properties.length === 0 ? (
         <EmptyState
-          icon="🏠"
+          icon={
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </div>
+          }
           title="No properties found"
           description="Create a property or adjust your filters"
           action={<Button onClick={openCreate}>+ New Property</Button>}

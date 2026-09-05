@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import LogoIcon from "../LogoIcon";
 
 export function Footer() {
   function scrollToTop() {
@@ -13,9 +14,7 @@ export function Footer() {
           <div className="md:col-span-1 space-y-4">
             <NavLink to="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity text-decoration-none">
               <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
+                <LogoIcon size={16} />
               </div>
               <span className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight">DefectLoupe</span>
             </NavLink>

@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
 import { Footer } from "../../components/layout/Footer";
+import LogoIcon from "../../components/LogoIcon";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -75,9 +76,7 @@ export default function LandingPage() {
                 boxShadow: "0 0 16px rgba(16,185,129,0.20)",
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
+              <LogoIcon size={18} />
             </div>
             <span
               className="text-base font-extrabold tracking-tight flex items-center gap-1.5"
@@ -238,113 +237,82 @@ export default function LandingPage() {
                   />
                 )}
 
-                {/* Specimen Header */}
+                {/* Dossier Header */}
                 <div
-                  className="flex items-center justify-between border-b pb-3"
+                  className="flex items-center justify-between border-b pb-3.5"
                   style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
                 >
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-600 dark:text-rose-400 font-mono text-xs font-bold shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold shrink-0">
                       DL
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-                          SPECIMEN #DL-2026-8894
-                        </span>
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30">
-                          CRITICAL · RISK 4/5
-                        </span>
+                      <div className="text-xs font-mono uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-bold">
+                        Audit Record #DL-4820
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        1428 Elm Ridge Pkwy · Foundation Retaining Wall
-                      </p>
+                      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                        Highland Ridge Residence
+                      </h3>
                     </div>
                   </div>
+                  <span className="px-2.5 py-1 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    Audit Complete
+                  </span>
                 </div>
 
-                {/* Real Photo Visual with Optical Reticle */}
-                <div className="my-3.5 relative rounded-2xl overflow-hidden border border-slate-300 dark:border-slate-800 shadow-md">
+                {/* Architecture Visual Preview */}
+                <div className="my-3.5 relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm">
                   <img
-                    src="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=800&q=80"
-                    alt="Real Concrete Shear Crack Defect"
-                    className="w-full h-40 object-cover"
+                    src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+                    alt="Highland Ridge Residence Inspection View"
+                    className="w-full h-44 object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-                  {/* Telemetry coordinate tag */}
-                  <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-md bg-black/75 border border-white/20 text-[10px] font-mono text-emerald-400 font-bold backdrop-blur-md">
-                    METRIC CALIPER: 1:1
-                  </div>
-
-                  {/* In-photo Defect Banner */}
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 p-2.5 rounded-xl bg-slate-950/85 border border-rose-500/60 backdrop-blur-md text-slate-100 flex items-center justify-between">
-                    <div>
-                      <div className="text-[11px] font-bold text-rose-400">
-                        Foundation Shear Fracture (Active)
-                      </div>
-                      <div className="text-[10px] text-slate-300 font-mono mt-0.5">
-                        Aperture: 4.8mm • Propagation: Active • RH: 72%
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0">
-                      Class IV
-                    </span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <p className="text-xs font-semibold">742 Evergreen Terrace, Sector 4</p>
+                    <p className="text-[11px] text-slate-200 opacity-90">Structural, Envelope & Electrical Assessment</p>
                   </div>
                 </div>
 
-                {/* Real Forensic & Code Cross-Reference Data */}
-                <div className="space-y-2 mb-3 font-sans text-xs">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[9px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block">
-                        BUILDING CODE
-                      </span>
-                      <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 block mt-0.5">
-                        IBC 2024 §1807.1
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400">Shear stress wall limits</span>
+                {/* Simple & Plain Property Information Grid */}
+                <div className="space-y-2.5 mb-3.5 font-sans">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Inspection Scope</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">14 Audited Zones</span>
                     </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[9px] font-mono uppercase text-slate-500 dark:text-slate-400 font-bold block">
-                        REPAIR SPEC
-                      </span>
-                      <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                        ASTM C881-20
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400">Type IV epoxy injection</span>
+                    <div className="p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Building Standard</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-0.5 block">IBC & ASTM Aligned</span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between">
+                  <div className="p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
                     <div>
-                      <span className="text-[9px] font-mono uppercase text-emerald-800 dark:text-emerald-300 font-bold block">
-                        RECOMMENDED REMEDIATION
-                      </span>
-                      <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
-                        Structural underpinning & moisture sealing
-                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Lead Inspector</span>
+                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Sarah Jenkins, PE</span>
                     </div>
-                    <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
-                      $3,400 - $4,800
-                    </span>
+                    <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400">License #8492-CA</span>
                   </div>
                 </div>
 
-                {/* Card Footer: Digital Custody & Direct Inspection Action */}
+                {/* Card Footer: Simple and Plain Action */}
                 <div
-                  className="pt-2.5 border-t flex items-center justify-between text-xs"
+                  className="pt-3 border-t flex items-center justify-between text-xs"
                   style={{ borderColor: isDark ? "rgba(255, 255, 255, 0.08)" : "rgba(226, 232, 240, 0.9)" }}
                 >
-                  <span className="text-[10px] font-mono text-slate-400">
-                    SHA-256: 9e4f...21b0
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Cryptographic report verification sealed
                   </span>
                   <button
                     onClick={() => navigate("/inspections")}
-                    className="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-3.5 py-1.5 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    Inspect Specimen →
+                    Open Inspection
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -366,54 +334,54 @@ export default function LandingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Feature 1 */}
-          <div className="glass-card p-6 border-l-4 border-l-emerald-500 bg-white/95 dark:bg-slate-900/85">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 mb-4 font-bold">
+          <div className="glass-card p-6 sm:p-7 border-l-4 border-l-emerald-500 bg-white/95 dark:bg-slate-900/85">
+            <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 mb-4 font-bold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">High-Resolution Defect Detection</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">High-Resolution Defect Detection</h3>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Upload photos from site walkthroughs for automatic structural crack classification, severity scoring, and bounding coordinates.
             </p>
           </div>
 
           {/* Feature 2 */}
-          <div className="glass-card p-6 border-l-4 border-l-indigo-500 bg-white/95 dark:bg-slate-900/85">
-            <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-300 dark:border-indigo-500/30 flex items-center justify-center text-indigo-700 dark:text-indigo-400 mb-4 font-bold">
+          <div className="glass-card p-6 sm:p-7 border-l-4 border-l-indigo-500 bg-white/95 dark:bg-slate-900/85">
+            <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 border border-indigo-300 dark:border-indigo-500/30 flex items-center justify-center text-indigo-700 dark:text-indigo-400 mb-4 font-bold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Hands-Free Audio Dictation</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Hands-Free Audio Dictation</h3>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Record spoken inspector observations on site. Background speech transcription converts audio into clean, structured technical findings.
             </p>
           </div>
 
           {/* Feature 3 */}
-          <div className="glass-card p-6 border-l-4 border-l-cyan-500 bg-white/95 dark:bg-slate-900/85">
-            <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-400 mb-4 font-bold">
+          <div className="glass-card p-6 sm:p-7 border-l-4 border-l-cyan-500 bg-white/95 dark:bg-slate-900/85">
+            <div className="w-11 h-11 rounded-xl bg-cyan-100 dark:bg-cyan-500/20 border border-cyan-300 dark:border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-400 mb-4 font-bold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Building Code Compliance Match</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Building Code Compliance Match</h3>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Cross-reference findings against standard building codes (IBC, ASTM) and regional requirements using embedded vector search.
             </p>
           </div>
 
           {/* Feature 4 */}
-          <div className="glass-card p-6 border-l-4 border-l-violet-500 bg-white/95 dark:bg-slate-900/85">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-300 dark:border-violet-500/30 flex items-center justify-center text-violet-700 dark:text-violet-400 mb-4 font-bold">
+          <div className="glass-card p-6 sm:p-7 border-l-4 border-l-violet-500 bg-white/95 dark:bg-slate-900/85">
+            <div className="w-11 h-11 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-300 dark:border-violet-500/30 flex items-center justify-center text-violet-700 dark:text-violet-400 mb-4 font-bold">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-2">Signed PDF & QR Verification</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Signed PDF & QR Verification</h3>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Generate tamper-evident PDF deliverables equipped with cryptographic public QR verification for buyers, insurers, and banks.
             </p>
           </div>
@@ -429,7 +397,7 @@ export default function LandingPage() {
           <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-50">
             A Seamless Vertical Field-to-Report Workflow
           </p>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto mt-2">
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto mt-2 leading-relaxed">
             Follow our four-phase audit workflow designed for rapid on-site data gathering and certified technical reporting.
           </p>
         </div>
@@ -444,7 +412,7 @@ export default function LandingPage() {
             </div>
 
             {/* Step Card */}
-            <div className="glass-card p-5 sm:p-6 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-emerald-500/50 group-hover:shadow-md">
+            <div className="glass-card p-5 sm:p-7 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-emerald-500/50 group-hover:shadow-md">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   On-Site Field Capture & Media Ingestion
@@ -455,18 +423,31 @@ export default function LandingPage() {
                   </span>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 The inspector conducts the property walkthrough room by room (Basement, Kitchen, Roof, Foundation). Snap high-resolution defect photos and dictate immediate field observations hands-free.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  📸 Multi-Angle Defect Photos
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                  Multi-Angle Defect Photos
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🎙️ Spoken Audio Notes
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-600 dark:text-teal-400">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                  Spoken Audio Notes
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  📍 Room / Area Tagging
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
+                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  Room & Area Tagging
                 </span>
               </div>
             </div>
@@ -480,7 +461,7 @@ export default function LandingPage() {
             </div>
 
             {/* Step Card */}
-            <div className="glass-card p-5 sm:p-6 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-teal-500/50 group-hover:shadow-md">
+            <div className="glass-card p-5 sm:p-7 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-teal-500/50 group-hover:shadow-md">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   Automated Defect Diagnostics & Speech Processing
@@ -491,18 +472,31 @@ export default function LandingPage() {
                   </span>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 Photos are analyzed for surface fractures, water staining, and structural deterioration. Audio recordings are simultaneously transcribed and parsed into technical finding statements.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🔍 Computer Vision Defect Bounding
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-600 dark:text-teal-400">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.3-4.3" />
+                  </svg>
+                  Computer Vision Defect Bounding
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  ⚡ Severity Scoring (1-5)
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+                    <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+                  </svg>
+                  Severity Scoring (1 to 5)
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  📝 Audio Transcription Sync
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" x2="8" y1="13" y2="13" />
+                    <line x1="16" x2="8" y1="17" y2="17" />
+                  </svg>
+                  Audio Transcription Sync
                 </span>
               </div>
             </div>
@@ -516,7 +510,7 @@ export default function LandingPage() {
             </div>
 
             {/* Step Card */}
-            <div className="glass-card p-5 sm:p-6 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-cyan-500/50 group-hover:shadow-md">
+            <div className="glass-card p-5 sm:p-7 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-cyan-500/50 group-hover:shadow-md">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   Building Code Cross-Referencing & Synthesis
@@ -527,18 +521,32 @@ export default function LandingPage() {
                   </span>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 The compliance engine compares flagged defects with local building codes, ASTM material standards, and historic inspection baselines stored in the knowledge base.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🏛️ IBC & ASTM Standards Matching
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-cyan-600 dark:text-cyan-400">
+                    <rect width="16" height="20" x="4" y="2" rx="2" />
+                    <line x1="8" x2="16" y1="6" y2="6" />
+                    <line x1="8" x2="16" y1="10" y2="10" />
+                    <line x1="8" x2="12" y1="14" y2="14" />
+                  </svg>
+                  IBC & ASTM Standards Matching
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🧠 PgVector Semantic RAG
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
+                    <ellipse cx="12" cy="5" rx="9" ry="3" />
+                    <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                    <path d="M3 12A9 3 0 0 0 21 12" />
+                  </svg>
+                  PgVector Semantic RAG
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🛠️ Remediation Cost Estimating
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  </svg>
+                  Remediation Cost Estimating
                 </span>
               </div>
             </div>
@@ -552,7 +560,7 @@ export default function LandingPage() {
             </div>
 
             {/* Step Card */}
-            <div className="glass-card p-5 sm:p-6 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-indigo-500/50 group-hover:shadow-md">
+            <div className="glass-card p-5 sm:p-7 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 transition-all group-hover:border-indigo-500/50 group-hover:shadow-md">
               <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                 <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                   Signed PDF Generation & Public QR Verification
@@ -563,18 +571,31 @@ export default function LandingPage() {
                   </span>
                 </div>
               </div>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
                 Compile a certified, branded inspection PDF complete with cover photos, area breakdowns, severity summaries, and a tamper-evident QR code that anyone can scan to verify authenticity.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-mono">
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  📑 WeasyPrint Multi-Page PDF
+              <div className="mt-4 flex flex-wrap gap-2 text-xs font-medium">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-600 dark:text-indigo-400">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" />
+                    <path d="M6 6h10" />
+                    <path d="M6 10h10" />
+                  </svg>
+                  WeasyPrint Multi-Page PDF
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  🔒 Cryptographic Token Verification
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 dark:text-emerald-400">
+                    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Cryptographic Token Verification
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                  ⚡ Client Turnaround: &lt; 2 Minutes
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-600 dark:text-teal-400">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  Client Turnaround Under 2 Minutes
                 </span>
               </div>
             </div>
@@ -587,39 +608,79 @@ export default function LandingPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 text-center">
           <div className="glass-card p-6 bg-white/95 dark:bg-slate-900/85">
             <span className="text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 block mb-1">10x</span>
-            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 uppercase">Faster Audits</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase">Faster Audits</span>
           </div>
           <div className="glass-card p-6 bg-white/95 dark:bg-slate-900/85">
             <span className="text-4xl font-extrabold text-indigo-600 dark:text-indigo-400 block mb-1">99.4%</span>
-            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 uppercase">Vision Accuracy</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase">Vision Accuracy</span>
           </div>
           <div className="glass-card p-6 bg-white/95 dark:bg-slate-900/85">
             <span className="text-4xl font-extrabold text-cyan-600 dark:text-cyan-400 block mb-1">100%</span>
-            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 uppercase">QR Verification</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase">QR Verification</span>
           </div>
           <div className="glass-card p-6 bg-white/95 dark:bg-slate-900/85">
             <span className="text-4xl font-extrabold text-violet-600 dark:text-violet-400 block mb-1">0</span>
-            <span className="text-xs font-mono font-bold text-slate-600 dark:text-slate-400 uppercase">Manual Bottlenecks</span>
+            <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase">Manual Bottlenecks</span>
           </div>
         </div>
       </section>
 
-      {/* Bottom CTA Banner */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="rounded-3xl p-8 sm:p-12 bg-gradient-to-r from-emerald-700 via-teal-700 to-indigo-800 text-white text-center shadow-2xl relative overflow-hidden">
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-            Accelerate Your Property Inspection Workflow Today
-          </h2>
-          <p className="text-emerald-100 text-sm sm:text-base max-w-xl mx-auto mb-8 font-medium">
-            Join property inspectors, asset managers, and engineering auditors saving hours on every report.
-          </p>
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="px-8 py-4 rounded-2xl text-sm font-extrabold text-slate-900 bg-white hover:bg-emerald-50 shadow-xl transition-all cursor-pointer inline-flex items-center gap-2"
-            type="button"
-          >
-            Launch DefectLoupe Workspace →
-          </button>
+      {/* Architectural Audit Deliverable Section */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div
+          className="rounded-3xl p-8 sm:p-14 border shadow-xl relative overflow-hidden"
+          style={{
+            background: isDark
+              ? "linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(7, 9, 14, 0.98))"
+              : "linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.95))",
+            borderColor: isDark ? "rgba(255, 255, 255, 0.12)" : "rgba(203, 213, 225, 0.9)",
+          }}
+        >
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="text-xs font-mono uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-400 mb-3 block">
+              Architectural & Engineering Audits
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+              A Standard of Precision for Modern Property Auditing
+            </h2>
+            <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed mb-8 max-w-2xl mx-auto">
+              Standardized room protocols, cryptographic report seals, and automated building standard cross-checks built for certified survey teams and asset managers.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="w-full sm:w-auto px-8 py-3.5 rounded-2xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-600/25 transition-all cursor-pointer flex items-center justify-center gap-2"
+                type="button"
+              >
+                Launch DefectLoupe Workspace
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => navigate("/knowledge-base")}
+                className="w-full sm:w-auto px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-800 dark:text-slate-200 bg-transparent border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                type="button"
+              >
+                Inspect Building Standards
+              </button>
+            </div>
+            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/80 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                IBC & ASTM Engineering Citations
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Cryptographically Sealed PDFs
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Air-gapped & On-premise Deployable
+              </span>
+            </div>
+          </div>
         </div>
       </section>
 
