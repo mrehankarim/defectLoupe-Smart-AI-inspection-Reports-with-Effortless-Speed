@@ -67,17 +67,18 @@ export default function DashboardPage() {
       {/* System Status Banner */}
       <div className="glass-panel rounded-2xl p-3 px-4 flex flex-wrap items-center justify-between gap-3 text-xs border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-indigo-500/10 dark:from-emerald-950/40 dark:to-slate-900/80">
         <div className="flex items-center gap-3">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          <span className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+            <svg className="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            System Status: Operational
           </span>
-          <span className="font-bold text-slate-900 dark:text-slate-100">System Status: Operational</span>
           <span className="hidden md:inline text-slate-300 dark:text-slate-600">•</span>
-          <span className="hidden md:inline text-slate-700 dark:text-slate-300">Gemini 1.5 Vision: <span className="text-emerald-700 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20">Ready</span></span>
+          <span className="hidden md:inline text-slate-700 dark:text-slate-300">Gemini 2.5 Flash Vision: <span className="text-emerald-700 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20">Ready</span></span>
           <span className="hidden lg:inline text-slate-300 dark:text-slate-600">•</span>
           <span className="hidden lg:inline text-slate-700 dark:text-slate-300">STT Audio Worker: <span className="text-indigo-700 dark:text-indigo-400 font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20">Active</span></span>
         </div>
-        <span className="text-slate-500 dark:text-slate-400 font-mono font-medium">Host: localhost:80</span>
+        <span className="text-slate-500 dark:text-slate-400 font-mono font-medium">Gateway: localhost:80</span>
       </div>
 
       {/* Metric Stat Grid */}

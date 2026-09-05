@@ -506,7 +506,6 @@ export default function InspectionsPage() {
                   <div key={item.area_id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
                     <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                         <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base">{item.area_name}</h3>
                       </div>
                       <label className="bg-emerald-600 text-white text-xs px-3.5 py-1.5 rounded-xl cursor-pointer hover:bg-emerald-500 font-bold transition-colors">

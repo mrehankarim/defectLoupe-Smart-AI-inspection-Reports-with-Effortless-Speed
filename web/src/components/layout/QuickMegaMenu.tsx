@@ -346,7 +346,6 @@ export function QuickMegaMenu({
                 }}
               >
                 <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                     {sec.category}
                   </h3>
@@ -433,7 +432,6 @@ export function QuickMegaMenu({
           }}
         >
           <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>DefectLoupe Engine Active — 4 Microservices Operational</span>
           </div>
           <div className="flex items-center gap-3">

@@ -18,17 +18,10 @@ export function Footer() {
                 </svg>
               </div>
               <span className="font-bold text-sm text-slate-900 dark:text-slate-100 tracking-tight">DefectLoupe</span>
-              <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold">
-                v2.4
-              </span>
             </NavLink>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Smart AI property inspection reports with effortless speed and automated vision analysis.
+              Professional property inspection reports with verified forensic precision, building code compliance, and instant PDF deliverables.
             </p>
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              All Services Operational
-            </div>
           </div>
 
           {/* Workspace Links */}
@@ -58,33 +51,41 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* AI Engine */}
+          {/* AI & Knowledge Engine */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase font-bold tracking-wider text-slate-900 dark:text-slate-300">AI & Media Engine</h4>
+            <h4 className="text-xs font-mono uppercase font-bold tracking-wider text-slate-900 dark:text-slate-300">Engineering Engine</h4>
             <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
-              <li className="flex items-center gap-1.5">
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">●</span> Gemini 1.5 Vision Analysis
+              <li>
+                <NavLink to="/inspections" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  Gemini 2.5 Defect Vision
+                </NavLink>
               </li>
-              <li className="flex items-center gap-1.5">
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">●</span> Whisper STT Audio Transcriber
+              <li>
+                <NavLink to="/knowledge-base" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  PgVector RAG Knowledge Base
+                </NavLink>
               </li>
-              <li className="flex items-center gap-1.5">
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">●</span> PgVector RAG Document Search
+              <li>
+                <NavLink to="/inspections" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  Audio Observation Dictation
+                </NavLink>
               </li>
-              <li className="flex items-center gap-1.5">
-                <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px]">●</span> Automated PDF Generator
+              <li>
+                <NavLink to="/inspections" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  Certified PDF Report Generator
+                </NavLink>
               </li>
             </ul>
           </div>
 
           {/* Platform & Security */}
           <div className="space-y-3">
-            <h4 className="text-xs font-mono uppercase font-bold tracking-wider text-slate-900 dark:text-slate-300">Security & Core</h4>
+            <h4 className="text-xs font-mono uppercase font-bold tracking-wider text-slate-900 dark:text-slate-300">System Architecture</h4>
             <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
-              <li>FastAPI Microservices Architecture</li>
+              <li>FastAPI Asynchronous Microservices</li>
               <li>Traefik Reverse Proxy Gateway</li>
-              <li>Encrypted JWT Cookie Authentication</li>
-              <li>Public QR Verification Scanner</li>
+              <li>PostgreSQL 16 &amp; PgVector Extension</li>
+              <li>Cryptographic SHA-256 Custody Hash</li>
             </ul>
           </div>
         </div>
