@@ -10,23 +10,52 @@ export default function LogoIcon({ className = "w-5 h-5", size = 20 }: LogoIconP
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Precision Loupe Ring */}
-      <circle cx="10.5" cy="10.5" r="7" />
-      {/* Precision Reticle Focal Crosshair lines */}
-      <line x1="10.5" y1="5.5" x2="10.5" y2="7.5" />
-      <line x1="10.5" y1="13.5" x2="10.5" y2="15.5" />
-      <line x1="5.5" y1="10.5" x2="7.5" y2="10.5" />
-      <line x1="13.5" y1="10.5" x2="15.5" y2="10.5" />
-      {/* Center Optical Target Point */}
-      <circle cx="10.5" cy="10.5" r="1.5" fill="currentColor" stroke="none" />
-      {/* Loupe Diagonal Handle */}
-      <path d="M15.5 15.5L21 21" strokeWidth="2.6" />
+      {/* Outer Precision Optical Loupe Ring */}
+      <circle
+        cx="12"
+        cy="12"
+        r="9.5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+
+      {/* Inscribed Geometric Inspection Diamond (Defect Marker) */}
+      <path
+        d="M12 4.5L19.5 12L12 19.5L4.5 12Z"
+        fill="currentColor"
+        fillOpacity="0.14"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+
+      {/* Inner Optical Lens Core */}
+      <circle
+        cx="12"
+        cy="12"
+        r="3.6"
+        fill="currentColor"
+        fillOpacity="0.22"
+        stroke="currentColor"
+        strokeWidth="1.6"
+      />
+
+      {/* Center Target Focus Point */}
+      <circle
+        cx="12"
+        cy="12"
+        r="1.4"
+        fill="currentColor"
+      />
+
+      {/* 4 Cardinal Calibration Alignment Ticks */}
+      <line x1="12" y1="1" x2="12" y2="3.2" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <line x1="12" y1="20.8" x2="12" y2="23" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <line x1="1" y1="12" x2="3.2" y2="12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <line x1="20.8" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
   );
 }

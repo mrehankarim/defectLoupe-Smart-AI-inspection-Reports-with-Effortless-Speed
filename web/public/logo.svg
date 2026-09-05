@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="dl-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981" />
+      <stop offset="60%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="dl-fill" x1="6" y1="6" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#10B981" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.08" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Precision Optical Loupe Ring -->
+  <circle cx="16" cy="16" r="12.5" stroke="url(#dl-grad)" stroke-width="2.5" />
+
+  <!-- Inscribed Geometric Inspection Diamond (Defect Metrology Marker) -->
+  <path d="M16 6L26 16L16 26L6 16Z" fill="url(#dl-fill)" stroke="url(#dl-grad)" stroke-width="1.8" stroke-linejoin="round" />
+
+  <!-- Inner Optical Lens Ring -->
+  <circle cx="16" cy="16" r="4.8" stroke="url(#dl-grad)" stroke-width="1.8" />
+
+  <!-- Center Target Core -->
+  <circle cx="16" cy="16" r="2" fill="url(#dl-grad)" />
+
+  <!-- 4 Cardinal Alignment Ticks -->
+  <line x1="16" y1="1" x2="16" y2="4" stroke="url(#dl-grad)" stroke-width="2.4" stroke-linecap="round" />
+  <line x1="16" y1="28" x2="16" y2="31" stroke="url(#dl-grad)" stroke-width="2.4" stroke-linecap="round" />
+  <line x1="1" y1="16" x2="4" y2="16" stroke="url(#dl-grad)" stroke-width="2.4" stroke-linecap="round" />
+  <line x1="28" y1="16" x2="31" y2="16" stroke="url(#dl-grad)" stroke-width="2.4" stroke-linecap="round" />
+</svg>
