@@ -29,14 +29,14 @@ AUDIO_MIMES = {
 # ── Helpers ────────────────────────────────────────────────────────────────
 
 def _local_save(file_bytes: bytes, folder: str, extension: str) -> str:
-    """Save bytes to the local uploads/<folder>/ directory and return the path."""
+    """Save bytes to the local uploads/<folder>/ directory and return the public URL path."""
     dest_dir = LOCAL_UPLOAD_DIR / folder
     dest_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid.uuid4()}{extension}"
     dest = dest_dir / filename
     dest.write_bytes(file_bytes)
     logger.info("Saved file locally: %s", dest)
-    return str(dest)
+    return f"/api/v1/media/files/{folder}/{filename}"
 
 
 def _local_delete(path: str) -> None:
@@ -130,6 +130,9 @@ def delete_file(url_or_path: str) -> None:
                 logger.info("Deleted from Cloudinary: %s", public_id)
             except Exception as exc:
                 logger.warning("Cloudinary delete failed for %s: %s", url_or_path, exc)
+    elif url_or_path.startswith("/api/v1/media/files/"):
+        rel = url_or_path.replace("/api/v1/media/files/", "")
+        _local_delete(str(LOCAL_UPLOAD_DIR / rel))
     else:
         _local_delete(url_or_path)
 
@@ -160,6 +163,10 @@ def download_to_temp(url_or_path: str, suffix: str = "") -> str:
             tmp.write(resp.content)
         tmp.close()
         return tmp.name
+
+    if url_or_path.startswith("/api/v1/media/files/"):
+        rel = url_or_path.replace("/api/v1/media/files/", "")
+        return str(LOCAL_UPLOAD_DIR / rel)
 
     # Local file — just return the path
     return url_or_path

@@ -159,6 +159,7 @@ def generate_pdf_report(
 
     try:
         pdf_bytes = _render_pdf(html_string)
+        pdf_path.write_bytes(pdf_bytes)
     except Exception as exc:
         # WeasyPrint may not be available — save HTML as fallback
         logger.warning("WeasyPrint PDF rendering failed, saving HTML fallback: %s", exc)
@@ -170,7 +171,7 @@ def generate_pdf_report(
     job.verify_token = verify_token
     job.status = ReportStatus.READY
     job.pdf_url = str(pdf_path)
-    job.report_json = context
+    job.report_json = json.loads(json.dumps(context, default=str))
     job.completed_at = datetime.now(timezone.utc)
     db.commit()
 

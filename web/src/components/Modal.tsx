@@ -31,7 +31,7 @@ export default function Modal({ title, onClose, children, wide }: ModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[150] overflow-y-auto bg-black/65 backdrop-blur-sm flex min-h-full items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-[150] overflow-y-auto bg-black/65 backdrop-blur-sm flex min-h-full items-start justify-center pt-20 sm:pt-24 pb-8 px-3 sm:px-6"
       onMouseDown={onClose}
       role="dialog"
       aria-modal="true"
@@ -40,10 +40,10 @@ export default function Modal({ title, onClose, children, wide }: ModalProps) {
       <section
         ref={ref}
         onMouseDown={(e) => e.stopPropagation()}
-        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} max-h-[84vh] flex flex-col my-auto overflow-hidden text-left text-slate-900 dark:text-slate-100 transition-all duration-200 animate-in zoom-in-95`}
+        className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full ${wide ? 'max-w-2xl' : 'max-w-lg'} max-h-[calc(100vh-7.5rem)] flex flex-col overflow-hidden text-left text-slate-900 dark:text-slate-100 transition-all duration-200 animate-in zoom-in-95`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/75 dark:bg-slate-900/80">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0 bg-slate-50/75 dark:bg-slate-900/80 sticky top-0 z-10">
           <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100 m-0">{title}</h2>
           <button
             onClick={onClose}

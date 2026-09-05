@@ -91,16 +91,44 @@ export default function LandingPage() {
 
           {/* Center Links */}
           <nav className="hidden md:flex items-center gap-6 text-xs font-bold tracking-wide">
-            <a href="#features" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <a
+              href="#features"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
               Features
             </a>
-            <a href="#ai-engine" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <a
+              href="#ai-engine"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("ai-engine")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
               AI Vision & STT
             </a>
-            <a href="#workflow" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <a
+              href="#workflow"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("workflow")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
               Workflow
             </a>
-            <a href="#metrics" className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+            <a
+              href="#metrics"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("metrics")?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+            >
               Performance
             </a>
           </nav>
@@ -384,6 +412,227 @@ export default function LandingPage() {
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
               Generate tamper-evident PDF deliverables equipped with cryptographic public QR verification for buyers, insurers, and banks.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Vision & Speech Diagnostics Engine Section */}
+      <section id="ai-engine" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="text-center mb-12">
+          <h2 className="text-xs font-mono uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-400 mb-2">
+            Dual AI Diagnostics Engine
+          </h2>
+          <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-50">
+            Multimodal Gemini Vision & Field Speech-to-Text
+          </p>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mt-2 leading-relaxed">
+            Real-time computer vision bounding coordinates for structural defects paired with hands-free Whisper voice transcription structured into certified engineering reports.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+          {/* Panel 1: Computer Vision Defect Diagnostics */}
+          <div className="glass-card p-6 sm:p-8 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                      <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                      <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                      <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      Gemini Vision Defect Diagnostics
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                      Spatial Bounding & Severity Classification
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  99.4% Precision
+                </span>
+              </div>
+
+              {/* Defect Specimen View with Precision Bounding Box */}
+              <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700/60 bg-slate-950 p-4 mb-6">
+                {/* Visual Texture / Photo */}
+                <div className="h-48 w-full rounded-xl relative overflow-hidden bg-slate-900">
+                  <img
+                    src="https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1000&q=80"
+                    alt="Structural concrete audit"
+                    className="w-full h-full object-cover opacity-75 contrast-125"
+                  />
+                  {/* Subtle Grid Scanning Overlay */}
+                  <div
+                    className="absolute inset-0 pointer-events-none opacity-20"
+                    style={{
+                      backgroundImage: "linear-gradient(to right, rgba(16, 185, 129, 0.4) 1px, transparent 1px), linear-gradient(to bottom, rgba(16, 185, 129, 0.4) 1px, transparent 1px)",
+                      backgroundSize: "24px 24px"
+                    }}
+                  />
+
+                  {/* Simulated Bounding Box Overlay */}
+                  <div
+                    className="absolute border-2 border-dashed border-emerald-400 rounded-lg bg-emerald-500/15 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                    style={{ top: "18%", left: "22%", width: "56%", height: "64%" }}
+                  >
+                    {/* Bounding Corner Crosshairs */}
+                    <div className="absolute -top-1.5 -left-1.5 w-3 h-3 border-t-2 border-l-2 border-emerald-300" />
+                    <div className="absolute -top-1.5 -right-1.5 w-3 h-3 border-t-2 border-r-2 border-emerald-300" />
+                    <div className="absolute -bottom-1.5 -left-1.5 w-3 h-3 border-b-2 border-l-2 border-emerald-300" />
+                    <div className="absolute -bottom-1.5 -right-1.5 w-3 h-3 border-b-2 border-r-2 border-emerald-300" />
+
+                    {/* Tag badge */}
+                    <div className="absolute -top-3.5 left-2 bg-emerald-600 text-white font-mono text-[10px] font-bold px-2 py-0.5 rounded shadow-sm flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      STRUCTURAL CRACK · 99.2%
+                    </div>
+
+                    <div className="absolute bottom-2 right-2 bg-slate-900/90 text-emerald-300 font-mono text-[9px] px-1.5 py-0.5 rounded border border-emerald-500/30">
+                      [Y: 140, X: 220, W: 640, H: 380]
+                    </div>
+                  </div>
+                </div>
+
+                {/* Analysis telemetry bar */}
+                <div className="mt-3 flex items-center justify-between text-[11px] font-mono text-slate-400">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Sensor: 48MP Optical RGB
+                  </span>
+                  <span>Latency: 410ms</span>
+                </div>
+              </div>
+
+              {/* Analysis Metadata Breakdown */}
+              <div className="space-y-2.5">
+                <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Defect Classification</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Basement Foundation Wall Crack</span>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                    Severity 4 / 5
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Building Standard Match</span>
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">IBC Section 1807.1.5 · Foundation Wall Cracking</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">ASTM C823</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Automated bounding box & technical report injection
+              </span>
+              <button
+                onClick={() => navigate("/inspections")}
+                className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 cursor-pointer"
+                type="button"
+              >
+                Scan Photos →
+              </button>
+            </div>
+          </div>
+
+          {/* Panel 2: Field Speech-to-Text Dictation */}
+          <div className="glass-card p-6 sm:p-8 bg-white/95 dark:bg-slate-900/85 border border-slate-200 dark:border-slate-800 rounded-3xl flex flex-col justify-between">
+            <div>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/80 dark:border-slate-800/80">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                      Whisper Audio Dictation (STT)
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                      Voice Ingestion to Structured Observations
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                  Real-Time STT
+                </span>
+              </div>
+
+              {/* Audio Waveform & Speech Ingestion Player */}
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700/60 bg-slate-950 p-4 mb-6">
+                <div className="flex items-center justify-between mb-3 text-[11px] font-mono text-slate-400">
+                  <div className="flex items-center gap-2 text-teal-400 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                    Inspector Field Dictation
+                  </div>
+                  <span>00:14 / 00:22 · 16kHz PCM</span>
+                </div>
+
+                {/* Soundwave bars */}
+                <div className="h-16 flex items-center justify-center gap-1 px-2 py-2 bg-slate-900/90 rounded-xl border border-slate-800">
+                  {[28, 45, 62, 35, 80, 95, 70, 40, 85, 100, 75, 50, 90, 65, 45, 85, 92, 60, 38, 70, 88, 52, 30, 65, 78, 42, 25, 60, 82, 55, 30, 48, 70, 35, 20].map((h, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 bg-gradient-to-t from-teal-500 to-emerald-400 rounded-full transition-all duration-300"
+                      style={{ height: `${h}%`, opacity: i > 25 ? 0.35 : 0.9 }}
+                    />
+                  ))}
+                </div>
+
+                {/* Raw Spoken Dictation Quote */}
+                <div className="mt-3 p-3 rounded-xl bg-slate-900 border border-slate-800/80 text-xs text-slate-300 italic font-serif leading-relaxed">
+                  "Visible crack on the basement wall with water leaking through. Needs immediate repair."
+                </div>
+              </div>
+
+              {/* Structured Extracted Finding */}
+              <div className="space-y-2.5">
+                <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Mapped Location</span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Basement · North Foundation Wall</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold">Auto-Tagged</span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-medium">Detected Defect</span>
+                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">Wall Crack with Water Leak</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-teal-600 dark:text-teal-400 font-bold">Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Hands-free audio dictation with automated finding synthesis
+              </span>
+              <button
+                onClick={() => navigate("/inspections")}
+                className="text-xs font-bold text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 cursor-pointer"
+                type="button"
+              >
+                Record Audio →
+              </button>
+            </div>
           </div>
         </div>
       </section>

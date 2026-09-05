@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { api, buildQuery, ApiError } from "../../services/api";
 import { useToast } from "../../components/Layout";
 import PageHeader from "../../components/PageHeader";
@@ -43,7 +44,15 @@ interface Property {
 interface Area { id: string; name: string; display_order: number; }
 interface ListResponse<T> { items: T[]; total: number; }
 
+interface ReportStatusInfo {
+  job_id: string;
+  status: "queued" | "processing" | "ready" | "failed" | string;
+  pdf_url: string | null;
+  error_message: string | null;
+}
+
 export default function InspectionsPage() {
+  const navigate = useNavigate();
   const { showToast } = useToast();
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [total, setTotal] = useState(0);
@@ -67,6 +76,25 @@ export default function InspectionsPage() {
   const [analyzingPhotoId, setAnalyzingPhotoId] = useState<string | null>(null);
   const [photoAnalysis, setPhotoAnalysis] = useState<Record<string, any>>({});
   const [newObsText, setNewObsText] = useState<{ [areaId: string]: string }>({});
+
+  const [reportStatus, setReportStatus] = useState<ReportStatusInfo | null>(null);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+
+  // Seamlessly merge areas from core and media from media service
+  const displayAreas = useMemo(() => {
+    if (areas.length === 0) return [];
+    const mediaMap = new Map((mediaData || []).map((m: any) => [m.area_id, m]));
+    return areas.map((area) => {
+      const mediaItem = mediaMap.get(area.id);
+      return {
+        area_id: area.id,
+        area_name: area.name,
+        photos: mediaItem?.photos || [],
+        observations: mediaItem?.observations || [],
+      };
+    });
+  }, [areas, mediaData]);
 
   const fetchInspections = useCallback(async () => {
     setLoading(true);
@@ -112,13 +140,29 @@ export default function InspectionsPage() {
     }
   }, []);
 
+  const fetchReportStatus = useCallback(async (inspectionId: string) => {
+    try {
+      const data = await api.get<ReportStatusInfo>(`/inspections/${inspectionId}/report/status`);
+      setReportStatus(data);
+      return data;
+    } catch {
+      setReportStatus(null);
+      return null;
+    }
+  }, []);
+
   useEffect(() => { fetchInspections(); }, [fetchInspections]);
+
   useEffect(() => {
     if (selectedInspection) {
       fetchAreas(selectedInspection.id);
       fetchMedia(selectedInspection.id);
+      fetchReportStatus(selectedInspection.id);
+    } else {
+      setReportStatus(null);
+      setIsGeneratingReport(false);
     }
-  }, [selectedInspection, fetchAreas, fetchMedia]);
+  }, [selectedInspection, fetchAreas, fetchMedia, fetchReportStatus]);
 
   useEffect(() => {
     api.get<ListResponse<Property>>("/properties?limit=200")
@@ -286,6 +330,82 @@ export default function InspectionsPage() {
     }
   }
 
+  async function handleGenerateReport() {
+    if (!selectedInspection) return;
+    setIsGeneratingReport(true);
+    try {
+      await api.post(`/inspections/${selectedInspection.id}/generate-report`);
+      showToast("PDF report generation started (queued)...");
+
+      // Poll status every 2 seconds
+      let attempts = 0;
+      const maxAttempts = 30; // 60s
+      const pollTimer = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await api.get<ReportStatusInfo>(
+            `/inspections/${selectedInspection.id}/report/status`
+          );
+          setReportStatus(res);
+          if (res.status === "ready") {
+            clearInterval(pollTimer);
+            setIsGeneratingReport(false);
+            showToast("Inspection PDF report generated successfully!", "success");
+            fetchInspections();
+          } else if (res.status === "failed") {
+            clearInterval(pollTimer);
+            setIsGeneratingReport(false);
+            showToast(res.error_message || "Report generation failed", "error");
+          } else if (attempts >= maxAttempts) {
+            clearInterval(pollTimer);
+            setIsGeneratingReport(false);
+            showToast("Report generation is still processing in background.", "info");
+          }
+        } catch {
+          if (attempts >= maxAttempts) {
+            clearInterval(pollTimer);
+            setIsGeneratingReport(false);
+          }
+        }
+      }, 2000);
+    } catch (err) {
+      setIsGeneratingReport(false);
+      showToast((err as ApiError).detail || "Failed to start report generation", "error");
+    }
+  }
+
+  async function handleDownloadPdf() {
+    if (!selectedInspection) return;
+    setDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/v1/inspections/${selectedInspection.id}/report/pdf`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        let errMsg = "Failed to download PDF";
+        try {
+          const errData = await res.json();
+          if (errData.detail) errMsg = errData.detail;
+        } catch {}
+        throw new Error(errMsg);
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `inspection_${selectedInspection.id.slice(0, 8)}_report.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      showToast("PDF report downloaded successfully!");
+    } catch (err: any) {
+      showToast(err.message || "Failed to download PDF", "error");
+    } finally {
+      setDownloadingPdf(false);
+    }
+  }
+
   function handleExportCSV() {
     const q = buildQuery({ status: statusFilter || null });
     window.open(`/api/v1/inspections/export/csv${q}`, "_blank");
@@ -332,6 +452,12 @@ export default function InspectionsPage() {
                 <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold capitalize border ${STATUS_COLORS[insp.status]}`}>
                   {insp.status.replace(/_/g, " ")}
                 </span>
+                {reportStatus?.status === "ready" && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                    Report Ready
+                  </span>
+                )}
               </div>
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
                 <svg className="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -348,23 +474,85 @@ export default function InspectionsPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full md:w-auto">
-            <button
-              onClick={async () => {
-                try {
-                  const res = await api.post(`/inspections/${insp.id}/generate-report`);
-                  showToast("Report generation started (PDF job queued)");
-                } catch {
-                  showToast("Report generation triggered");
-                }
-              }}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-              Generate PDF Report
-            </button>
+            {/* Report Actions */}
+            {isGeneratingReport || reportStatus?.status === "queued" || reportStatus?.status === "processing" ? (
+              <button
+                disabled
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-teal-600/80 cursor-wait text-center flex items-center justify-center gap-2 shadow-sm animate-pulse"
+              >
+                <svg className="animate-spin h-3.5 w-3.5 text-white" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                </svg>
+                Generating PDF Report...
+              </button>
+            ) : reportStatus?.status === "ready" ? (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={downloadingPdf}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
+                  title="Download inspection PDF report"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  {downloadingPdf ? "Downloading..." : "Download PDF Report"}
+                </button>
+                <button
+                  onClick={handleGenerateReport}
+                  className="px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer flex items-center justify-center gap-1 transition-all"
+                  title="Regenerate Report with latest data"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  Regenerate
+                </button>
+                <button
+                  onClick={() => navigate(`/reports?inspection_id=${insp.id}`)}
+                  className="px-2.5 py-2 rounded-xl text-xs font-semibold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 dark:hover:bg-teal-900/50 cursor-pointer flex items-center justify-center gap-1 transition-all"
+                  title="Open in Report Viewer"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  Viewer
+                </button>
+              </div>
+            ) : reportStatus?.status === "failed" ? (
+              <button
+                onClick={handleGenerateReport}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
+                title="Generation failed. Click to retry"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
+                  <path d="M21 3v5h-5" />
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
+                  <path d="M3 21v-5h5" />
+                </svg>
+                Generation Failed (Retry)
+              </button>
+            ) : (
+              <button
+                onClick={handleGenerateReport}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm cursor-pointer text-center flex items-center justify-center gap-1.5 transition-all"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+                Generate PDF Report
+              </button>
+            )}
+
             <div className="flex gap-1.5 flex-wrap">
               {(VALID_TRANSITIONS[insp.status] || []).map((s) => (
                 <button
@@ -432,6 +620,7 @@ export default function InspectionsPage() {
                         });
                         showToast(`Added ${room}`);
                         fetchAreas(selectedInspection.id);
+                        fetchMedia(selectedInspection.id);
                       } catch {
                         showToast(`Failed to add ${room}`, "error");
                       }
@@ -511,9 +700,9 @@ export default function InspectionsPage() {
         {/* Photos Tab */}
         {activeTab === "photos" && (
           <div>
-            {mediaLoading ? (
+            {mediaLoading && displayAreas.length === 0 ? (
               <div className="text-center py-12 text-slate-500">Loading defect photos...</div>
-            ) : mediaData.length === 0 ? (
+            ) : displayAreas.length === 0 ? (
               <EmptyState
                 icon={
                   <div className="w-12 h-12 rounded-2xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
@@ -524,11 +713,16 @@ export default function InspectionsPage() {
                   </div>
                 }
                 title="No inspection areas"
-                description="Add rooms in the Areas tab first to attach defect photos"
+                description="Add rooms in the Inspection Rooms & Areas tab first to attach defect photos"
+                action={
+                  <Button variant="primary" onClick={() => setActiveTab("areas")}>
+                    Go to Inspection Rooms & Areas
+                  </Button>
+                }
               />
             ) : (
               <div className="space-y-6">
-                {mediaData.map((item) => (
+                {displayAreas.map((item) => (
                   <div key={item.area_id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
                     <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
                       <div className="flex items-center gap-2">
@@ -614,9 +808,9 @@ export default function InspectionsPage() {
         {/* Observations Tab */}
         {activeTab === "observations" && (
           <div>
-            {mediaLoading ? (
+            {mediaLoading && displayAreas.length === 0 ? (
               <div className="text-center py-12 text-slate-500">Loading observations...</div>
-            ) : mediaData.length === 0 ? (
+            ) : displayAreas.length === 0 ? (
               <EmptyState
                 icon={
                   <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -627,11 +821,16 @@ export default function InspectionsPage() {
                   </div>
                 }
                 title="No inspection areas"
-                description="Add areas first to record observations"
+                description="Add rooms in the Inspection Rooms & Areas tab first to record observations"
+                action={
+                  <Button variant="primary" onClick={() => setActiveTab("areas")}>
+                    Go to Inspection Rooms & Areas
+                  </Button>
+                }
               />
             ) : (
               <div className="space-y-6">
-                {mediaData.map((item: any) => (
+                {displayAreas.map((item: any) => (
                   <Card key={item.area_id}>
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="font-bold text-slate-900 dark:text-slate-100">{item.area_name}</h3>

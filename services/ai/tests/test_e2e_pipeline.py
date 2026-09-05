@@ -30,7 +30,7 @@ sys.path.insert(0, str(ROOT))
 # Load .env before shared imports
 os.environ.setdefault("DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/defect-loupe")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-os.environ.setdefault("ACCESS_TOKEN_SECRET", "test_secret")
+os.environ.setdefault("ACCESS_TOKEN_SECRET", "defectloupe-hackathon-jwt-secret-key-32b")
 os.environ.setdefault("ACCESS_TOKEN_EXPIRY", "15m")
 os.environ.setdefault("GEMINI_API_KEY", "test_key")
 

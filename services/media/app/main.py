@@ -18,7 +18,33 @@ from app.repository.area_photo import AreaPhoto  # noqa: F401
 from app.repository.area_observation import AreaObservation  # noqa: F401
 from app.repository.transcription import Transcription  # noqa: F401
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 app = FastAPI(title="DefectLoupe — media-service", version="0.1.0")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc: RequestValidationError):
+    clean_errors = []
+    for err in exc.errors():
+        clean_err = {}
+        for k, v in err.items():
+            if isinstance(v, bytes):
+                clean_err[k] = f"<binary data: {len(v)} bytes>"
+            elif isinstance(v, (list, tuple)):
+                clean_err[k] = [
+                    f"<binary data: {len(item)} bytes>" if isinstance(item, bytes) else item
+                    for item in v
+                ]
+            elif isinstance(v, dict):
+                clean_err[k] = {
+                    dk: (f"<binary data: {len(dv)} bytes>" if isinstance(dv, bytes) else dv)
+                    for dk, dv in v.items()
+                }
+            else:
+                clean_err[k] = v
+        clean_errors.append(clean_err)
+    return JSONResponse(status_code=422, content={"detail": clean_errors})
 
 try:
     Base.metadata.create_all(bind=engine)
@@ -51,8 +77,12 @@ from app.api.routes.photo_routes import router as photo_router
 from app.api.routes.observation_routes import router as observation_router
 from app.api.routes.transcription_routes import router as transcription_router
 from app.api.routes.media_routes import router as media_router
+from fastapi.staticfiles import StaticFiles
+from app.utils.config import LOCAL_UPLOAD_DIR
 
 app.include_router(photo_router)
 app.include_router(observation_router)
 app.include_router(transcription_router)
 app.include_router(media_router)
+
+app.mount("/api/v1/media/files", StaticFiles(directory=str(LOCAL_UPLOAD_DIR)), name="media_files")

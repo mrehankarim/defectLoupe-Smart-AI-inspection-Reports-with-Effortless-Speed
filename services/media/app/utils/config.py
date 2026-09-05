@@ -37,10 +37,17 @@ REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 WHISPER_MODEL: str = os.getenv("WHISPER_MODEL", "small")
 
 # ── Upload folder (local fallback when Cloudinary is not configured) ─────
-LOCAL_UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads"
-LOCAL_UPLOAD_DIR.mkdir(exist_ok=True)
+_upload_env = os.getenv("UPLOAD_DIR")
+LOCAL_UPLOAD_DIR = Path(_upload_env) if _upload_env else Path(__file__).resolve().parents[2] / "uploads"
+LOCAL_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def is_cloudinary_configured() -> bool:
-    """Return True when Cloudinary credentials and package are present."""
-    return bool(cloudinary and CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)
+    """Return True when valid Cloudinary credentials and package are present."""
+    if not (cloudinary and CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET):
+        return False
+    # Check for placeholder strings from .env.example
+    for val in (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET):
+        if any(p in val.lower() for p in ("your_", "replace-", "default", "example")):
+            return False
+    return True

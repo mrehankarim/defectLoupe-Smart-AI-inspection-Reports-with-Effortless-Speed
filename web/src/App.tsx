@@ -38,6 +38,7 @@ export default function App() {
           <Route path="/properties" element={<LegacyPage><PropertiesPage /></LegacyPage>} />
           <Route path="/inspections" element={<LegacyPage><InspectionsPage /></LegacyPage>} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/account" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/reports" element={<LegacyPage><ReportViewerPage /></LegacyPage>} />
           <Route path="/knowledge-base" element={<LegacyPage><KnowledgeBasePage /></LegacyPage>} />

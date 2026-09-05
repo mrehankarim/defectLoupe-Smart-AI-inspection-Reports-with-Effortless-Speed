@@ -190,8 +190,8 @@ export function QuickMegaMenu({
       items: [
         {
           title: "Inspector Account",
-          description: "Profile, agency & credentials",
-          path: "/account",
+          description: "Profile, license & agency credentials",
+          path: "/profile",
           accentColor: "from-indigo-500/20 to-sky-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
           icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

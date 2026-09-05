@@ -3,6 +3,7 @@
  * for a given inspection. Authenticated (inside AppShell).
  */
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { api, ApiError } from "../../services/api";
 
 interface ReportStatus {
@@ -12,15 +13,24 @@ interface ReportStatus {
   error_message: string | null;
 }
 
+interface InspectionSummary {
+  id: string;
+  title: string | null;
+  status: string;
+  created_at: string;
+}
+
 const STATUS_BADGE: Record<string, string> = {
-  queued: "bg-gray-200 text-gray-800",
-  processing: "bg-blue-200 text-blue-800",
-  ready: "bg-green-200 text-green-800",
-  failed: "bg-red-200 text-red-800",
+  queued: "bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300",
+  processing: "bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300",
+  ready: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300",
+  failed: "bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300",
 };
 
 export default function ReportViewerPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [inspectionId, setInspectionId] = useState("");
+  const [inspections, setInspections] = useState<InspectionSummary[]>([]);
   const [reportStatus, setReportStatus] = useState<ReportStatus | null>(null);
   const [reportJson, setReportJson] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,23 +40,53 @@ export default function ReportViewerPage() {
   const showToast = (message: string, type: "error" | "success" = "success") =>
     setToast({ message, type });
 
-  const fetchStatus = useCallback(async () => {
-    if (!inspectionId.trim()) return;
+  const fetchStatusForId = useCallback(async (id: string) => {
+    if (!id.trim()) return;
     setLoading(true);
     setReportJson(null);
     setShowJson(false);
     try {
       const data = await api.get<ReportStatus>(
-        `/inspections/${inspectionId.trim()}/report/status`
+        `/inspections/${id.trim()}/report/status`
       );
       setReportStatus(data);
     } catch (err) {
       setReportStatus(null);
-      showToast((err as ApiError).detail || "Failed to fetch report status", "error");
+      showToast((err as ApiError).detail || "No report found for this inspection.", "error");
     } finally {
       setLoading(false);
     }
-  }, [inspectionId]);
+  }, []);
+
+  const fetchStatus = useCallback(() => {
+    fetchStatusForId(inspectionId);
+  }, [fetchStatusForId, inspectionId]);
+
+  // Load user's inspections for the quick dropdown
+  useEffect(() => {
+    api.get<{ items: InspectionSummary[] }>("/inspections?limit=50")
+      .then((data) => {
+        const items = data.items || [];
+        setInspections(items);
+        // If no ID is specified yet and inspections exist, pick the first one with a report or the first inspection
+        const paramId = searchParams.get("inspection_id");
+        if (!paramId && items.length > 0) {
+          const preferred = items.find((i) => i.status === "report_generated") || items[0];
+          setInspectionId(preferred.id);
+          fetchStatusForId(preferred.id);
+        }
+      })
+      .catch(() => {});
+  }, [fetchStatusForId, searchParams]);
+
+  // Handle URL query parameter ?inspection_id=...
+  useEffect(() => {
+    const qId = searchParams.get("inspection_id");
+    if (qId && qId.trim() && qId !== inspectionId) {
+      setInspectionId(qId.trim());
+      fetchStatusForId(qId.trim());
+    }
+  }, [searchParams, fetchStatusForId, inspectionId]);
 
   useEffect(() => {
     if (toast) {
@@ -88,7 +128,7 @@ export default function ReportViewerPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {toast && (
         <div className={`fixed top-4 right-4 ${toast.type === "error" ? "bg-red-600" : "bg-green-600"} text-white px-4 py-3 rounded-lg shadow-lg z-[100] max-w-sm`}>
           <div className="flex justify-between items-center gap-3">
@@ -98,25 +138,85 @@ export default function ReportViewerPage() {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold mb-6">Report Viewer</h1>
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Inspection Reports & PDF Viewer</h1>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Inspect, generate, preview, and download compliance-ready inspection PDF reports.
+        </p>
+      </div>
 
-      {/* Inspection ID Input */}
-      <div className="flex gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="Enter inspection ID..."
-          value={inspectionId}
-          onChange={(e) => setInspectionId(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && fetchStatus()}
-          className="flex-1 p-2.5 border border-[rgb(var(--input-border))] rounded-xl bg-[rgb(var(--input-bg))] focus:ring-2 focus:ring-indigo-300 outline-none text-sm"
-        />
-        <button
-          onClick={fetchStatus}
-          disabled={!inspectionId.trim() || loading}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-        >
-          {loading ? "Loading..." : "Check Status"}
-        </button>
+      {/* Inspection Selection Card */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+            Select an Inspection from your account
+          </label>
+          <select
+            value={inspectionId}
+            onChange={(e) => {
+              const val = e.target.value;
+              setInspectionId(val);
+              if (val) {
+                setSearchParams({ inspection_id: val });
+                fetchStatusForId(val);
+              }
+            }}
+            className="w-full p-3 border border-slate-300 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-medium text-sm outline-none focus:border-emerald-500 transition-colors"
+          >
+            <option value="">-- Choose an inspection to view or generate report --</option>
+            {inspections.map((insp) => (
+              <option key={insp.id} value={insp.id}>
+                {insp.title || "Inspection"} ({insp.status.replace(/_/g, " ")}) — {insp.id.slice(0, 8)}...
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Quick select pills */}
+        {inspections.length > 0 && (
+          <div className="flex gap-2 flex-wrap items-center pt-1">
+            <span className="text-xs font-mono font-bold text-slate-400 uppercase">Quick Select:</span>
+            {inspections.slice(0, 5).map((insp) => (
+              <button
+                key={insp.id}
+                onClick={() => {
+                  setInspectionId(insp.id);
+                  setSearchParams({ inspection_id: insp.id });
+                  fetchStatusForId(insp.id);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                  inspectionId === insp.id
+                    ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                    : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-emerald-500 hover:text-emerald-600"
+                }`}
+              >
+                {insp.title || "Inspection"}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Manual ID Input fallback */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
+          <span className="text-[11px] text-slate-400 block mb-1.5">Or paste a specific Inspection UUID:</span>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. 74e104e1-c6fa-42db-9627-e4808e4eb743"
+              value={inspectionId}
+              onChange={(e) => setInspectionId(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && fetchStatus()}
+              className="flex-1 p-2.5 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none text-xs font-mono focus:border-emerald-500"
+            />
+            <button
+              onClick={fetchStatus}
+              disabled={!inspectionId.trim() || loading}
+              className="bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-bold cursor-pointer transition-all shadow-sm"
+            >
+              {loading ? "Checking..." : "Check Status"}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Report Status */}

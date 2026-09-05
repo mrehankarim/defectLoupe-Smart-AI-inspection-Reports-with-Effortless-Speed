@@ -25,7 +25,10 @@ class _EmbeddingModel:
             with cls._lock:
                 if cls._instance is None:
                     from sentence_transformers import SentenceTransformer
-                    cls._instance = SentenceTransformer(cls._MODEL_NAME)
+                    try:
+                        cls._instance = SentenceTransformer(cls._MODEL_NAME, local_files_only=True)
+                    except Exception:
+                        cls._instance = SentenceTransformer(cls._MODEL_NAME)
         return cls._instance
 
 

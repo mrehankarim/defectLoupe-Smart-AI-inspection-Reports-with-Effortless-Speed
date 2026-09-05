@@ -56,6 +56,9 @@ def delete_photo(
     return photo_service.delete_photo(photo_id, db)
 
 
+from fastapi.responses import RedirectResponse, FileResponse
+from app.utils.config import LOCAL_UPLOAD_DIR
+
 @router.get(
     "/api/v1/photos/{photo_id}/download",
     summary="Download / redirect to photo",
@@ -67,4 +70,9 @@ def download_photo(
 ):
     """Redirect to the Cloudinary URL (or serve local file in dev)."""
     photo = photo_service.get_photo(photo_id, db)
+    if photo.photo_url.startswith("/api/v1/media/files/"):
+        rel = photo.photo_url.replace("/api/v1/media/files/", "")
+        local_file = LOCAL_UPLOAD_DIR / rel
+        if local_file.exists():
+            return FileResponse(local_file)
     return RedirectResponse(url=photo.photo_url)

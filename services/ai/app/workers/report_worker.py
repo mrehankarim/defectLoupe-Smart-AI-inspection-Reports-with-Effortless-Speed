@@ -14,7 +14,7 @@ from app.repository.report_job import ReportJob, ReportStatus
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="generate_report_task", bind=True, max_retries=2)
+@celery_app.task(name="generate_report_task", queue="reports", bind=True, max_retries=2)
 def generate_report_task(self, job_id: str) -> dict:
     """Generate a PDF report for the given ReportJob.
 
@@ -44,6 +44,10 @@ def generate_report_task(self, job_id: str) -> dict:
 
     except Exception as exc:
         logger.exception("Report generation failed for job %s", job_id)
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
         # Update job status to FAILED
         try:
