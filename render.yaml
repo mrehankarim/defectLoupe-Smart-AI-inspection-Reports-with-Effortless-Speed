@@ -37,7 +37,7 @@ services:
         fromService:
           type: web
           name: defectloupe-auth
-          property: url
+          property: host
 
   # ----------------------------------------------------------------------------
   # 2. Auth Microservice
