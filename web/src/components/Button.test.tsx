@@ -7,12 +7,12 @@ describe('Button component', () => {
     const el = Button({ children: 'Click me' });
     expect(el).toBeDefined();
     expect(el.props.children).toBe('Click me');
-    expect(el.props.className).toContain('bg-brand-500');
+    expect(el.props.className).toContain('bg-emerald-600');
   });
 
   it('renders secondary variant', () => {
     const el = Button({ variant: 'secondary', children: 'Cancel' });
-    expect(el.props.className).toContain('bg-gray-100');
+    expect(el.props.className).toContain('bg-slate-200');
   });
 
   it('respects disabled state', () => {

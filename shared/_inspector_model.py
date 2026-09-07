@@ -16,14 +16,14 @@ from shared.base import Base
 
 
 class InspectorType(str, enum.Enum):
-    INDIVIDUAL = "individual"
-    AGENCY_MEMBER = "agency_member"
+    INDIVIDUAL = "INDIVIDUAL"
+    AGENCY_MEMBER = "AGENCY_MEMBER"
 
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, str):
             for member in cls:
-                if member.value.lower() == value.lower() or member.name.lower() == value.lower():
+                if member.value.upper() == value.upper() or member.name.upper() == value.upper():
                     return member
         return None
 
