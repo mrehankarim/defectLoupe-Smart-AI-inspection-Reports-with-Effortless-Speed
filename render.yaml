@@ -56,7 +56,7 @@ services:
       - key: DEV_AUTO_VERIFY
         value: "false"
       - key: COOKIE_SECURE
-        value: "false"
+        value: "true"
       - key: APP_BASE_URL
         value: https://defectloupe-web.onrender.com
 
