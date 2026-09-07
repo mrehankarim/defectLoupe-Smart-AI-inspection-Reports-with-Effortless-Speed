@@ -8,6 +8,7 @@ import Modal from "../../components/Modal";
 import EmptyState from "../../components/EmptyState";
 import { InputField, SelectField, TextareaField } from "../../components/FormFields";
 import { Card } from "../../components/Card";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "border-slate-700/60 bg-slate-800/60 text-slate-300 font-mono text-[11px]",
@@ -504,7 +505,7 @@ export default function InspectionsPage() {
         if (!imgRes.ok) throw new Error("CORS or image download error");
         blob = await imgRes.blob();
       } catch {
-        // Fallback: minimal valid JPEG blob so user can always test Gemini AI analysis seamlessly
+        // Fallback: minimal valid JPEG blob so user can always test AI analysis seamlessly
         const sampleJpeg = new Uint8Array([
           0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x01, 0x00, 0x48,
           0x00, 0x48, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43, 0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08,
@@ -531,7 +532,7 @@ export default function InspectionsPage() {
       if (!res.ok) throw new Error("Analysis failed");
       const analysis = await res.json();
       setPhotoAnalysis((prev) => ({ ...prev, [photoId]: analysis }));
-      showToast("Live Gemini Vision defect analysis complete");
+      showToast("Live AI defect analysis complete");
     } catch (err) {
       showToast("AI analysis failed", "error");
     } finally {
@@ -1456,7 +1457,7 @@ export default function InspectionsPage() {
                                       <circle cx="11" cy="11" r="8" />
                                       <path d="m21 21-4.3-4.3" />
                                     </svg>
-                                    Run Gemini Vision Analysis
+                                    Run AI Vision Analysis
                                   </>
                                 )}
                               </button>
@@ -1472,11 +1473,11 @@ export default function InspectionsPage() {
                                     </span>
                                   </div>
                                   <p className="text-slate-700 dark:text-slate-300 font-medium">
-                                    {photoAnalysis[p.id].description}
+                                    {stripMarkdown(photoAnalysis[p.id].description)}
                                   </p>
                                   {photoAnalysis[p.id].remediation && (
                                     <p className="text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-1 mt-1">
-                                      <strong>Remediation:</strong> {photoAnalysis[p.id].remediation}
+                                      <strong>Remediation:</strong> {stripMarkdown(photoAnalysis[p.id].remediation)}
                                     </p>
                                   )}
                                 </div>

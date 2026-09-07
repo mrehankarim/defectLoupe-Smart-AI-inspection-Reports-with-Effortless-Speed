@@ -20,6 +20,7 @@ import {
   ReportStructuredData,
 } from "../../services/aiReportService";
 import { getErrorMessage } from "../../services/api";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 import {
   Sparkles,
   FileText,
@@ -146,7 +147,7 @@ export const ReportViewerScreen: React.FC<{
               </Text>
               <Text style={[styles.statusSub, { color: colors.textMuted }]}>
                 {jobStatus?.status === "ready"
-                  ? "Generated using Groq LLM and Vision AI analysis."
+                  ? "Generated using AI analysis."
                   : jobStatus?.status === "processing"
                   ? "Analyzing defect photos and transcribing notes."
                   : "Ready to aggregate field photos, voice notes, and defect ratings."}
@@ -245,7 +246,7 @@ export const ReportViewerScreen: React.FC<{
             </Text>
             <GlassCard style={styles.narrativeCard}>
               <Text style={[styles.narrativeText, { color: colors.text }]}>
-                {reportData.executive_summary ||
+                {stripMarkdown(reportData.executive_summary) ||
                   "The property inspection was conducted according to standard operating guidelines. Observations and defect evidence were captured across walkthrough zones."}
               </Text>
             </GlassCard>
@@ -266,7 +267,7 @@ export const ReportViewerScreen: React.FC<{
                     <View key={rIdx} style={styles.recItemRow}>
                       <CheckCircle size={14} color={colors.accent} />
                       <Text style={[styles.recItemText, { color: colors.text }]}>
-                        {rec}
+                        {stripMarkdown(rec)}
                       </Text>
                     </View>
                   ))}

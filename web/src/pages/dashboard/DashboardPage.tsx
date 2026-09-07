@@ -74,7 +74,7 @@ export default function DashboardPage() {
             System Status: Operational
           </span>
           <span className="hidden md:inline text-slate-300 dark:text-slate-600">•</span>
-          <span className="hidden md:inline text-slate-700 dark:text-slate-300">Gemini 2.5 Flash Vision: <span className="text-emerald-700 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20">Ready</span></span>
+          <span className="hidden md:inline text-slate-700 dark:text-slate-300">AI Vision: <span className="text-emerald-700 dark:text-emerald-400 font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/20">Ready</span></span>
           <span className="hidden lg:inline text-slate-300 dark:text-slate-600">•</span>
           <span className="hidden lg:inline text-slate-700 dark:text-slate-300">STT Audio Worker: <span className="text-indigo-700 dark:text-indigo-400 font-bold px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-500/20">Active</span></span>
         </div>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               {[
                 { step: '01', title: 'Client Onboarding', desc: 'Create client record and contact details.', path: '/clients', bg: 'bg-emerald-600 text-white' },
                 { step: '02', title: 'Property Registration', desc: 'Register property parameters and year built.', path: '/properties', bg: 'bg-indigo-600 text-white' },
-                { step: '03', title: 'Field Media & Vision AI', desc: 'Capture photos, analyze defects with Gemini Vision.', path: '/inspections', bg: 'bg-cyan-600 text-white' },
+                { step: '03', title: 'Field Media & Vision AI', desc: 'Capture photos, analyze defects with AI Vision.', path: '/inspections', bg: 'bg-cyan-600 text-white' },
                 { step: '04', title: 'PDF Report & Verification', desc: 'Generate signed PDF and QR verification link.', path: '/reports', bg: 'bg-violet-600 text-white' },
               ].map(({ step, title, desc, path, bg }) => (
                 <button

@@ -423,7 +423,7 @@ export default function LandingPage() {
             Dual AI Diagnostics Engine
           </h2>
           <p className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-50">
-            Multimodal Gemini Vision & Field Speech-to-Text
+            Multimodal AI Vision & Field Speech-to-Text
           </p>
           <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mt-2 leading-relaxed">
             Real-time computer vision bounding coordinates for structural defects paired with hands-free Whisper voice transcription structured into certified engineering reports.
@@ -448,7 +448,7 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                      Gemini Vision Defect Diagnostics
+                      AI Vision Defect Diagnostics
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
                       Spatial Bounding & Severity Classification

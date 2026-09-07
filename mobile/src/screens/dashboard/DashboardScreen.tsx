@@ -117,7 +117,7 @@ export const DashboardScreen: React.FC<{ navigation: any }> = ({ navigation }) =
             </Text>
             <Text style={[styles.bannerDot, { color: colors.textSubtle }]}>•</Text>
             <Text style={[styles.bannerAi, { color: colors.accent }]}>
-              Gemini Vision AI Ready
+              AI Vision Ready
             </Text>
           </View>
         </View>

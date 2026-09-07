@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { api, ApiError } from "../../services/api";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 
 interface Document {
   id: string;
@@ -389,7 +390,7 @@ export default function KnowledgeBasePage() {
                     AI Engineering Advisory Console
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Vector search → Gemini 2.5 Flash synthesis → Structured engineering advisory
+                    Vector search → AI synthesis → Structured engineering advisory
                   </p>
                 </div>
               </div>
@@ -468,7 +469,7 @@ export default function KnowledgeBasePage() {
                       Querying Vector Index &amp; Synthesizing Advisory...
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      Retrieving relevant standards → Gemini 2.5 Flash engineering analysis
+                      Retrieving relevant standards → AI engineering analysis
                     </p>
                   </div>
                 </div>
@@ -485,7 +486,7 @@ export default function KnowledgeBasePage() {
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
                       Ask any field inspection question. The system retrieves relevant building code excerpts
-                      via vector search, then Gemini synthesizes a structured advisory with specific code
+                      via vector search, then AI synthesizes a structured advisory with specific code
                       references, violation thresholds, and remediation protocols.
                     </p>
                   </div>
@@ -521,7 +522,7 @@ export default function KnowledgeBasePage() {
                     )}
                   </div>
 
-                  {/* ── GEMINI LLM SYNTHESIS CARD ─────────────────────────── */}
+                  {/* ── AI LLM SYNTHESIS CARD ─────────────────────────── */}
                   {synthesis && (() => {
                     const sevStyle = SEVERITY_STYLES[synthesis.severity || ""] || SEVERITY_STYLES["Medium"];
                     return (
@@ -534,8 +535,8 @@ export default function KnowledgeBasePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                               </svg>
                             </div>
-                            <span className="text-xs font-bold text-slate-100">Gemini Engineering Advisory</span>
-                            <span className="text-[9px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">gemini-2.5-flash</span>
+                            <span className="text-xs font-bold text-slate-100">AI Engineering Advisory</span>
+                            <span className="text-[9px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">AI</span>
                           </div>
                           {synthesis.severity && (
                             <span className={`px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border ${sevStyle}`}>
@@ -547,7 +548,7 @@ export default function KnowledgeBasePage() {
                         {/* Main answer */}
                         <div className="p-4 bg-slate-50 dark:bg-slate-900/80">
                           <p className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
-                            {synthesis.answer}
+                            {stripMarkdown(synthesis.answer)}
                           </p>
                         </div>
 

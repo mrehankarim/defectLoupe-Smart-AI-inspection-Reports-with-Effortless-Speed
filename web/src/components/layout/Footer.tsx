@@ -56,7 +56,7 @@ export function Footer() {
             <ul className="space-y-2 text-xs text-slate-600 dark:text-slate-400 font-medium">
               <li>
                 <NavLink to="/inspections" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-                  Gemini 2.5 Defect Vision
+                  AI Defect Vision
                 </NavLink>
               </li>
               <li>

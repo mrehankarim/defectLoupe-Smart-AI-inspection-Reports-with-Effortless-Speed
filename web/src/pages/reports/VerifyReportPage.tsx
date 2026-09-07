@@ -6,6 +6,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { api, ApiError } from "../../services/api";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 import LogoIcon from "../../components/LogoIcon";
 import { useTheme } from "../../context/ThemeContext";
 import { useAuth } from "../../context/AuthContext";
@@ -311,7 +312,7 @@ export default function VerifyReportPage() {
                     <div>
                       <h3 className="text-[11px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Executive Summary</h3>
                       <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-100/80 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
-                        {summary.executive_summary}
+                        {stripMarkdown(summary.executive_summary)}
                       </p>
                     </div>
                   )}

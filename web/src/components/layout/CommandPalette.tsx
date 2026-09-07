@@ -49,7 +49,7 @@ const STATIC_COMMANDS: CommandItem[] = [
   {
     id: "inspect",
     label: "Field Inspections Studio",
-    description: "Room walkthroughs, Gemini Vision defect scan & dictation",
+    description: "Room walkthroughs, AI Vision defect scan & dictation",
     category: "Workspace Pages",
     path: "/inspections",
     shortcut: ["G", "I"],
