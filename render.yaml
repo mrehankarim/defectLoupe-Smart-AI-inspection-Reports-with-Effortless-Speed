@@ -29,7 +29,11 @@ services:
       - key: REFRESH_TOKEN_SECRET
         generateValue: true
       - key: AUTO_VERIFY_EMAIL
-        value: "true"
+        value: "false"
+      - key: DEV_AUTO_VERIFY
+        value: "false"
+      - key: RESEND_EMAIL_VERIFICATION_KEY
+        sync: false
       - key: COOKIE_SECURE
         value: "false"
 
@@ -66,8 +70,12 @@ services:
         sync: false
       - key: ACCESS_TOKEN_SECRET
         sync: false
-      - key: UPLOAD_DIR
-        value: /data/uploads
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
 
   # ----------------------------------------------------------------------------
   # 5. AI & RAG Microservice
