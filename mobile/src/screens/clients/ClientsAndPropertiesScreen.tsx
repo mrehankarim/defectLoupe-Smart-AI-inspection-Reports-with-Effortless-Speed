@@ -42,6 +42,7 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   // Add Client Modal
   const [showAddClient, setShowAddClient] = useState(false);
@@ -61,6 +62,7 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
   const [savingProp, setSavingProp] = useState(false);
 
   const loadData = useCallback(async () => {
+    setLoadError("");
     try {
       const [cList, pList] = await Promise.all([
         coreService.listClients({ limit: 50 }).catch(() => []),
@@ -68,7 +70,8 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
       ]);
       setClients(cList);
       setProperties(pList);
-    } catch {
+    } catch (err) {
+      setLoadError(getErrorMessage(err));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -215,8 +218,20 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
       </View>
 
       {/* CLIENTS TAB */}
-      {activeTab === "clients" ? (
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+          <Text style={{ color: colors.textMuted, fontSize: 14 }}>Loading...</Text>
+        </View>
+      ) : loadError ? (
+        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 20 }}>
+          <Text style={{ color: colors.danger, fontSize: 14, textAlign: "center", marginBottom: 12 }}>
+            {loadError}
+          </Text>
+          <GlassButton title="Retry" onPress={loadData} size="sm" />
+        </View>
+      ) : activeTab === "clients" ? (
         <FlatList
+          style={{ flex: 1 }}
           data={clients}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -276,6 +291,7 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
       ) : (
         /* PROPERTIES TAB */
         <FlatList
+          style={{ flex: 1 }}
           data={properties}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}

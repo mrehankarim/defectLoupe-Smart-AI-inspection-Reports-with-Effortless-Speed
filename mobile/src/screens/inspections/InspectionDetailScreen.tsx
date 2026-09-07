@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Alert,
   Modal,
+  Platform,
 } from "react-native";
 import { useTheme } from "../../context/ThemeContext";
 import { HeaderBar } from "../../components/HeaderBar";
@@ -142,25 +143,28 @@ export const InspectionDetailScreen: React.FC<{
   };
 
   const handleDeleteArea = (areaId: string, areaName: string) => {
-    Alert.alert(
-      "Delete Area",
-      `Are you sure you want to remove "${areaName}"?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await coreService.deleteArea(areaId);
-              loadInspectionData();
-            } catch (err) {
-              Alert.alert("Error", getErrorMessage(err));
-            }
-          },
-        },
-      ]
-    );
+    const doDelete = async () => {
+      try {
+        await coreService.deleteArea(areaId);
+        loadInspectionData();
+      } catch (err) {
+        Alert.alert("Error", getErrorMessage(err));
+      }
+    };
+    if (Platform.OS === "web") {
+      if (window.confirm(`Are you sure you want to remove "${areaName}"?`)) {
+        doDelete();
+      }
+    } else {
+      Alert.alert(
+        "Delete Area",
+        `Are you sure you want to remove "${areaName}"?`,
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Delete", style: "destructive", onPress: doDelete },
+        ]
+      );
+    }
   };
 
   // Determine transition buttons
