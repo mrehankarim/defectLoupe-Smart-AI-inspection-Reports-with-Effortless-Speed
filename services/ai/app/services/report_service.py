@@ -87,7 +87,7 @@ Return ONLY the summary text, no JSON, no markdown.
         import httpx
 
         groq_api_key = os.getenv("GROQ_API_KEY", "")
-        groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        groq_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
         if not groq_api_key:
             raise ValueError("No Groq API key")
 
