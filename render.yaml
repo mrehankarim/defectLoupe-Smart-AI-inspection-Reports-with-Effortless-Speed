@@ -1,20 +1,6 @@
 # Render Blueprint Configuration for DefectLoupe
 # Docs: https://render.com/docs/blueprint-spec
 
-envVarGroups:
-  - name: defectloupe-shared-config
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: ACCESS_TOKEN_SECRET
-        generateValue: true
-      - key: REFRESH_TOKEN_SECRET
-        generateValue: true
-      - key: GEMINI_API_KEY
-        sync: false
-
 services:
   # ----------------------------------------------------------------------------
   # 1. Frontend Web App (Static Site)
@@ -24,9 +10,6 @@ services:
     runtime: static
     buildCommand: cd web && npm install && npm run build
     staticPublishPath: web/dist
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: ""
 
   # ----------------------------------------------------------------------------
   # 2. Auth Microservice
@@ -39,7 +22,12 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      - fromGroup: defectloupe-shared-config
+      - key: DATABASE_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: REFRESH_TOKEN_SECRET
+        generateValue: true
       - key: AUTO_VERIFY_EMAIL
         value: "true"
       - key: COOKIE_SECURE
@@ -56,7 +44,10 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      - fromGroup: defectloupe-shared-config
+      - key: DATABASE_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
 
   # ----------------------------------------------------------------------------
   # 4. Media Microservice
@@ -69,7 +60,12 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      - fromGroup: defectloupe-shared-config
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
       - key: UPLOAD_DIR
         value: /data/uploads
 
@@ -84,7 +80,14 @@ services:
     plan: free
     healthCheckPath: /health
     envVars:
-      - fromGroup: defectloupe-shared-config
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
 
@@ -99,4 +102,11 @@ services:
     dockerCommand: celery -A app.workers.celery_app worker -l info -Q celery,default,stt,vision,reports --concurrency=2
     plan: free
     envVars:
-      - fromGroup: defectloupe-shared-config
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
