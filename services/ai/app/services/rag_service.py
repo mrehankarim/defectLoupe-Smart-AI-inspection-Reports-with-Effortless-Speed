@@ -214,12 +214,11 @@ def synthesize_rag_response(
         payload = {
             "model": groq_model,
             "messages": [
-                {"role": "system", "content": "You are a building code engineering assistant. Return only valid JSON."},
+                {"role": "system", "content": "You are a building code engineering assistant. Return only valid JSON with no markdown or code fences."},
                 {"role": "user", "content": system_prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 350,
-            "response_format": {"type": "json_object"},
+            "max_tokens": 800,
         }
 
         resp = httpx.post(
@@ -253,8 +252,19 @@ def synthesize_rag_response(
         logger.warning("Groq RAG synthesis fallback activated: %s", exc)
         top_chunk = retrieved_chunks[0]
         filenames = list({c.get("filename") for c in retrieved_chunks})
+        # Clean markdown from chunk text for display
+        raw_chunk = top_chunk.get("chunk_text", "")
+        clean_chunk = (
+            raw_chunk
+            .replace("#", "")
+            .replace("**", "")
+            .replace("*", "")
+            .replace("`", "")
+            .replace(">", "")
+            .strip()
+        )
         return {
-            "answer": f"Based on retrieved engineering standards ({', '.join(filenames)}): {top_chunk.get('chunk_text')[:350]}...",
+            "answer": f"Based on retrieved engineering standards ({', '.join(filenames)}): {clean_chunk[:500]}",
             "code_references": [f.replace(".md", "").replace(".txt", "").replace("_", " ") for f in filenames],
             "violation_thresholds": "Refer to specific sections in the cited engineering manuals for numeric tolerances.",
             "remediation_protocol": "Perform certified contractor inspection and execute remediation per manufacturer and jurisdiction specifications.",
