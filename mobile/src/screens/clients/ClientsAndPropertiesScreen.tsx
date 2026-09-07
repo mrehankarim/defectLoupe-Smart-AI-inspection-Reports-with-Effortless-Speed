@@ -46,7 +46,8 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
 
   // Add Client Modal
   const [showAddClient, setShowAddClient] = useState(false);
-  const [clientName, setClientName] = useState("");
+  const [clientFirstName, setClientFirstName] = useState("");
+  const [clientLastName, setClientLastName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
   const [savingClient, setSavingClient] = useState(false);
@@ -56,7 +57,9 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
   const [propClientId, setPropClientId] = useState("");
   const [propAddress, setPropAddress] = useState("");
   const [propCity, setPropCity] = useState("");
-  const [propType, setPropType] = useState("Single Family");
+  const [propState, setPropState] = useState("");
+  const [propZip, setPropZip] = useState("");
+  const [propType, setPropType] = useState("RESIDENTIAL");
   const [propSqft, setPropSqft] = useState("");
   const [propYear, setPropYear] = useState("");
   const [savingProp, setSavingProp] = useState(false);
@@ -88,18 +91,20 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
   };
 
   const handleCreateClient = async () => {
-    if (!clientName.trim() || !clientEmail.trim()) {
-      Alert.alert("Validation", "Name and email are required.");
+    if (!clientFirstName.trim() || !clientEmail.trim()) {
+      Alert.alert("Validation", "First name and email are required.");
       return;
     }
     setSavingClient(true);
     try {
       await coreService.createClient({
-        name: clientName.trim(),
+        first_name: clientFirstName.trim(),
+        last_name: clientLastName.trim() || "—",
         email: clientEmail.trim(),
-        phone: clientPhone.trim() || undefined,
+        phone_number: clientPhone.trim() || undefined,
       });
-      setClientName("");
+      setClientFirstName("");
+      setClientLastName("");
       setClientEmail("");
       setClientPhone("");
       setShowAddClient(false);
@@ -131,13 +136,17 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
       await coreService.createProperty({
         client_id: targetClientId,
         address: propAddress.trim(),
-        city: propCity.trim() || undefined,
+        city: propCity.trim() || "Springfield",
+        state: propState.trim() || "IL",
+        zip_code: propZip.trim() || "00000",
         property_type: propType,
-        square_feet: propSqft ? parseInt(propSqft, 10) : undefined,
+        square_footage: propSqft ? parseInt(propSqft, 10) : undefined,
         year_built: propYear ? parseInt(propYear, 10) : undefined,
       });
       setPropAddress("");
       setPropCity("");
+      setPropState("");
+      setPropZip("");
       setPropSqft("");
       setPropYear("");
       setShowAddProp(false);
@@ -256,7 +265,7 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
             <GlassCard elevated style={styles.card}>
               <View style={styles.cardHeader}>
                 <Text style={[styles.clientName, { color: colors.text }]}>
-                  {item.name}
+                  {item.first_name} {item.last_name}
                 </Text>
                 <View
                   style={[
@@ -265,7 +274,7 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
                   ]}
                 >
                   <Text style={[styles.avatarText, { color: colors.accent }]}>
-                    {item.name.charAt(0).toUpperCase()}
+                    {(item.first_name || "?").charAt(0).toUpperCase()}
                   </Text>
                 </View>
               </View>
@@ -277,11 +286,11 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
                 </Text>
               </View>
 
-              {item.phone && (
+              {item.phone_number && (
                 <View style={styles.infoRow}>
                   <Phone size={13} color={colors.textMuted} />
                   <Text style={[styles.infoText, { color: colors.textMuted }]}>
-                    {item.phone}
+                    {item.phone_number}
                   </Text>
                 </View>
               )}
@@ -331,11 +340,11 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
 
               <View style={styles.propStatsRow}>
                 <Text style={[styles.propStatBadge, { color: colors.textSubtle }]}>
-                  {item.property_type || "Residential"}
+                  {(item.property_type || "residential").replace("_", " ")}
                 </Text>
-                {item.square_feet && (
+                {item.square_footage && (
                   <Text style={[styles.propStatBadge, { color: colors.textSubtle }]}>
-                    {item.square_feet.toLocaleString()} sqft
+                    {item.square_footage.toLocaleString()} sqft
                   </Text>
                 )}
                 {item.year_built && (
@@ -362,10 +371,16 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
               Create New Client
             </Text>
             <GlassInput
-              label="Full Name *"
-              placeholder="e.g. Sarah Jenkins"
-              value={clientName}
-              onChangeText={setClientName}
+              label="First Name *"
+              placeholder="e.g. Sarah"
+              value={clientFirstName}
+              onChangeText={setClientFirstName}
+            />
+            <GlassInput
+              label="Last Name"
+              placeholder="e.g. Jenkins"
+              value={clientLastName}
+              onChangeText={setClientLastName}
             />
             <GlassInput
               label="Email Address *"
@@ -424,6 +439,25 @@ export const ClientsAndPropertiesScreen: React.FC<{ navigation: any }> = ({
               value={propCity}
               onChangeText={setPropCity}
             />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  label="State"
+                  placeholder="IL"
+                  value={propState}
+                  onChangeText={setPropState}
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <GlassInput
+                  label="Zip Code"
+                  placeholder="62704"
+                  value={propZip}
+                  onChangeText={setPropZip}
+                  keyboardType="numeric"
+                />
+              </View>
+            </View>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <View style={{ flex: 1 }}>
                 <GlassInput

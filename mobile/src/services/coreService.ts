@@ -10,23 +10,29 @@ export interface DashboardStats {
 
 export interface Client {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  phone?: string;
+  phone_number?: string;
+  inspector_id?: string;
+  company_id?: string;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface Property {
   id: string;
   client_id: string;
   address: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  country?: string;
   property_type?: string;
-  square_feet?: number;
+  square_footage?: number;
   year_built?: number;
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface Inspection {
@@ -67,7 +73,7 @@ export const coreService = {
     return res.data?.items || res.data || [];
   },
 
-  async createClient(payload: { name: string; email: string; phone?: string }): Promise<Client> {
+  async createClient(payload: { first_name: string; last_name: string; email: string; phone_number?: string }): Promise<Client> {
     const res = await apiClient.post<Client>("/api/v1/clients", payload);
     return res.data;
   },
@@ -86,11 +92,12 @@ export const coreService = {
   async createProperty(payload: {
     client_id: string;
     address: string;
-    city?: string;
-    state?: string;
-    zip_code?: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    country?: string;
     property_type?: string;
-    square_feet?: number;
+    square_footage?: number;
     year_built?: number;
   }): Promise<Property> {
     const res = await apiClient.post<Property>("/api/v1/properties", payload);
