@@ -60,7 +60,7 @@ def _render_pdf(html_string: str) -> bytes:
 
 
 def build_report_narrative(context: dict) -> dict:
-    """Use Gemini 1.5 Flash to synthesise an executive summary.
+    """Use Groq LLM to synthesise an executive summary.
 
     Falls back to a simple summary if the API is unreachable.
     """
@@ -69,7 +69,7 @@ def build_report_narrative(context: dict) -> dict:
         context["executive_summary"] = context.get("executive_summary", "No defects were identified during this inspection.")
         return context
 
-    # Build a text summary of findings for Gemini
+    # Build a text summary of findings for Groq
     findings_text = "\n".join(
         f"- [{f.get('severity', 'Low')}] {', '.join(f.get('defect_labels', ['N/A']))}: {f.get('description', '')}"
         for f in findings[:10]
@@ -84,25 +84,37 @@ Based on the following inspection findings, write a concise executive summary \
 Return ONLY the summary text, no JSON, no markdown.
 """
     try:
-        from app.services.vision_service import _call_gemini, _get_config
-        api_key, model_name, url = _get_config()
-        if not api_key:
-            raise ValueError("No API key")
-
         import httpx
+
+        groq_api_key = os.getenv("GROQ_API_KEY", "")
+        groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        if not groq_api_key:
+            raise ValueError("No Groq API key")
+
         payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 256},
+            "model": groq_model,
+            "messages": [
+                {"role": "system", "content": "You are a property inspection report writer. Return only the requested text."},
+                {"role": "user", "content": prompt},
+            ],
+            "temperature": 0.3,
+            "max_tokens": 256,
         }
         resp = httpx.post(
-            url, params={"key": api_key}, json=payload, timeout=30.0,
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=30.0,
         )
         resp.raise_for_status()
         data = resp.json()
-        summary = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        summary = data["choices"][0]["message"]["content"].strip()
         context["executive_summary"] = summary
     except Exception as exc:
-        logger.warning("Gemini narrative synthesis failed: %s", exc)
+        logger.warning("Groq narrative synthesis failed: %s", exc)
         severities = [f.get("severity", "Low") for f in findings]
         critical_count = severities.count("Critical") + severities.count("High")
         context["executive_summary"] = (

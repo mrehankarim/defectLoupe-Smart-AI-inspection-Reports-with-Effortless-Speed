@@ -7,6 +7,7 @@ similarity search scoped by tenant (company_id).
 import io
 import json
 import logging
+import os
 from uuid import UUID
 
 from fastapi import HTTPException
@@ -168,7 +169,7 @@ def synthesize_rag_response(
     query: str,
     retrieved_chunks: list[dict],
 ) -> dict:
-    """Synthesize a structured engineering advisory using Gemini LLM over RAG context."""
+    """Synthesize a structured engineering advisory using Groq LLM over RAG context."""
     if not retrieved_chunks:
         return {
             "answer": f"No specific technical code or standard documents in the knowledge base match '{query}'. Please consult general municipal building codes or upload the relevant jurisdiction manual to the knowledge base.",
@@ -203,30 +204,36 @@ def synthesize_rag_response(
     )
 
     try:
-        from app.services.vision_service import _get_config
         import httpx
 
-        api_key, model_name, url = _get_config()
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY is not configured.")
+        groq_api_key = os.getenv("GROQ_API_KEY", "")
+        groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+        if not groq_api_key:
+            raise ValueError("GROQ_API_KEY is not configured.")
 
         payload = {
-            "contents": [
-                {
-                    "parts": [{"text": system_prompt}],
-                }
+            "model": groq_model,
+            "messages": [
+                {"role": "system", "content": "You are a building code engineering assistant. Return only valid JSON."},
+                {"role": "user", "content": system_prompt},
             ],
-            "generationConfig": {
-                "temperature": 0.2,
-                "maxOutputTokens": 350,
-                "responseMimeType": "application/json",
-            },
+            "temperature": 0.2,
+            "max_tokens": 350,
+            "response_format": {"type": "json_object"},
         }
 
-        resp = httpx.post(url, params={"key": api_key}, json=payload, timeout=30.0)
+        resp = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=30.0,
+        )
         resp.raise_for_status()
         data = resp.json()
-        raw_text = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+        raw_text = data["choices"][0]["message"]["content"].strip()
 
         # Clean code fences if any
         if raw_text.startswith("```"):
@@ -243,7 +250,7 @@ def synthesize_rag_response(
             "severity": parsed.get("severity", "Medium"),
         }
     except Exception as exc:
-        logger.warning("Gemini RAG synthesis fallback activated: %s", exc)
+        logger.warning("Groq RAG synthesis fallback activated: %s", exc)
         top_chunk = retrieved_chunks[0]
         filenames = list({c.get("filename") for c in retrieved_chunks})
         return {
