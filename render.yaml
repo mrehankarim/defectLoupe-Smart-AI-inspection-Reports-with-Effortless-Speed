@@ -57,6 +57,8 @@ services:
         value: "false"
       - key: COOKIE_SECURE
         value: "false"
+      - key: APP_BASE_URL
+        value: https://defectloupe-web.onrender.com
 
   # ----------------------------------------------------------------------------
   # 3. Core Microservice
@@ -100,6 +102,8 @@ services:
       - fromGroup: defectloupe-shared-config
       - key: GEMINI_MODEL
         value: gemini-2.5-flash
+      - key: PUBLIC_VERIFY_URL
+        value: https://defectloupe-web.onrender.com/verify
 
   # ----------------------------------------------------------------------------
   # 6. Celery Async Worker
