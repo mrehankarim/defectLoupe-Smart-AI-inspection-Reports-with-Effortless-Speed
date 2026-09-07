@@ -51,12 +51,13 @@ try:
 except Exception as exc:
     warnings.warn(f"Could not create tables (DB may be unreachable): {exc}")
 
-_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
+_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")
 _cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors,
+    allow_origin_regex=r"https://.*\.onrender\.com|http://localhost.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

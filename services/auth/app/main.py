@@ -31,6 +31,7 @@ _cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors,
+    allow_origin_regex=r"https://.*\.onrender\.com|http://localhost.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
