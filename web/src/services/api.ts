@@ -7,6 +7,45 @@ if (rawBaseUrl && !rawBaseUrl.startsWith("http://") && !rawBaseUrl.startsWith("h
 }
 const BASE_URL = rawBaseUrl;
 
+const TOKEN_KEY = "defectloupe_access_token";
+const REFRESH_TOKEN_KEY = "defectloupe_refresh_token";
+
+export function getStoredAccessToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getStoredRefreshToken(): string | null {
+  try {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredTokens(accessToken: string, refreshToken?: string | null) {
+  try {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    if (refreshToken) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    }
+  } catch {
+    // Ignore storage restrictions if in private/iframe
+  }
+}
+
+export function clearStoredTokens() {
+  try {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  } catch {
+    // Ignore
+  }
+}
+
 export interface ApiError {
   status: number;
   detail: string;
@@ -23,14 +62,54 @@ function canRefresh(path: string) {
   return path === "/auth/me" || path === "/inspectors/me" || (!path.startsWith("/auth/") && !path.startsWith("/inspectors/"));
 }
 
+function getServiceBaseUrl(path: string): string {
+  if (!BASE_URL.includes(".onrender.com")) {
+    return BASE_URL;
+  }
+
+  const p = path.startsWith("/api/v1/") ? path.slice(7) : path;
+
+  // 1. Auth service: /auth, /inspectors
+  if (p.startsWith("/auth") || p.startsWith("/inspectors")) {
+    return BASE_URL.replace(/defectloupe-[a-z0-9-]+/, "defectloupe-auth");
+  }
+
+  // 2. Media service: /photos, /observations, /transcriptions, /media
+  if (
+    p.startsWith("/photos") ||
+    p.startsWith("/observations") ||
+    p.startsWith("/transcriptions") ||
+    p.includes("/media") ||
+    p.includes("/photos") ||
+    p.includes("/observations")
+  ) {
+    return BASE_URL.replace(/defectloupe-[a-z0-9-]+/, "defectloupe-media");
+  }
+
+  // 3. AI service: /rag, /reports, /analyze, /generate-report, /report/
+  if (
+    p.startsWith("/rag") ||
+    p.startsWith("/reports") ||
+    p.includes("/analyze") ||
+    p.includes("/generate-report") ||
+    p.includes("/report/")
+  ) {
+    return BASE_URL.replace(/defectloupe-[a-z0-9-]+/, "defectloupe-ai");
+  }
+
+  // 4. Core service: /clients, /properties, /inspections, /dashboard, /areas, /templates
+  return BASE_URL.replace(/defectloupe-[a-z0-9-]+/, "defectloupe-core");
+}
+
 function buildUrl(path: string): string {
+  const serviceBase = getServiceBaseUrl(path);
   if (path.startsWith("/auth/") || path.startsWith("/inspectors/") || path.startsWith("/auth")) {
-    return `${BASE_URL}${path}`;
+    return `${serviceBase}${path}`;
   }
   if (path.startsWith("/api/v1/")) {
-    return `${BASE_URL}${path}`;
+    return `${serviceBase}${path}`;
   }
-  return `${BASE_URL}/api/v1${path}`;
+  return `${serviceBase}/api/v1${path}`;
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -65,17 +144,37 @@ async function parseError(response: Response): Promise<ApiError> {
 }
 
 async function refreshAccessToken() {
-  const response = await fetch(`${BASE_URL}/auth/refresh`, {
+  const refreshToken = getStoredRefreshToken();
+  const authBase = getServiceBaseUrl("/auth/refresh");
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  const currentAccess = getStoredAccessToken();
+  if (currentAccess) {
+    headers["Authorization"] = `Bearer ${currentAccess}`;
+  }
+
+  const response = await fetch(`${authBase}/auth/refresh`, {
     method: "POST",
+    headers,
     credentials: "include",
+    body: JSON.stringify(refreshToken ? { refresh_token: refreshToken } : {}),
   });
 
   if (!response.ok) {
+    clearStoredTokens();
     return false;
   }
 
-  await response.text();
-  return true;
+  try {
+    const data = (await response.json()) as { access_token?: string; refresh_token?: string };
+    if (data?.access_token) {
+      setStoredTokens(data.access_token, data.refresh_token);
+    }
+    return true;
+  } catch {
+    return true;
+  }
 }
 
 function refreshSession() {
@@ -97,6 +196,10 @@ async function request<T>(
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
+  const token = getStoredAccessToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
 
   const url = buildUrl(path);
   const response = await fetch(url, {
@@ -110,6 +213,7 @@ async function request<T>(
     if (await refreshSession()) {
       return request<T>(method, path, body, false);
     }
+    clearStoredTokens();
     unauthorizedHandler?.();
   }
 
@@ -125,9 +229,16 @@ async function uploadRequest<T>(
   formData: FormData,
   retryAfterRefresh = true,
 ): Promise<T> {
+  const headers: Record<string, string> = {};
+  const token = getStoredAccessToken();
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const url = buildUrl(path);
   const response = await fetch(url, {
     method: "POST",
+    headers,
     credentials: "include",
     body: formData,
   });
@@ -136,6 +247,7 @@ async function uploadRequest<T>(
     if (await refreshSession()) {
       return uploadRequest<T>(path, formData, false);
     }
+    clearStoredTokens();
     unauthorizedHandler?.();
   }
 

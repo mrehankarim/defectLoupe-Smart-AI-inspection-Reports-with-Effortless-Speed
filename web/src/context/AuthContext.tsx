@@ -1,6 +1,6 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api, ApiError, setUnauthorizedHandler } from "../services/api";
+import { api, ApiError, setUnauthorizedHandler, setStoredTokens, clearStoredTokens } from "../services/api";
 
 export type UserRole = "ADMIN" | "INSPECTOR" | "CLIENT_VIEWER";
 
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!isApiError(error) || error.status !== 401) {
         throw error;
       }
+      clearStoredTokens();
       setUser(null);
       return null;
     }
@@ -61,6 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
+      clearStoredTokens();
       setUser(null);
       const next = `${window.location.pathname}${window.location.search}`;
       if (!next.startsWith("/login") && !next.startsWith("/signup") && !next.startsWith("/verify-email")) {
@@ -80,7 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isLoading,
       login: async (credentials: Credentials) => {
-        await api.post("/auth/login", credentials);
+        const res = await api.post<{ access_token?: string; refresh_token?: string }>("/auth/login", credentials);
+        if (res?.access_token) {
+          setStoredTokens(res.access_token, res.refresh_token);
+        }
         await refreshUser();
       },
       register: async (data: Registration) => {
@@ -90,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           await api.post("/auth/logout");
         } finally {
+          clearStoredTokens();
           setUser(null);
         }
       },
