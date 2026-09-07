@@ -146,6 +146,7 @@ services:
       ACCESS_TOKEN_SECRET: defectloupe-hackathon-jwt-secret-key-32b
       CORE_SERVICE_URL: http://core:8000
       MEDIA_SERVICE_URL: http://media:8000
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80,http://localhost:8081"
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
