@@ -21,7 +21,7 @@ export interface AreaObservation {
   transcription?: {
     id: string;
     text: string;
-    status: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+    status: "pending" | "processing" | "completed" | "failed";
     confidence?: number;
   };
   created_at: string;

@@ -118,6 +118,7 @@ def report_status(
         job_id=job.id,
         status=job.status.value,
         pdf_url=job.pdf_url,
+        verify_token=job.verify_token,
         error_message=job.error_message,
     )
 
