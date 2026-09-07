@@ -1,5 +1,8 @@
 let rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
 if (rawBaseUrl && !rawBaseUrl.startsWith("http://") && !rawBaseUrl.startsWith("https://")) {
+  if (!rawBaseUrl.includes(".") && !rawBaseUrl.includes("localhost")) {
+    rawBaseUrl = `${rawBaseUrl}.onrender.com`;
+  }
   rawBaseUrl = `https://${rawBaseUrl}`;
 }
 const BASE_URL = rawBaseUrl;
