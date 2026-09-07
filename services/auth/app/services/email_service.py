@@ -23,7 +23,9 @@ VERIFICATION_LINK_EXPIRY_HOURS = 24
 def build_verification_link(token: str) -> str:
     """Build the full URL the user will click to verify their email."""
     base_url = get_app_base_url().rstrip("/")
-    return f"{base_url}/auth/verify-email?token={token}"
+    if not base_url.startswith("http://") and not base_url.startswith("https://"):
+        base_url = f"https://{base_url}"
+    return f"{base_url}/verify-email?token={token}"
 
 
 def send_verification_email(
