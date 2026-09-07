@@ -194,19 +194,50 @@ def synthesize_rag_response(
             "- remediation_protocol: (string) 1 concise sentence stating the technical fix.\n"
             "- severity: (string) One of: 'Low', 'Medium', 'High', 'Critical'.\n"
         )
-    else:
-        prompt = (
-            "You are DefectLoupe's Building Code & Forensic Engineering Advisory Assistant. "
-            "An inspector has asked you a question. If it is a technical building code, structural, defect, or property question, "
-            "provide an authoritative engineering advisory based on standard international and US building codes (IBC, IRC, NEC, ASTM, ACI). "
-            "If the query is conversational (e.g., 'hello', 'yoo you litening'), respond pleasantly and professionally, letting them know you are ready to assist with building code analysis.\n\n"
-            f"INSPECTOR QUERY: {query}\n\n"
-            "Return ONLY a JSON object with these keys:\n"
-            "- answer: (string) Technical advisory summary or friendly assistant response.\n"
-            "- code_references: (list of strings) Applicable building codes or [] if conversational.\n"
-            "- violation_thresholds: (string or null) Numerical tolerance or limit if applicable, else null.\n"
-            "- remediation_protocol: (string or null) Recommended engineering repair step if applicable, else null.\n"
-            "- severity: (string) 'Low', 'Medium', 'High', or 'Critical'. Default 'Low' for conversational.\n"
+    context_str = "\n\n".join(context_blocks)
+
+    system_prompt = (
+        "You are DefectLoupe's Building Code & Engineering Assistant. "
+        "Synthesize a concise, direct, professional engineering advisory based on the building code excerpts below.\n\n"
+        f"INSPECTOR QUERY: {query}\n\n"
+        f"RETRIEVED KNOWLEDGE BASE EXCERPTS:\n{context_str}\n\n"
+        "Strict Instructions to Conserve Token Usage:\n"
+        "1. Return ONLY a valid JSON object (no markdown, no ```json fences).\n"
+        "2. Do NOT include conversational greetings, polite pleasantries, or self-introductions (e.g. NEVER say 'Greetings', 'As an AI assistant', etc.). Start immediately with direct technical facts.\n"
+        "3. Keys required:\n"
+        "   - answer: (string) Concise, high-density technical summary (maximum 2-3 sentences, strictly under 80 words).\n"
+        "   - code_references: (list of strings) Clean, compact code citations (e.g. ['IRC 2024 R905', 'IBC Sec 1904']). Max 3 items.\n"
+        "   - violation_thresholds: (string) 1 concise sentence stating exact numerical limit/failure criteria.\n"
+        "   - remediation_protocol: (string) 1 concise sentence stating the technical fix.\n"
+        "   - severity: (string) One of: 'Low', 'Medium', 'High', 'Critical'.\n"
+    )
+
+    try:
+        import httpx
+
+        groq_api_key = os.getenv("GROQ_API_KEY", "")
+        groq_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+        if not groq_api_key:
+            raise ValueError("GROQ_API_KEY is not configured.")
+
+        payload = {
+            "model": groq_model,
+            "messages": [
+                {"role": "system", "content": "You are a building code engineering assistant. Return only valid JSON with no markdown or code fences."},
+                {"role": "user", "content": system_prompt},
+            ],
+            "temperature": 0.2,
+            "max_tokens": 800,
+        }
+
+        resp = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=30.0,
         )
 
     # 1. Primary: Gemini 2.5 Flash
@@ -275,8 +306,19 @@ def synthesize_rag_response(
     if retrieved_chunks:
         top_chunk = retrieved_chunks[0]
         filenames = list({c.get("filename") for c in retrieved_chunks})
+        # Clean markdown from chunk text for display
+        raw_chunk = top_chunk.get("chunk_text", "")
+        clean_chunk = (
+            raw_chunk
+            .replace("#", "")
+            .replace("**", "")
+            .replace("*", "")
+            .replace("`", "")
+            .replace(">", "")
+            .strip()
+        )
         return {
-            "answer": f"Based on retrieved engineering standards ({', '.join(filenames)}): {top_chunk.get('chunk_text')[:350]}...",
+            "answer": f"Based on retrieved engineering standards ({', '.join(filenames)}): {clean_chunk[:500]}",
             "code_references": [f.replace(".md", "").replace(".txt", "").replace("_", " ") for f in filenames],
             "violation_thresholds": "Refer to specific sections in the cited engineering manuals for numeric tolerances.",
             "remediation_protocol": "Perform certified contractor inspection and execute remediation per manufacturer and jurisdiction specifications.",

@@ -20,6 +20,7 @@ import {
   ReportStructuredData,
 } from "../../services/aiReportService";
 import { getErrorMessage } from "../../services/api";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 import {
   Sparkles,
   FileText,
@@ -49,7 +50,7 @@ export const ReportViewerScreen: React.FC<{
       const status = await aiReportService.getReportStatus(inspectionId).catch(() => null);
       setJobStatus(status);
 
-      if (status?.status === "READY") {
+      if (status?.status === "ready") {
         const data = await aiReportService.getReportJson(inspectionId).catch(() => null);
         setReportData(data);
       }
@@ -65,7 +66,7 @@ export const ReportViewerScreen: React.FC<{
 
   // Poll while processing
   useEffect(() => {
-    if (jobStatus?.status === "PROCESSING" || jobStatus?.status === "QUEUED") {
+    if (jobStatus?.status === "processing" || jobStatus?.status === "queued") {
       const interval = setInterval(() => {
         fetchStatusAndReport();
       }, 3000);
@@ -123,7 +124,7 @@ export const ReportViewerScreen: React.FC<{
         showBack
         onBack={() => navigation.goBack()}
         rightAction={
-          jobStatus?.status === "READY" ? (
+          jobStatus?.status === "ready" ? (
             <TouchableOpacity onPress={handleShareReport} style={styles.shareBtn}>
               <Share2 size={16} color={colors.accent} />
             </TouchableOpacity>
@@ -138,23 +139,23 @@ export const ReportViewerScreen: React.FC<{
             <Sparkles size={24} color={colors.secondary} />
             <View style={{ marginLeft: 12, flex: 1 }}>
               <Text style={[styles.statusTitle, { color: colors.text }]}>
-                {jobStatus?.status === "READY"
+                {jobStatus?.status === "ready"
                   ? "Report Ready & Verified"
-                  : jobStatus?.status === "PROCESSING"
+                  : jobStatus?.status === "processing"
                   ? "Synthesizing Report..."
                   : "AI Technical Report"}
               </Text>
               <Text style={[styles.statusSub, { color: colors.textMuted }]}>
-                {jobStatus?.status === "READY"
-                  ? "Generated using Gemini Vision AI and RAG technical standards."
-                  : jobStatus?.status === "PROCESSING"
+                {jobStatus?.status === "ready"
+                  ? "Generated using AI analysis."
+                  : jobStatus?.status === "processing"
                   ? "Analyzing defect photos and transcribing notes."
                   : "Ready to aggregate field photos, voice notes, and defect ratings."}
               </Text>
             </View>
           </View>
 
-          {jobStatus?.status === "PROCESSING" && (
+          {jobStatus?.status === "processing" && (
             <View style={styles.processingBar}>
               <ActivityIndicator size="small" color={colors.secondary} />
               <Text style={[styles.procText, { color: colors.secondary }]}>
@@ -163,11 +164,11 @@ export const ReportViewerScreen: React.FC<{
             </View>
           )}
 
-          {jobStatus?.status !== "PROCESSING" && (
+          {jobStatus?.status !== "processing" && (
             <View style={styles.btnRow}>
               <GlassButton
                 title={
-                  jobStatus?.status === "READY"
+                  jobStatus?.status === "ready"
                     ? "Regenerate AI Report"
                     : "Generate Report Now"
                 }
@@ -245,7 +246,7 @@ export const ReportViewerScreen: React.FC<{
             </Text>
             <GlassCard style={styles.narrativeCard}>
               <Text style={[styles.narrativeText, { color: colors.text }]}>
-                {reportData.executive_summary ||
+                {stripMarkdown(reportData.executive_summary) ||
                   "The property inspection was conducted according to standard operating guidelines. Observations and defect evidence were captured across walkthrough zones."}
               </Text>
             </GlassCard>
@@ -266,7 +267,7 @@ export const ReportViewerScreen: React.FC<{
                     <View key={rIdx} style={styles.recItemRow}>
                       <CheckCircle size={14} color={colors.accent} />
                       <Text style={[styles.recItemText, { color: colors.text }]}>
-                        {rec}
+                        {stripMarkdown(rec)}
                       </Text>
                     </View>
                   ))}

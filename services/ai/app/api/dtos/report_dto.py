@@ -21,6 +21,7 @@ class ReportStatusResponse(BaseModel):
     job_id: UUID
     status: str
     pdf_url: str | None = None
+    verify_token: str | None = None
     error_message: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

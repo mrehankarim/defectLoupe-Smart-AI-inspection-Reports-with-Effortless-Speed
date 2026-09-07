@@ -156,9 +156,9 @@ export function QuickMegaMenu({
         },
         {
           title: "Photo Defect Scanner",
-          description: "Gemini 1.5 Flash inspection",
+          description: "AI-powered photo defect inspection",
           path: "/inspections",
-          badge: "Gemini",
+          badge: "AI",
           accentColor: "from-rose-500/20 to-pink-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
           icon: (
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

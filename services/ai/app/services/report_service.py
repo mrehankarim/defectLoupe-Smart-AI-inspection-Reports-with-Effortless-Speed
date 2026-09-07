@@ -98,7 +98,7 @@ Return ONLY the summary text, no JSON, no markdown.
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.3,
-            "max_tokens": 256,
+            "max_tokens": 400,
         }
         resp = httpx.post(
             "https://api.groq.com/openai/v1/chat/completions",

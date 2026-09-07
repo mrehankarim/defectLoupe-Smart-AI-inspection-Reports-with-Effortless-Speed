@@ -29,6 +29,7 @@ import {
   DefectItem,
 } from "../../services/aiReportService";
 import { getErrorMessage } from "../../services/api";
+import { stripMarkdown } from "../../utils/stripMarkdown";
 import {
   Camera,
   Image as ImageIcon,
@@ -109,7 +110,7 @@ export const AreaWalkthroughScreen: React.FC<{
         try {
           const uploaded = await mediaService.uploadPhoto(areaId, asset.uri);
           setPhotos((prev) => [uploaded, ...prev]);
-          Alert.alert("Photo Uploaded", "Would you like to analyze this photo with Gemini Vision AI?", [
+          Alert.alert("Photo Uploaded", "Would you like to analyze this photo with AI Vision?", [
             { text: "Later", style: "cancel" },
             {
               text: "Analyze Now",
@@ -178,7 +179,7 @@ export const AreaWalkthroughScreen: React.FC<{
     ]);
   };
 
-  // Analyze Photo with Gemini Vision
+  // Analyze Photo with AI Vision
   const handleAnalyzePhoto = async (photoId: string) => {
     setAnalyzingPhotoId(photoId);
     try {
@@ -411,7 +412,7 @@ export const AreaWalkthroughScreen: React.FC<{
                       <Text
                         style={[styles.findingsTitle, { color: colors.text }]}
                       >
-                        Gemini Vision Analysis
+                        AI Vision Analysis
                       </Text>
                     </View>
 
@@ -419,7 +420,7 @@ export const AreaWalkthroughScreen: React.FC<{
                       <Text
                         style={[styles.findingsSummary, { color: colors.textMuted }]}
                       >
-                        {analysis.summary}
+                        {stripMarkdown(analysis.summary)}
                       </Text>
                     )}
 
@@ -442,7 +443,7 @@ export const AreaWalkthroughScreen: React.FC<{
                             { color: colors.textMuted },
                           ]}
                         >
-                          {defect.description}
+                          {stripMarkdown(defect.description)}
                         </Text>
                         {defect.remediation && (
                           <Text
@@ -451,7 +452,7 @@ export const AreaWalkthroughScreen: React.FC<{
                               { color: colors.accent },
                             ]}
                           >
-                            Fix: {defect.remediation}
+                            Fix: {stripMarkdown(defect.remediation)}
                           </Text>
                         )}
                       </View>
