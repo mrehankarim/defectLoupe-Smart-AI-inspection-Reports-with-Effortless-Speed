@@ -45,12 +45,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 app = FastAPI(title="DefectLoupe — ai-service", version="0.1.0")
 
-_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:80")
+_cors_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")
 _cors = [o.strip() for o in _cors_raw.split(",")] if _cors_raw != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_cors,
+    allow_origin_regex=r"https://.*\.onrender\.com|http://localhost.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

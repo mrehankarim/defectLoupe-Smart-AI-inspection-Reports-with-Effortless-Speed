@@ -58,12 +58,13 @@ app = FastAPI(
 
 import os
 
-cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
+cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost,http://localhost:5173,http://localhost:3000")
 cors_origins = [o.strip() for o in cors_origins_raw.split(",")] if cors_origins_raw != "*" else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"https://.*\.onrender\.com|http://localhost.*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
