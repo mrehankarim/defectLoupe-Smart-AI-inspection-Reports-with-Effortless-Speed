@@ -1,0 +1,194 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155"/>
+    </marker>
+    <marker id="arrow-dashed" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="600" y="40" text-anchor="middle" font-size="22" font-weight="bold" fill="#1e293b">DefectLoupe — System Architecture Diagram</text>
+  <text x="600" y="62" text-anchor="middle" font-size="13" fill="#64748b">Microservices Platform with AI-Powered Inspection Reports</text>
+
+  <!-- ===== CLIENTS LAYER ===== -->
+  <rect x="200" y="85" width="220" height="55" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="310" y="108" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">📱 Mobile App</text>
+  <text x="310" y="126" text-anchor="middle" font-size="11" fill="#64748b">React Native / Expo</text>
+
+  <rect x="780" y="85" width="220" height="55" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="890" y="108" text-anchor="middle" font-size="13" font-weight="600" fill="#334155">🖥 Web Dashboard</text>
+  <text x="890" y="126" text-anchor="middle" font-size="11" fill="#64748b">React + Vite + Tailwind CSS</text>
+
+  <!-- Arrows from clients to gateway -->
+  <line x1="310" y1="140" x2="310" y2="175" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="890" y1="140" x2="890" y2="175" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="600" y="168" text-anchor="middle" font-size="10" fill="#64748b">HTTPS</text>
+
+  <!-- ===== API GATEWAY ===== -->
+  <rect x="150" y="180" width="900" height="60" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="600" y="203" text-anchor="middle" font-size="15" font-weight="bold" fill="#c2410c">Traefik v3 — API Gateway (Port 80)</text>
+  <text x="600" y="222" text-anchor="middle" font-size="11" fill="#9a3412">Path-based routing: /auth/* → Auth  |  /api/v1/clients,properties,inspections → Core  |  /api/v1/photos,observations → Media  |  /api/v1/rag,reports → AI</text>
+
+  <!-- Arrows from gateway to services -->
+  <line x1="260" y1="240" x2="260" y2="300" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="460" y1="240" x2="460" y2="300" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="700" y1="240" x2="700" y2="300" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="940" y1="240" x2="940" y2="300" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== MICROSERVICES LAYER ===== -->
+  <!-- Auth Service -->
+  <rect x="130" y="305" width="260" height="120" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="260" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#1d4ed8">Auth Service</text>
+  <text x="260" y="345" text-anchor="middle" font-size="11" fill="#3b82f6">FastAPI — Port 8000</text>
+  <line x1="150" y1="355" x2="370" y2="355" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="260" y="373" text-anchor="middle" font-size="11" fill="#475569">• JWT (HS256) Token Auth</text>
+  <text x="260" y="389" text-anchor="middle" font-size="11" fill="#475569">• User Registration &amp; Login</text>
+  <text x="260" y="405" text-anchor="middle" font-size="11" fill="#475569">• Email Verification (Resend)</text>
+  <text x="260" y="421" text-anchor="middle" font-size="11" fill="#475569">• RBAC &amp; Tenant Scoping</text>
+
+  <!-- Core Service -->
+  <rect x="330" y="305" width="260" height="120" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="460" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#15803d">Core Service</text>
+  <text x="460" y="345" text-anchor="middle" font-size="11" fill="#22c55e">FastAPI — Port 8000</text>
+  <line x1="350" y1="355" x2="570" y2="355" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="460" y="373" text-anchor="middle" font-size="11" fill="#475569">• Client Management (CRUD)</text>
+  <text x="460" y="389" text-anchor="middle" font-size="11" fill="#475569">• Property Management</text>
+  <text x="460" y="405" text-anchor="middle" font-size="11" fill="#475569">• Inspection Lifecycle</text>
+  <text x="460" y="421" text-anchor="middle" font-size="11" fill="#475569">• Area Templates &amp; Dashboard</text>
+
+  <!-- Media Service -->
+  <rect x="570" y="305" width="260" height="120" rx="8" fill="#fefce8" stroke="#eab308" stroke-width="2" filter="url(#shadow)"/>
+  <text x="700" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#a16207">Media Service</text>
+  <text x="700" y="345" text-anchor="middle" font-size="11" fill="#ca8a04">FastAPI — Port 8000</text>
+  <line x1="590" y1="355" x2="810" y2="355" stroke="#fef08a" stroke-width="1"/>
+  <text x="700" y="373" text-anchor="middle" font-size="11" fill="#475569">• Photo Upload &amp; Storage</text>
+  <text x="700" y="389" text-anchor="middle" font-size="11" fill="#475569">• Voice Note Recording</text>
+  <text x="700" y="405" text-anchor="middle" font-size="11" fill="#475569">• Text/Voice Observations</text>
+  <text x="700" y="421" text-anchor="middle" font-size="11" fill="#475569">• Transcription Management</text>
+
+  <!-- AI Service -->
+  <rect x="810" y="305" width="260" height="120" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2" filter="url(#shadow)"/>
+  <text x="940" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#7e22ce">AI Service</text>
+  <text x="940" y="345" text-anchor="middle" font-size="11" fill="#a855f7">FastAPI — Port 8000</text>
+  <line x1="830" y1="355" x2="1050" y2="355" stroke="#e9d5ff" stroke-width="1"/>
+  <text x="940" y="373" text-anchor="middle" font-size="11" fill="#475569">• RAG Vector Search (pgvector)</text>
+  <text x="940" y="389" text-anchor="middle" font-size="11" fill="#475569">• Vision AI (Gemini Flash)</text>
+  <text x="940" y="405" text-anchor="middle" font-size="11" fill="#475569">• Report Generation (PDF)</text>
+  <text x="940" y="421" text-anchor="middle" font-size="11" fill="#475569">• QR Verification</text>
+
+  <!-- ===== INTER-SERVICE COMMUNICATION ===== -->
+  <!-- AI → Core (HTTP) -->
+  <line x1="830" y1="380" x2="590" y2="380" stroke="#64748b" stroke-width="1.2" stroke-dasharray="6,3" marker-end="url(#arrow-dashed)"/>
+  <text x="710" y="375" text-anchor="middle" font-size="9" fill="#64748b">HTTP (httpx)</text>
+
+  <!-- AI → Media (HTTP) -->
+  <line x1="830" y1="400" x2="810" y2="400" stroke="#64748b" stroke-width="1.2" stroke-dasharray="6,3" marker-end="url(#arrow-dashed)"/>
+
+  <!-- ===== SHARED PACKAGE ===== -->
+  <rect x="15" y="320" width="100" height="90" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="65" y="342" text-anchor="middle" font-size="10" font-weight="bold" fill="#475569">shared/</text>
+  <text x="65" y="356" text-anchor="middle" font-size="9" fill="#64748b">DB Engine</text>
+  <text x="65" y="369" text-anchor="middle" font-size="9" fill="#64748b">Base Model</text>
+  <text x="65" y="382" text-anchor="middle" font-size="9" fill="#64748b">JWT Deps</text>
+  <text x="65" y="395" text-anchor="middle" font-size="9" fill="#64748b">Passwords</text>
+  <line x1="115" y1="365" x2="130" y2="365" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="115" y1="365" x2="130" y2="365" stroke="#94a3b8" stroke-width="1"/>
+
+  <!-- ===== CELERY WORKERS ===== -->
+  <rect x="300" y="480" width="600" height="80" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#shadow)"/>
+  <text x="600" y="503" text-anchor="middle" font-size="14" font-weight="bold" fill="#b91c1c">Celery Async Workers (Redis-backed)</text>
+  <line x1="320" y1="513" x2="880" y2="513" stroke="#fecaca" stroke-width="1"/>
+
+  <rect x="330" y="523" width="160" height="28" rx="4" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <text x="410" y="542" text-anchor="middle" font-size="11" fill="#991b1b">STT Worker (stt queue)</text>
+
+  <rect x="520" y="523" width="160" height="28" rx="4" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <text x="600" y="542" text-anchor="middle" font-size="11" fill="#991b1b">Vision Worker (vision)</text>
+
+  <rect x="710" y="523" width="160" height="28" rx="4" fill="#fee2e2" stroke="#f87171" stroke-width="1"/>
+  <text x="790" y="542" text-anchor="middle" font-size="11" fill="#991b1b">Report Worker (reports)</text>
+
+  <!-- Arrows: Services → Celery -->
+  <line x1="700" y1="425" x2="550" y2="480" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <line x1="940" y1="425" x2="750" y2="480" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+  <text x="840" y="458" font-size="9" fill="#ef4444">Publish Tasks</text>
+
+  <!-- ===== DATA LAYER ===== -->
+  <!-- PostgreSQL -->
+  <ellipse cx="350" cy="640" rx="100" ry="25" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="250" y="640" width="200" height="60" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <ellipse cx="350" cy="700" rx="100" ry="25" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="350" y="668" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e40af">PostgreSQL 15</text>
+  <text x="350" y="685" text-anchor="middle" font-size="11" fill="#2563eb">+ pgvector extension</text>
+
+  <!-- Redis -->
+  <ellipse cx="850" cy="640" rx="80" ry="22" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <rect x="770" y="640" width="160" height="50" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <ellipse cx="850" cy="690" rx="80" ry="22" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <text x="850" y="665" text-anchor="middle" font-size="13" font-weight="bold" fill="#9d174d">Redis 7</text>
+  <text x="850" y="680" text-anchor="middle" font-size="10" fill="#be185d">Broker + Cache</text>
+
+  <!-- Arrows: Services → Data -->
+  <line x1="260" y1="425" x2="310" y2="620" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="460" y1="425" x2="380" y2="620" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="700" y1="425" x2="400" y2="620" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="940" y1="425" x2="420" y2="620" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Celery → Redis -->
+  <line x1="600" y1="560" x2="820" y2="625" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="720" y="590" font-size="10" fill="#ec4899">Task Queue</text>
+
+  <!-- Media → Redis -->
+  <line x1="700" y1="425" x2="810" y2="625" stroke="#ec4899" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow)"/>
+
+  <!-- ===== EXTERNAL SERVICES ===== -->
+  <rect x="30" y="480" width="120" height="45" rx="22" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="90" y="500" text-anchor="middle" font-size="10" font-weight="600" fill="#15803d">Resend API</text>
+  <text x="90" y="514" text-anchor="middle" font-size="9" fill="#22c55e">(Email)</text>
+  <line x1="150" y1="500" x2="260" y2="420" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-dashed)"/>
+
+  <rect x="1050" y="480" width="120" height="45" rx="22" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1110" y="500" text-anchor="middle" font-size="10" font-weight="600" fill="#7e22ce">Gemini API</text>
+  <text x="1110" y="514" text-anchor="middle" font-size="9" fill="#a855f7">(Vision AI)</text>
+  <line x1="1050" y1="500" x2="960" y2="425" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#arrow-dashed)"/>
+
+  <!-- Legend -->
+  <rect x="30" y="760" width="1140" height="120" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="600" y="782" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">Legend</text>
+
+  <rect x="60" y="795" width="20" height="14" rx="3" fill="#eff6ff" stroke="#3b82f6" stroke-width="1"/>
+  <text x="90" y="806" font-size="10" fill="#475569">Auth Service</text>
+
+  <rect x="200" y="795" width="20" height="14" rx="3" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+  <text x="230" y="806" font-size="10" fill="#475569">Core Service</text>
+
+  <rect x="340" y="795" width="20" height="14" rx="3" fill="#fefce8" stroke="#eab308" stroke-width="1"/>
+  <text x="370" y="806" font-size="10" fill="#475569">Media Service</text>
+
+  <rect x="490" y="795" width="20" height="14" rx="3" fill="#faf5ff" stroke="#a855f7" stroke-width="1"/>
+  <text x="520" y="806" font-size="10" fill="#475569">AI Service</text>
+
+  <rect x="620" y="795" width="20" height="14" rx="3" fill="#fef2f2" stroke="#ef4444" stroke-width="1"/>
+  <text x="650" y="806" font-size="10" fill="#475569">Celery Workers</text>
+
+  <rect x="770" y="795" width="20" height="14" rx="3" fill="#fff7ed" stroke="#f97316" stroke-width="1"/>
+  <text x="800" y="806" font-size="10" fill="#475569">API Gateway</text>
+
+  <line x1="60" y1="835" x2="100" y2="835" stroke="#334155" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="110" y="839" font-size="10" fill="#475569">Synchronous Flow</text>
+
+  <line x1="260" y1="835" x2="300" y2="835" stroke="#64748b" stroke-width="1.2" stroke-dasharray="5,3" marker-end="url(#arrow-dashed)"/>
+  <text x="310" y="839" font-size="10" fill="#475569">Async / Inter-service</text>
+
+  <text x="500" y="839" font-size="10" fill="#475569">All services share PostgreSQL 15 via shared/ Python package (SQLAlchemy 2.0, Argon2, JWT deps)</text>
+
+  <text x="600" y="865" text-anchor="middle" font-size="10" fill="#94a3b8">Network: defectloupe-net (Docker bridge) — All inter-service communication over internal Docker DNS</text>
+</svg>

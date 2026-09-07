@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 950" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155"/>
+    </marker>
+    <marker id="arr-r" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+    </marker>
+    <marker id="arr-b" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+    <filter id="sh" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="950" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="bold" fill="#1e293b">DefectLoupe — Entity Relationship Diagram</text>
+  <text x="600" y="58" text-anchor="middle" font-size="13" fill="#64748b">PostgreSQL 15 Database Schema (Crow's Foot Notation)</text>
+
+  <!-- ===== AUTH DOMAIN ===== -->
+  <rect x="30" y="80" width="350" height="440" rx="10" fill="#eff6ff" fill-opacity="0.4" stroke="#93c5fd" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="205" y="102" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">AUTH DOMAIN</text>
+
+  <!-- USERS -->
+  <rect x="55" y="115" width="280" height="195" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="2" filter="url(#sh)"/>
+  <rect x="55" y="115" width="280" height="28" rx="6" fill="#3b82f6"/>
+  <text x="195" y="134" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">USERS</text>
+  <text x="70" y="160" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="70" y="176" font-size="11" fill="#1e293b">email : VARCHAR(255) UNIQUE</text>
+  <text x="70" y="192" font-size="11" fill="#1e293b">hashed_password : TEXT</text>
+  <text x="70" y="208" font-size="11" fill="#1e293b">role : ENUM (inspector, admin)</text>
+  <text x="70" y="224" font-size="11" fill="#1e293b">email_verified : BOOLEAN</text>
+  <text x="70" y="240" font-size="11" fill="#1e293b">refresh_token : TEXT</text>
+  <text x="70" y="256" font-size="11" fill="#1e293b">email_verification_token : VARCHAR</text>
+  <text x="70" y="272" font-size="11" fill="#1e293b">is_active : BOOLEAN</text>
+  <text x="70" y="288" font-size="11" fill="#64748b">created_at : TIMESTAMP</text>
+  <text x="70" y="304" font-size="11" fill="#64748b">is_admin : BOOLEAN</text>
+
+  <!-- INSPECTORS -->
+  <rect x="55" y="340" width="280" height="165" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="2" filter="url(#sh)"/>
+  <rect x="55" y="340" width="280" height="28" rx="6" fill="#3b82f6"/>
+  <text x="195" y="359" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">INSPECTORS</text>
+  <text x="70" y="385" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="70" y="401" font-size="11" fill="#ef4444">user_id : UUID (FK → users)</text>
+  <text x="70" y="417" font-size="11" fill="#ef4444">company_id : UUID (FK → companies)</text>
+  <text x="70" y="433" font-size="11" fill="#1e293b">first_name : TEXT</text>
+  <text x="70" y="449" font-size="11" fill="#1e293b">last_name : TEXT</text>
+  <text x="70" y="465" font-size="11" fill="#1e293b">phone_number : VARCHAR(20)</text>
+  <text x="70" y="481" font-size="11" fill="#1e293b">license_number : TEXT</text>
+  <text x="70" y="497" font-size="11" fill="#1e293b">inspector_type : ENUM</text>
+
+  <!-- COMPANIES -->
+  <rect x="55" y="540" width="280" height="165" rx="6" fill="#ffffff" stroke="#3b82f6" stroke-width="2" filter="url(#sh)"/>
+  <rect x="55" y="540" width="280" height="28" rx="6" fill="#3b82f6"/>
+  <text x="195" y="559" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">COMPANIES</text>
+  <text x="70" y="585" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="70" y="601" font-size="11" fill="#ef4444">owner_id : UUID (FK → inspectors)</text>
+  <text x="70" y="617" font-size="11" fill="#1e293b">name : TEXT</text>
+  <text x="70" y="633" font-size="11" fill="#1e293b">email : VARCHAR(255) UNIQUE</text>
+  <text x="70" y="649" font-size="11" fill="#1e293b">phone_number : VARCHAR(20)</text>
+  <text x="70" y="665" font-size="11" fill="#1e293b">address, city, state, zip, country</text>
+  <text x="70" y="681" font-size="11" fill="#1e293b">logo_url : TEXT</text>
+  <text x="70" y="697" font-size="11" fill="#64748b">website : TEXT</text>
+
+  <!-- Users 1:1 Inspectors -->
+  <line x1="195" y1="310" x2="195" y2="340" stroke="#334155" stroke-width="1.5"/>
+  <text x="210" y="328" font-size="9" fill="#64748b">1:1</text>
+
+  <!-- Companies 1:N Inspectors -->
+  <line x1="335" y1="540" x2="335" y2="505" stroke="#334155" stroke-width="1.5"/>
+  <text x="345" y="525" font-size="9" fill="#64748b">1:N</text>
+
+  <!-- ===== CORE DOMAIN ===== -->
+  <rect x="420" y="80" width="350" height="560" rx="10" fill="#f0fdf4" fill-opacity="0.4" stroke="#86efac" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="595" y="102" text-anchor="middle" font-size="13" font-weight="bold" fill="#15803d">CORE DOMAIN</text>
+
+  <!-- CLIENTS -->
+  <rect x="445" y="115" width="280" height="150" rx="6" fill="#ffffff" stroke="#22c55e" stroke-width="2" filter="url(#sh)"/>
+  <rect x="445" y="115" width="280" height="28" rx="6" fill="#22c55e"/>
+  <text x="585" y="134" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">CLIENTS</text>
+  <text x="460" y="160" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="460" y="176" font-size="11" fill="#ef4444">inspector_id : UUID (FK → inspectors)</text>
+  <text x="460" y="192" font-size="11" fill="#ef4444">company_id : UUID (FK → companies)</text>
+  <text x="460" y="208" font-size="11" fill="#1e293b">first_name, last_name : TEXT</text>
+  <text x="460" y="224" font-size="11" fill="#1e293b">email : VARCHAR(255) UNIQUE</text>
+  <text x="460" y="240" font-size="11" fill="#1e293b">phone_number : VARCHAR(20)</text>
+  <text x="460" y="256" font-size="11" fill="#64748b">created_at, updated_at : TIMESTAMP</text>
+
+  <!-- PROPERTIES -->
+  <rect x="445" y="295" width="280" height="155" rx="6" fill="#ffffff" stroke="#22c55e" stroke-width="2" filter="url(#sh)"/>
+  <rect x="445" y="295" width="280" height="28" rx="6" fill="#22c55e"/>
+  <text x="585" y="314" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">PROPERTIES</text>
+  <text x="460" y="340" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="460" y="356" font-size="11" fill="#ef4444">client_id : UUID (FK → clients)</text>
+  <text x="460" y="372" font-size="11" fill="#1e293b">address : TEXT</text>
+  <text x="460" y="388" font-size="11" fill="#1e293b">city, state, zip_code, country</text>
+  <text x="460" y="404" font-size="11" fill="#1e293b">property_type : ENUM</text>
+  <text x="460" y="420" font-size="11" fill="#1e293b">year_built, square_footage : INT</text>
+  <text x="460" y="436" font-size="11" fill="#64748b">created_at, updated_at : TIMESTAMP</text>
+
+  <!-- INSPECTIONS -->
+  <rect x="445" y="480" width="280" height="150" rx="6" fill="#ffffff" stroke="#22c55e" stroke-width="2" filter="url(#sh)"/>
+  <rect x="445" y="480" width="280" height="28" rx="6" fill="#22c55e"/>
+  <text x="585" y="499" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">INSPECTIONS</text>
+  <text x="460" y="525" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="460" y="541" font-size="11" fill="#ef4444">inspector_id : UUID (FK → inspectors)</text>
+  <text x="460" y="557" font-size="11" fill="#ef4444">property_id : UUID (FK → properties)</text>
+  <text x="460" y="573" font-size="11" fill="#1e293b">title : TEXT</text>
+  <text x="460" y="589" font-size="11" fill="#1e293b">status : ENUM (draft→scheduled→</text>
+  <text x="460" y="603" font-size="11" fill="#1e293b">in_progress→completed→report_generated)</text>
+  <text x="460" y="619" font-size="11" fill="#64748b">report_url, notes : TEXT</text>
+
+  <!-- INSPECTION_AREAS -->
+  <rect x="445" y="660" width="280" height="105" rx="6" fill="#ffffff" stroke="#22c55e" stroke-width="2" filter="url(#sh)"/>
+  <rect x="445" y="660" width="280" height="28" rx="6" fill="#22c55e"/>
+  <text x="585" y="679" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">INSPECTION_AREAS</text>
+  <text x="460" y="705" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="460" y="721" font-size="11" fill="#ef4444">inspection_id : UUID (FK → inspections)</text>
+  <text x="460" y="737" font-size="11" fill="#1e293b">name : TEXT</text>
+  <text x="460" y="753" font-size="11" fill="#1e293b">display_order : INT</text>
+
+  <!-- Core relationships -->
+  <!-- Clients → Properties -->
+  <line x1="585" y1="265" x2="585" y2="295" stroke="#334155" stroke-width="1.5"/>
+  <text x="600" y="283" font-size="9" fill="#64748b">1:N</text>
+  <!-- Properties → Inspections -->
+  <line x1="585" y1="450" x2="585" y2="480" stroke="#334155" stroke-width="1.5"/>
+  <text x="600" y="468" font-size="9" fill="#64748b">1:N</text>
+  <!-- Inspections → Areas -->
+  <line x1="585" y1="630" x2="585" y2="660" stroke="#334155" stroke-width="1.5"/>
+  <text x="600" y="648" font-size="9" fill="#64748b">1:N</text>
+
+  <!-- Cross-domain: Inspectors → Clients -->
+  <line x1="335" y1="400" x2="445" y2="180" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="380" y="280" font-size="9" fill="#ef4444" transform="rotate(-50,380,280)">1:N</text>
+
+  <!-- ===== MEDIA DOMAIN ===== -->
+  <rect x="810" y="80" width="360" height="440" rx="10" fill="#fefce8" fill-opacity="0.4" stroke="#fde047" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="990" y="102" text-anchor="middle" font-size="13" font-weight="bold" fill="#a16207">MEDIA DOMAIN</text>
+
+  <!-- AREA_PHOTOS -->
+  <rect x="835" y="115" width="280" height="95" rx="6" fill="#ffffff" stroke="#eab308" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="115" width="280" height="28" rx="6" fill="#eab308"/>
+  <text x="975" y="134" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">AREA_PHOTOS</text>
+  <text x="850" y="160" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="850" y="176" font-size="11" fill="#ef4444">inspection_area_id (FK → inspection_areas)</text>
+  <text x="850" y="192" font-size="11" fill="#1e293b">photo_url : TEXT</text>
+  <text x="850" y="205" font-size="11" fill="#64748b">created_at : TIMESTAMP</text>
+
+  <!-- AREA_OBSERVATIONS -->
+  <rect x="835" y="240" width="280" height="145" rx="6" fill="#ffffff" stroke="#eab308" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="240" width="280" height="28" rx="6" fill="#eab308"/>
+  <text x="975" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">AREA_OBSERVATIONS</text>
+  <text x="850" y="285" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="850" y="301" font-size="11" fill="#ef4444">inspection_area_id (FK → inspection_areas)</text>
+  <text x="850" y="317" font-size="11" fill="#ef4444">photo_id : UUID (FK → area_photos)</text>
+  <text x="850" y="333" font-size="11" fill="#1e293b">observation_type : ENUM (text/voice)</text>
+  <text x="850" y="349" font-size="11" fill="#1e293b">observation_text : TEXT</text>
+  <text x="850" y="365" font-size="11" fill="#1e293b">audio_url : TEXT</text>
+  <text x="850" y="380" font-size="11" fill="#64748b">created_at, updated_at : TIMESTAMP</text>
+
+  <!-- TRANSCRIPTIONS -->
+  <rect x="835" y="415" width="280" height="95" rx="6" fill="#ffffff" stroke="#eab308" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="415" width="280" height="28" rx="6" fill="#eab308"/>
+  <text x="975" y="434" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">TRANSCRIPTIONS</text>
+  <text x="850" y="460" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="850" y="476" font-size="11" fill="#ef4444">observation_id (FK → area_observations)</text>
+  <text x="850" y="492" font-size="11" fill="#1e293b">transcription_text : TEXT</text>
+  <text x="850" y="505" font-size="11" fill="#64748b">confidence : FLOAT</text>
+
+  <!-- Media relationships -->
+  <!-- Areas → Photos (cross-domain) -->
+  <line x1="725" y1="710" x2="835" y2="165" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3"/>
+  <text x="770" y="420" font-size="9" fill="#ef4444" transform="rotate(-72,770,420)">1:N</text>
+
+  <!-- Areas → Observations -->
+  <line x1="725" y1="720" x2="835" y2="310" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="5,3"/>
+
+  <!-- Photos → Observations -->
+  <line x1="975" y1="210" x2="975" y2="240" stroke="#334155" stroke-width="1.5"/>
+  <text x="990" y="228" font-size="9" fill="#64748b">1:N</text>
+
+  <!-- Observations → Transcriptions -->
+  <line x1="975" y1="385" x2="975" y2="415" stroke="#334155" stroke-width="1.5"/>
+  <text x="990" y="403" font-size="9" fill="#64748b">1:1</text>
+
+  <!-- ===== AI DOMAIN ===== -->
+  <rect x="810" y="550" width="360" height="380" rx="10" fill="#faf5ff" fill-opacity="0.4" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="990" y="572" text-anchor="middle" font-size="13" font-weight="bold" fill="#7e22ce">AI DOMAIN</text>
+
+  <!-- DOCUMENT_CHUNKS -->
+  <rect x="835" y="585" width="280" height="130" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="585" width="280" height="28" rx="6" fill="#a855f7"/>
+  <text x="975" y="604" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">DOCUMENT_CHUNKS</text>
+  <text x="850" y="630" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="850" y="646" font-size="11" fill="#ef4444">company_id (FK → companies)</text>
+  <text x="850" y="662" font-size="11" fill="#1e293b">filename : VARCHAR(255)</text>
+  <text x="850" y="678" font-size="11" fill="#1e293b">chunk_text : TEXT</text>
+  <text x="850" y="694" font-size="11" fill="#7c3aed">embedding : Vector(384) [pgvector]</text>
+  <text x="850" y="708" font-size="11" fill="#ef4444">uploaded_by (FK → inspectors)</text>
+
+  <!-- REPORT_JOBS -->
+  <rect x="835" y="740" width="280" height="120" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="740" width="280" height="28" rx="6" fill="#a855f7"/>
+  <text x="975" y="759" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">REPORT_JOBS</text>
+  <text x="850" y="785" font-size="11" fill="#1e293b"><tspan text-decoration="underline">id</tspan> : UUID (PK)</text>
+  <text x="850" y="801" font-size="11" fill="#1e293b">inspection_id : UUID (indexed)</text>
+  <text x="850" y="817" font-size="11" fill="#1e293b">status : ENUM (queued→processing→ready/failed)</text>
+  <text x="850" y="833" font-size="11" fill="#1e293b">pdf_url, verify_token : TEXT</text>
+  <text x="850" y="849" font-size="11" fill="#64748b">report_json : JSON</text>
+
+  <!-- PHOTO_ANALYSES -->
+  <rect x="835" y="885" width="280" height="40" rx="6" fill="#ffffff" stroke="#a855f7" stroke-width="2" filter="url(#sh)"/>
+  <rect x="835" y="885" width="280" height="28" rx="6" fill="#a855f7"/>
+  <text x="975" y="904" text-anchor="middle" font-size="13" font-weight="bold" fill="#ffffff">PHOTO_ANALYSES</text>
+
+  <!-- ===== LEGEND ===== -->
+  <rect x="30" y="880" width="350" height="55" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="205" y="900" text-anchor="middle" font-size="11" font-weight="bold" fill="#334155">Legend</text>
+  <text x="50" y="920" font-size="10" fill="#ef4444">FK = Foreign Key</text>
+  <text x="170" y="920" font-size="10" fill="#1e293b"><tspan text-decoration="underline">PK</tspan> = Primary Key</text>
+  <text x="290" y="920" font-size="10" fill="#7c3aed">pgvector = Vector Column</text>
+</svg>

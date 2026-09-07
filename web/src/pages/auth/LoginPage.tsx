@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useRef, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ApiError } from '../../services/api';
@@ -18,8 +18,26 @@ export default function LoginPage({ onDone }: { onDone?: () => void } = {}) {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('error');
   const [busy, setBusy] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const nextUrl = searchParams.get('next');
+
+  function fillDemoCredentials() {
+    if (!formRef.current) return;
+    const emailInput = formRef.current.querySelector('input[name="email"]') as HTMLInputElement;
+    const passwordInput = formRef.current.querySelector('input[name="password"]') as HTMLInputElement;
+    if (emailInput) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+      nativeInputValueSetter.call(emailInput, 'demo@defectloupe.com');
+      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if (passwordInput) {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!;
+      nativeInputValueSetter.call(passwordInput, 'demo1234');
+      passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    setMessage('');
+  }
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -83,7 +101,7 @@ export default function LoginPage({ onDone }: { onDone?: () => void } = {}) {
         </p>
       </div>
 
-      <form onSubmit={submit} className="flex flex-col gap-4">
+      <form ref={formRef} onSubmit={submit} className="flex flex-col gap-4">
         {mode === 'register' && (
           <div className="grid grid-cols-2 gap-3">
             <InputField required name="first_name" label="First name" placeholder="Ali" />
@@ -121,6 +139,17 @@ export default function LoginPage({ onDone }: { onDone?: () => void } = {}) {
         <Button type="submit" disabled={busy} className="w-full mt-2 py-3 text-sm font-bold">
           {busy ? 'Please wait...' : mode === 'login' ? 'Sign in' : 'Create account'}
         </Button>
+
+        {mode === 'login' && (
+          <button
+            type="button"
+            onClick={fillDemoCredentials}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 hover:bg-emerald-500/20 transition-colors cursor-pointer flex items-center justify-center gap-2"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Fill Demo Credentials
+          </button>
+        )}
 
         {message && (
           <div

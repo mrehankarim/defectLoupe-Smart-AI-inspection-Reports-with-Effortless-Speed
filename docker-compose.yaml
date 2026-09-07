@@ -53,7 +53,7 @@ services:
       REFRESH_TOKEN_SECRET: defectloupe-hackathon-jwt-refresh-key-32b
       AUTO_VERIFY_EMAIL: "true"
       COOKIE_SECURE: "false"
-      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80"
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80,http://localhost:8081"
     depends_on:
       db:
         condition: service_healthy
@@ -79,7 +79,7 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/defect-loupe
       ACCESS_TOKEN_SECRET: defectloupe-hackathon-jwt-secret-key-32b
-      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80"
+      CORS_ORIGINS: "http://localhost,http://localhost:5173,http://localhost:80,http://localhost:8081"
     volumes:
       - ./services/core/app:/app/app
       - ./shared:/app/shared

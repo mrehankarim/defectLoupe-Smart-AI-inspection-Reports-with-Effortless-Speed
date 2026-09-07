@@ -1,0 +1,181 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155"/>
+    </marker>
+    <filter id="s" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="900" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="600" y="38" text-anchor="middle" font-size="22" font-weight="bold" fill="#1e293b">DefectLoupe — Deployment &amp; Infrastructure Diagram</text>
+  <text x="600" y="58" text-anchor="middle" font-size="13" fill="#64748b">Docker Compose Container Orchestration</text>
+
+  <!-- Host Machine Border -->
+  <rect x="30" y="80" width="1140" height="700" rx="12" fill="none" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="60" y="102" font-size="14" font-weight="bold" fill="#475569">Docker Host (docker-compose.yaml)</text>
+
+  <!-- Network Border -->
+  <rect x="55" y="115" width="900" height="550" rx="10" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="80" y="137" font-size="12" font-weight="bold" fill="#1d4ed8">defectloupe-net (bridge network)</text>
+
+  <!-- ===== GATEWAY ===== -->
+  <rect x="80" y="155" width="200" height="90" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="2" filter="url(#s)"/>
+  <text x="180" y="178" text-anchor="middle" font-size="13" font-weight="bold" fill="#c2410c">gateway</text>
+  <text x="180" y="195" text-anchor="middle" font-size="10" fill="#9a3412">traefik:latest</text>
+  <text x="180" y="210" text-anchor="middle" font-size="10" fill="#475569">Port 80 (host:80)</text>
+  <text x="180" y="225" text-anchor="middle" font-size="10" fill="#475569">Port 8080 (dashboard)</text>
+  <text x="180" y="240" text-anchor="middle" font-size="9" fill="#64748b">Reverse Proxy</text>
+
+  <!-- External traffic arrow -->
+  <text x="180" y="148" text-anchor="middle" font-size="10" fill="#f97316">External Traffic :80</text>
+  <line x1="180" y1="130" x2="180" y2="155" stroke="#f97316" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- ===== AUTH ===== -->
+  <rect x="310" y="155" width="180" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2" filter="url(#s)"/>
+  <text x="400" y="178" text-anchor="middle" font-size="13" font-weight="bold" fill="#1d4ed8">auth</text>
+  <text x="400" y="195" text-anchor="middle" font-size="10" fill="#3b82f6">defectloupe-auth:latest</text>
+  <text x="400" y="210" text-anchor="middle" font-size="10" fill="#475569">Port 8000 (internal)</text>
+  <text x="400" y="225" text-anchor="middle" font-size="9" fill="#64748b">/auth/*, /inspectors/*</text>
+
+  <!-- ===== CORE ===== -->
+  <rect x="520" y="155" width="180" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2" filter="url(#s)"/>
+  <text x="610" y="178" text-anchor="middle" font-size="13" font-weight="bold" fill="#15803d">core</text>
+  <text x="610" y="195" text-anchor="middle" font-size="10" fill="#22c55e">defectloupe-core:latest</text>
+  <text x="610" y="210" text-anchor="middle" font-size="10" fill="#475569">Port 8000 (internal)</text>
+  <text x="610" y="225" text-anchor="middle" font-size="9" fill="#64748b">/api/v1/clients, properties...</text>
+
+  <!-- ===== MEDIA ===== -->
+  <rect x="730" y="155" width="200" height="80" rx="8" fill="#fefce8" stroke="#eab308" stroke-width="2" filter="url(#s)"/>
+  <text x="830" y="178" text-anchor="middle" font-size="13" font-weight="bold" fill="#a16207">media</text>
+  <text x="830" y="195" text-anchor="middle" font-size="10" fill="#ca8a04">defectloupe-media:latest</text>
+  <text x="830" y="210" text-anchor="middle" font-size="10" fill="#475569">Port 8000 (internal)</text>
+  <text x="830" y="225" text-anchor="middle" font-size="9" fill="#64748b">/api/v1/photos, observations...</text>
+
+  <!-- ===== AI ===== -->
+  <rect x="310" y="270" width="200" height="80" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="2" filter="url(#s)"/>
+  <text x="410" y="293" text-anchor="middle" font-size="13" font-weight="bold" fill="#7e22ce">ai</text>
+  <text x="410" y="310" text-anchor="middle" font-size="10" fill="#a855f7">defectloupe-ai:latest</text>
+  <text x="410" y="325" text-anchor="middle" font-size="10" fill="#475569">Port 8000 (internal)</text>
+  <text x="410" y="340" text-anchor="middle" font-size="9" fill="#64748b">/api/v1/rag, reports...</text>
+
+  <!-- ===== CELERY WORKER ===== -->
+  <rect x="540" y="270" width="200" height="80" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="2" filter="url(#s)"/>
+  <text x="640" y="293" text-anchor="middle" font-size="13" font-weight="bold" fill="#b91c1c">celery-worker</text>
+  <text x="640" y="310" text-anchor="middle" font-size="10" fill="#ef4444">defectloupe-ai:latest</text>
+  <text x="640" y="325" text-anchor="middle" font-size="10" fill="#475569">No port (worker process)</text>
+  <text x="640" y="340" text-anchor="middle" font-size="9" fill="#64748b">Queues: stt, vision, reports</text>
+
+  <!-- ===== DATABASE ===== -->
+  <ellipse cx="250" cy="420" rx="90" ry="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <rect x="160" y="420" width="180" height="50" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <ellipse cx="250" cy="470" rx="90" ry="20" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="250" y="443" text-anchor="middle" font-size="12" font-weight="bold" fill="#1e40af">db</text>
+  <text x="250" y="458" text-anchor="middle" font-size="10" fill="#2563eb">ankane/pgvector</text>
+  <text x="250" y="480" text-anchor="middle" font-size="9" fill="#475569">Port 5432 (host:5433)</text>
+
+  <!-- ===== REDIS ===== -->
+  <ellipse cx="500" cy="420" rx="70" ry="18" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <rect x="430" y="420" width="140" height="45" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <ellipse cx="500" cy="465" rx="70" ry="18" fill="#fce7f3" stroke="#ec4899" stroke-width="2"/>
+  <text x="500" y="442" text-anchor="middle" font-size="12" font-weight="bold" fill="#9d174d">redis</text>
+  <text x="500" y="456" text-anchor="middle" font-size="10" fill="#be185d">redis:7-alpine</text>
+  <text x="500" y="478" text-anchor="middle" font-size="9" fill="#475569">Port 6379 (host:6379)</text>
+
+  <!-- Connection lines: Gateway → Services -->
+  <line x1="280" y1="200" x2="310" y2="200" stroke="#f97316" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="280" y1="210" x2="520" y2="200" stroke="#f97316" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="280" y1="220" x2="730" y2="200" stroke="#f97316" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="180" y1="245" x2="310" y2="310" stroke="#f97316" stroke-width="1.2" marker-end="url(#a)"/>
+
+  <!-- Services → DB -->
+  <line x1="400" y1="235" x2="290" y2="410" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="610" y1="235" x2="300" y2="415" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="830" y1="235" x2="310" y2="420" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="410" y1="350" x2="290" y2="410" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="640" y1="350" x2="300" y2="420" stroke="#3b82f6" stroke-width="1.2" marker-end="url(#a)"/>
+
+  <!-- Services → Redis -->
+  <line x1="830" y1="235" x2="540" y2="420" stroke="#ec4899" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="410" y1="350" x2="480" y2="415" stroke="#ec4899" stroke-width="1.2" marker-end="url(#a)"/>
+  <line x1="640" y1="350" x2="520" y2="415" stroke="#ec4899" stroke-width="1.2" marker-end="url(#a)"/>
+
+  <!-- AI → Celery (same image, different command) -->
+  <line x1="510" y1="310" x2="540" y2="310" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="525" y="303" text-anchor="middle" font-size="8" fill="#ef4444">same image</text>
+
+  <!-- ===== VOLUMES ===== -->
+  <rect x="55" y="520" width="870" height="75" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="490" y="540" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">Docker Volumes (Persistent Storage)</text>
+
+  <rect x="80" y="550" width="140" height="35" rx="4" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+  <text x="150" y="572" text-anchor="middle" font-size="9" fill="#1e40af">defect-loupe-data</text>
+
+  <rect x="240" y="550" width="140" height="35" rx="4" fill="#fce7f3" stroke="#ec4899" stroke-width="1"/>
+  <text x="310" y="572" text-anchor="middle" font-size="9" fill="#9d174d">defect-loupe-redis</text>
+
+  <rect x="400" y="550" width="140" height="35" rx="4" fill="#fefce8" stroke="#eab308" stroke-width="1"/>
+  <text x="470" y="572" text-anchor="middle" font-size="9" fill="#a16207">defect-loupe-uploads</text>
+
+  <rect x="560" y="550" width="140" height="35" rx="4" fill="#faf5ff" stroke="#a855f7" stroke-width="1"/>
+  <text x="630" y="572" text-anchor="middle" font-size="9" fill="#7e22ce">defect-loupe-reports</text>
+
+  <rect x="720" y="550" width="140" height="35" rx="4" fill="#f0fdf4" stroke="#22c55e" stroke-width="1"/>
+  <text x="790" y="572" text-anchor="middle" font-size="9" fill="#15803d">defect-loupe-hf-cache</text>
+
+  <!-- Volume connections -->
+  <line x1="250" y1="470" x2="150" y2="550" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <line x1="500" y1="465" x2="310" y2="550" stroke="#94a3b8" stroke-width="0.8" stroke-dasharray="3,2"/>
+
+  <!-- ===== EXTERNAL SERVICES ===== -->
+  <rect x="990" y="155" width="160" height="180" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="1070" y="178" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">External APIs</text>
+
+  <rect x="1010" y="195" width="120" height="35" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="1070" y="217" text-anchor="middle" font-size="10" fill="#15803d">Resend API</text>
+
+  <rect x="1010" y="245" width="120" height="35" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1070" y="267" text-anchor="middle" font-size="10" fill="#7e22ce">Gemini API</text>
+
+  <rect x="1010" y="295" width="120" height="35" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="1070" y="317" text-anchor="middle" font-size="10" fill="#1d4ed8">HuggingFace Hub</text>
+
+  <!-- External connections -->
+  <line x1="1010" y1="210" x2="490" y2="200" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#a)"/>
+  <line x1="1010" y1="260" x2="510" y2="300" stroke="#a855f7" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#a)"/>
+  <line x1="1010" y1="310" x2="510" y2="330" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#a)"/>
+
+  <!-- ===== CLIENTS (outside Docker) ===== -->
+  <rect x="80" y="800" width="200" height="50" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="180" y="822" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Mobile App</text>
+  <text x="180" y="838" text-anchor="middle" font-size="10" fill="#64748b">React Native / Expo</text>
+
+  <rect x="500" y="800" width="200" height="50" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="600" y="822" text-anchor="middle" font-size="12" font-weight="600" fill="#334155">Web Dashboard</text>
+  <text x="600" y="838" text-anchor="middle" font-size="10" fill="#64748b">React + Vite + Tailwind</text>
+
+  <line x1="180" y1="800" x2="180" y2="780" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <line x1="600" y1="800" x2="600" y2="780" stroke="#334155" stroke-width="1.5" marker-end="url(#a)"/>
+  <text x="400" y="790" text-anchor="middle" font-size="10" fill="#64748b">HTTP → localhost:80 (Traefik Gateway)</text>
+
+  <!-- Health check note -->
+  <rect x="990" y="400" width="160" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="1070" y="420" text-anchor="middle" font-size="11" font-weight="bold" fill="#15803d">Healthchecks</text>
+  <text x="1070" y="438" text-anchor="middle" font-size="9" fill="#475569">db: pg_isready</text>
+  <text x="1070" y="452" text-anchor="middle" font-size="9" fill="#475569">redis: redis-cli ping</text>
+  <text x="1070" y="466" text-anchor="middle" font-size="9" fill="#475569">services: /health endpoint</text>
+
+  <!-- Startup order -->
+  <rect x="990" y="510" width="160" height="80" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="1070" y="530" text-anchor="middle" font-size="11" font-weight="bold" fill="#c2410c">Startup Order</text>
+  <text x="1070" y="548" text-anchor="middle" font-size="9" fill="#475569">1. db (healthy)</text>
+  <text x="1070" y="562" text-anchor="middle" font-size="9" fill="#475569">2. redis (healthy)</text>
+  <text x="1070" y="576" text-anchor="middle" font-size="9" fill="#475569">3. auth → core → media → ai</text>
+
+  <!-- Legend -->
+  <rect x="30" y="870" width="1140" height="25" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="600" y="887" text-anchor="middle" font-size="10" fill="#475569">All services built from repo root context (shared/ package COPY'd into each image) — Only gateway port 80 exposed to host</text>
+</svg>

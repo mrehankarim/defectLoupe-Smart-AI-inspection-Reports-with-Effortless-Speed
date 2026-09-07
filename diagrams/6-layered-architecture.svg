@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="ac" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#334155"/>
+    </marker>
+    <filter id="sc" x="-2%" y="-2%" width="104%" height="104%">
+      <feDropShadow dx="1" dy="1" stdDeviation="1.5" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="750" fill="#ffffff"/>
+
+  <!-- Title -->
+  <text x="550" y="35" text-anchor="middle" font-size="22" font-weight="bold" fill="#1e293b">DefectLoupe — Layered Service Architecture</text>
+  <text x="550" y="55" text-anchor="middle" font-size="13" fill="#64748b">Consistent Internal Structure of Each Microservice (Auth, Core, Media, AI)</text>
+
+  <!-- ===== SINGLE SERVICE TEMPLATE ===== -->
+  <rect x="50" y="80" width="480" height="620" rx="10" fill="#f8fafc" stroke="#3b82f6" stroke-width="2"/>
+  <text x="290" y="105" text-anchor="middle" font-size="15" font-weight="bold" fill="#1d4ed8">Service Internal Architecture</text>
+  <text x="290" y="122" text-anchor="middle" font-size="11" fill="#64748b">(Same pattern for all 4 services)</text>
+
+  <!-- Layer 1: API Routes -->
+  <rect x="75" y="140" width="430" height="85" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="160" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">API Layer — app/api/routes/</text>
+  <text x="290" y="178" text-anchor="middle" font-size="10" fill="#475569">FastAPI routers defining HTTP endpoints</text>
+
+  <rect x="90" y="190" width="130" height="25" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="155" y="207" text-anchor="middle" font-size="9" fill="#1e40af">client_routes.py</text>
+
+  <rect x="230" y="190" width="130" height="25" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="295" y="207" text-anchor="middle" font-size="9" fill="#1e40af">inspection_routes.py</text>
+
+  <rect x="370" y="190" width="120" height="25" rx="3" fill="#dbeafe" stroke="#93c5fd" stroke-width="1"/>
+  <text x="430" y="207" text-anchor="middle" font-size="9" fill="#1e40af">photo_routes.py</text>
+
+  <!-- Layer 2: DTOs -->
+  <rect x="75" y="240" width="430" height="85" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="260" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">DTO Layer — app/api/dtos/</text>
+  <text x="290" y="278" text-anchor="middle" font-size="10" fill="#475569">Pydantic models for request validation &amp; response serialization</text>
+
+  <rect x="90" y="290" width="130" height="25" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="155" y="307" text-anchor="middle" font-size="9" fill="#15803d">client_dto.py</text>
+
+  <rect x="230" y="290" width="130" height="25" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="295" y="307" text-anchor="middle" font-size="9" fill="#15803d">inspection_dto.py</text>
+
+  <rect x="370" y="290" width="120" height="25" rx="3" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+  <text x="430" y="307" text-anchor="middle" font-size="9" fill="#15803d">photo_dto.py</text>
+
+  <!-- Layer 3: Services (Business Logic) -->
+  <rect x="75" y="340" width="430" height="85" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="360" text-anchor="middle" font-size="12" font-weight="bold" fill="#a16207">Service Layer — app/services/</text>
+  <text x="290" y="378" text-anchor="middle" font-size="10" fill="#475569">Business logic, validation, tenant scoping, orchestration</text>
+
+  <rect x="90" y="390" width="130" height="25" rx="3" fill="#fef9c3" stroke="#fde047" stroke-width="1"/>
+  <text x="155" y="407" text-anchor="middle" font-size="9" fill="#a16207">client_service.py</text>
+
+  <rect x="230" y="390" width="130" height="25" rx="3" fill="#fef9c3" stroke="#fde047" stroke-width="1"/>
+  <text x="295" y="407" text-anchor="middle" font-size="9" fill="#a16207">inspection_service.py</text>
+
+  <rect x="370" y="390" width="120" height="25" rx="3" fill="#fef9c3" stroke="#fde047" stroke-width="1"/>
+  <text x="430" y="407" text-anchor="middle" font-size="9" fill="#a16207">media_service.py</text>
+
+  <!-- Layer 4: Repository -->
+  <rect x="75" y="440" width="430" height="85" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="460" text-anchor="middle" font-size="12" font-weight="bold" fill="#7e22ce">Repository Layer — app/repository/</text>
+  <text x="290" y="478" text-anchor="middle" font-size="10" fill="#475569">SQLAlchemy ORM models — table definitions &amp; relationships</text>
+
+  <rect x="90" y="490" width="130" height="25" rx="3" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/>
+  <text x="155" y="507" text-anchor="middle" font-size="9" fill="#7e22ce">client.py (ORM)</text>
+
+  <rect x="230" y="490" width="130" height="25" rx="3" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/>
+  <text x="295" y="507" text-anchor="middle" font-size="9" fill="#7e22ce">inspection.py (ORM)</text>
+
+  <rect x="370" y="490" width="120" height="25" rx="3" fill="#f3e8ff" stroke="#c084fc" stroke-width="1"/>
+  <text x="430" y="507" text-anchor="middle" font-size="9" fill="#7e22ce">area_photo.py (ORM)</text>
+
+  <!-- Layer 5: Entry Point -->
+  <rect x="75" y="540" width="430" height="55" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="562" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Entry Point — app/main.py</text>
+  <text x="290" y="580" text-anchor="middle" font-size="10" fill="#475569">FastAPI app factory, CORS, router registration, /health endpoint</text>
+
+  <!-- Layer 6: Shared -->
+  <rect x="75" y="610" width="430" height="55" rx="6" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="290" y="632" text-anchor="middle" font-size="12" font-weight="bold" fill="#475569">Shared Package — shared/ (imported)</text>
+  <text x="290" y="650" text-anchor="middle" font-size="10" fill="#64748b">db_config.py (engine/session) | base.py (Base model) | auth_deps.py (JWT) | password.py (argon2)</text>
+
+  <!-- Arrows between layers -->
+  <line x1="290" y1="225" x2="290" y2="240" stroke="#334155" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="290" y1="325" x2="290" y2="340" stroke="#334155" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="290" y1="425" x2="290" y2="440" stroke="#334155" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="290" y1="525" x2="290" y2="540" stroke="#334155" stroke-width="1.2" marker-end="url(#ac)"/>
+  <line x1="290" y1="595" x2="290" y2="610" stroke="#334155" stroke-width="1.2" marker-end="url(#ac)"/>
+
+  <!-- ===== SERVICE-SPECIFIC TABLES ===== -->
+  <rect x="570" y="80" width="490" height="620" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="815" y="105" text-anchor="middle" font-size="15" font-weight="bold" fill="#1e293b">Service-Specific Responsibilities</text>
+
+  <!-- Auth Service -->
+  <rect x="595" y="120" width="210" height="125" rx="6" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="700" y="140" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">Auth Service</text>
+  <text x="700" y="158" text-anchor="middle" font-size="9" fill="#475569">Tables: users, inspectors, companies</text>
+  <text x="700" y="175" text-anchor="middle" font-size="9" fill="#475569">Routes: /auth/*, /inspectors/*</text>
+  <text x="700" y="192" text-anchor="middle" font-size="9" fill="#475569">JWT HS256 + secure cookies</text>
+  <text x="700" y="209" text-anchor="middle" font-size="9" fill="#475569">Email verification (Resend)</text>
+  <text x="700" y="226" text-anchor="middle" font-size="9" fill="#475569">RBAC: INDIVIDUAL / AGENCY_MEMBER</text>
+  <text x="700" y="240" text-anchor="middle" font-size="8" fill="#64748b">+ shared/auth_deps.py (get_current_user)</text>
+
+  <!-- Core Service -->
+  <rect x="825" y="120" width="210" height="125" rx="6" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="930" y="140" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">Core Service</text>
+  <text x="930" y="158" text-anchor="middle" font-size="9" fill="#475569">Tables: clients, properties,</text>
+  <text x="930" y="172" text-anchor="middle" font-size="9" fill="#475569">inspections, inspection_areas</text>
+  <text x="930" y="189" text-anchor="middle" font-size="9" fill="#475569">Routes: /api/v1/clients, /properties,</text>
+  <text x="930" y="203" text-anchor="middle" font-size="9" fill="#475569">/inspections, /dashboard, /areas</text>
+  <text x="930" y="220" text-anchor="middle" font-size="9" fill="#475569">Inspection state machine</text>
+  <text x="930" y="237" text-anchor="middle" font-size="9" fill="#475569">Tenant-scoped queries</text>
+
+  <!-- Media Service -->
+  <rect x="595" y="265" width="210" height="125" rx="6" fill="#fefce8" stroke="#eab308" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="700" y="285" text-anchor="middle" font-size="12" font-weight="bold" fill="#a16207">Media Service</text>
+  <text x="700" y="303" text-anchor="middle" font-size="9" fill="#475569">Tables: area_photos,</text>
+  <text x="700" y="317" text-anchor="middle" font-size="9" fill="#475569">area_observations, transcriptions</text>
+  <text x="700" y="334" text-anchor="middle" font-size="9" fill="#475569">Routes: /api/v1/photos, /observations,</text>
+  <text x="700" y="348" text-anchor="middle" font-size="9" fill="#475569">/transcriptions, /media</text>
+  <text x="700" y="365" text-anchor="middle" font-size="9" fill="#475569">Photo upload + voice recording</text>
+  <text x="700" y="382" text-anchor="middle" font-size="9" fill="#475569">Celery → STT transcription</text>
+
+  <!-- AI Service -->
+  <rect x="825" y="265" width="210" height="125" rx="6" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5" filter="url(#sc)"/>
+  <text x="930" y="285" text-anchor="middle" font-size="12" font-weight="bold" fill="#7e22ce">AI Service</text>
+  <text x="930" y="303" text-anchor="middle" font-size="9" fill="#475569">Tables: document_chunks,</text>
+  <text x="930" y="317" text-anchor="middle" font-size="9" fill="#475569">report_jobs, photo_analyses</text>
+  <text x="930" y="334" text-anchor="middle" font-size="9" fill="#475569">Routes: /api/v1/rag, /reports,</text>
+  <text x="930" y="348" text-anchor="middle" font-size="9" fill="#475569">/photos/{id}/analyze</text>
+  <text x="930" y="365" text-anchor="middle" font-size="9" fill="#475569">RAG: all-MiniLM-L6-v2 + pgvector</text>
+  <text x="930" y="382" text-anchor="middle" font-size="9" fill="#475569">Vision: Gemini Flash + PDF reports</text>
+
+  <!-- ===== DESIGN PATTERNS ===== -->
+  <rect x="595" y="410" width="440" height="140" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="815" y="432" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">Design Patterns &amp; Conventions</text>
+
+  <text x="615" y="455" font-size="10" fill="#475569">1. <tspan font-weight="bold">Layered Architecture</tspan> — Routes → DTOs → Services → Repository</text>
+  <text x="615" y="475" font-size="10" fill="#475569">2. <tspan font-weight="bold">Dependency Injection</tspan> — FastAPI Depends() for DB sessions &amp; auth</text>
+  <text x="615" y="495" font-size="10" fill="#475569">3. <tspan font-weight="bold">Shared DB</tspan> — All services use same PostgreSQL via shared/ engine</text>
+  <text x="615" y="515" font-size="10" fill="#475569">4. <tspan font-weight="bold">Table Ownership</tspan> — Each service owns specific tables (no overlap)</text>
+  <text x="615" y="535" font-size="10" fill="#475569">5. <tspan font-weight="bold">Local JWT Decode</tspan> — Each service validates tokens independently</text>
+
+  <!-- ===== INTER-SERVICE COMM ===== -->
+  <rect x="595" y="565" width="440" height="120" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="815" y="587" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">Inter-Service Communication</text>
+
+  <text x="615" y="610" font-size="10" fill="#475569"><tspan font-weight="bold">Sync HTTP</tspan> — AI → Core/Media via httpx on Docker network</text>
+  <text x="615" y="630" font-size="10" fill="#475569"><tspan font-weight="bold">Async Celery</tspan> — Media/AI → Redis queues → Workers</text>
+  <text x="615" y="650" font-size="10" fill="#475569"><tspan font-weight="bold">Shared DB</tspan> — Cross-service reads via direct SQL (same DB)</text>
+  <text x="615" y="670" font-size="10" fill="#475569"><tspan font-weight="bold">No Event Bus</tspan> — Simple architecture; future: Redis pub/sub</text>
+
+  <!-- Legend -->
+  <rect x="50" y="710" width="1000" height="30" rx="4" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="550" y="730" text-anchor="middle" font-size="10" fill="#475569">Each service: own Dockerfile + requirements.txt + .env + app/main.py — Built from repo root context with shared/ package COPY'd in</text>
+</svg>

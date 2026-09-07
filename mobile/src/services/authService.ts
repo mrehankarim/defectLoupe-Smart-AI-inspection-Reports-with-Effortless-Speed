@@ -119,10 +119,15 @@ export const authService = {
 
   async checkServerHealth(): Promise<{ ok: boolean; message: string }> {
     try {
-      const url = `${getBaseUrl()}/health`;
+      // Hit the auth service root endpoint (routed by Traefik)
+      const url = `${getBaseUrl()}/auth/`;
       const res = await axios.get(url, { timeout: 4000 });
       return { ok: res.status === 200, message: "Connected to DefectLoupe" };
     } catch (err: any) {
+      // If we get any response (even 4xx), the server is reachable
+      if (err.response) {
+        return { ok: true, message: "Connected to DefectLoupe" };
+      }
       return {
         ok: false,
         message: err.message || "Cannot reach server. Check IP & port.",

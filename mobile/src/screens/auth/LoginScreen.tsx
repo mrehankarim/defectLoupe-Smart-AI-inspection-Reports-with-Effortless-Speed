@@ -55,8 +55,8 @@ export const LoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   };
 
   const fillDemoCredentials = () => {
-    setEmail("inspector@example.com");
-    setPassword("password123");
+    setEmail("demo@defectloupe.com");
+    setPassword("demo1234");
     setError("");
   };
 
