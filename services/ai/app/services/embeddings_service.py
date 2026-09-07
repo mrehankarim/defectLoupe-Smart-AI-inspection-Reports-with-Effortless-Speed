@@ -65,11 +65,32 @@ def chunk_text(
 def generate_embeddings(texts: list[str]) -> list[list[float]]:
     """Encode *texts* and return 384-dimensional float vectors.
 
-    Returns an empty list when *texts* is empty so callers can safely
-    zip results without extra guards.
+    Prioritizes Gemini text-embedding-004 (output_dimensionality=384) to eliminate
+    local PyTorch RAM consumption on 512MB free-tier containers. Falls back to
+    SentenceTransformer if GEMINI_API_KEY is not available.
     """
     if not texts:
         return []
+
+    import os
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=gemini_key)
+            result = genai.embed_content(
+                model="models/text-embedding-004",
+                content=texts,
+                output_dimensionality=384,
+            )
+            raw = result.get("embedding", [])
+            if raw and isinstance(raw[0], (int, float)):
+                return [raw]
+            return raw
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Gemini text-embedding-004 failed (%s); using local fallback", exc)
+
     model = _EmbeddingModel.get_model()
     embeddings = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
     return [emb.tolist() for emb in embeddings]

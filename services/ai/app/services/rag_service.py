@@ -110,6 +110,11 @@ def search_knowledge_base(
     Filters out noise/unrelated documents whose similarity score is below min_score
     or significantly lower than the top candidate.
     """
+    # Guard: If no documents are in the knowledge base, avoid model load/embedding overhead
+    has_chunks = db.query(DocumentChunk.id).first() is not None
+    if not has_chunks:
+        return []
+
     query_embedding = generate_embeddings([query])[0]
 
     # Compute cosine distance
@@ -169,21 +174,25 @@ def synthesize_rag_response(
     query: str,
     retrieved_chunks: list[dict],
 ) -> dict:
-    """Synthesize a structured engineering advisory using Groq LLM over RAG context."""
-    if not retrieved_chunks:
-        return {
-            "answer": f"No specific technical code or standard documents in the knowledge base match '{query}'. Please consult general municipal building codes or upload the relevant jurisdiction manual to the knowledge base.",
-            "code_references": [],
-            "violation_thresholds": "No direct code threshold found in currently indexed manuals.",
-            "remediation_protocol": "Standard visual inspection and further exploratory diagnostics recommended.",
-            "severity": "Low",
-        }
-
-    # Format retrieved context for the prompt
-    context_blocks = []
-    for idx, chunk in enumerate(retrieved_chunks, 1):
-        context_blocks.append(
-            f"--- SOURCE EXCERPT {idx} [Document: {chunk.get('filename')}] ---\n{chunk.get('chunk_text')}"
+    """Synthesize a structured engineering advisory using Gemini 2.5 Flash over RAG context or general building codes."""
+    if retrieved_chunks:
+        context_blocks = []
+        for idx, chunk in enumerate(retrieved_chunks, 1):
+            context_blocks.append(
+                f"--- SOURCE EXCERPT {idx} [Document: {chunk.get('filename')}] ---\n{chunk.get('chunk_text')}"
+            )
+        context_str = "\n\n".join(context_blocks)
+        prompt = (
+            "You are DefectLoupe's Building Code & Forensic Engineering Assistant. "
+            "Synthesize a concise, direct, professional engineering advisory based on the building code excerpts below.\n\n"
+            f"INSPECTOR QUERY: {query}\n\n"
+            f"RETRIEVED KNOWLEDGE BASE EXCERPTS:\n{context_str}\n\n"
+            "Return ONLY a JSON object with these keys:\n"
+            "- answer: (string) Concise, high-density technical summary (maximum 2-3 sentences, strictly under 100 words).\n"
+            "- code_references: (list of strings) Clean, compact code citations (e.g. ['IRC 2024 R905', 'IBC Sec 1904']). Max 3 items.\n"
+            "- violation_thresholds: (string) 1 concise sentence stating exact numerical limit/failure criteria.\n"
+            "- remediation_protocol: (string) 1 concise sentence stating the technical fix.\n"
+            "- severity: (string) One of: 'Low', 'Medium', 'High', 'Critical'.\n"
         )
     context_str = "\n\n".join(context_blocks)
 
@@ -230,26 +239,71 @@ def synthesize_rag_response(
             json=payload,
             timeout=30.0,
         )
-        resp.raise_for_status()
-        data = resp.json()
-        raw_text = data["choices"][0]["message"]["content"].strip()
 
-        # Clean code fences if any
-        if raw_text.startswith("```"):
-            lines = raw_text.split("\n")
-            lines = [l for l in lines if not l.startswith("```")]
-            raw_text = "\n".join(lines).strip()
+    # 1. Primary: Gemini 2.5 Flash
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if gemini_key:
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=gemini_key)
+            model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.2,
+                    max_output_tokens=500,
+                    response_mime_type="application/json",
+                ),
+            )
+            parsed = json.loads(response.text)
+            return {
+                "answer": parsed.get("answer", "").strip(),
+                "code_references": parsed.get("code_references", []),
+                "violation_thresholds": parsed.get("violation_thresholds"),
+                "remediation_protocol": parsed.get("remediation_protocol"),
+                "severity": parsed.get("severity", "Medium"),
+            }
+        except Exception as exc:
+            logger.warning("Gemini RAG synthesis failed (%s); trying Groq fallback", exc)
 
-        parsed = json.loads(raw_text)
-        return {
-            "answer": parsed.get("answer", "").strip(),
-            "code_references": parsed.get("code_references", []),
-            "violation_thresholds": parsed.get("violation_thresholds"),
-            "remediation_protocol": parsed.get("remediation_protocol"),
-            "severity": parsed.get("severity", "Medium"),
-        }
-    except Exception as exc:
-        logger.warning("Groq RAG synthesis fallback activated: %s", exc)
+    # 2. Secondary: Groq LLM if configured
+    groq_api_key = os.getenv("GROQ_API_KEY", "")
+    if groq_api_key:
+        try:
+            import httpx
+            groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+            resp = httpx.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {groq_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": groq_model,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.2,
+                    "max_tokens": 400,
+                    "response_format": {"type": "json_object"},
+                },
+                timeout=20.0,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            raw_text = data["choices"][0]["message"]["content"].strip()
+            parsed = json.loads(raw_text)
+            return {
+                "answer": parsed.get("answer", "").strip(),
+                "code_references": parsed.get("code_references", []),
+                "violation_thresholds": parsed.get("violation_thresholds"),
+                "remediation_protocol": parsed.get("remediation_protocol"),
+                "severity": parsed.get("severity", "Medium"),
+            }
+        except Exception as exc:
+            logger.warning("Groq RAG synthesis fallback failed: %s", exc)
+
+    # 3. Default fallback
+    if retrieved_chunks:
         top_chunk = retrieved_chunks[0]
         filenames = list({c.get("filename") for c in retrieved_chunks})
         # Clean markdown from chunk text for display
@@ -270,6 +324,14 @@ def synthesize_rag_response(
             "remediation_protocol": "Perform certified contractor inspection and execute remediation per manufacturer and jurisdiction specifications.",
             "severity": "Medium",
         }
+
+    return {
+        "answer": "Yes! I am active and ready to assist. Ask any question regarding building codes (IBC, IRC, NEC, ASTM), foundation settlement tolerances, electrical panel clearances, or roof slopes, or upload project manuals to index custom standards.",
+        "code_references": ["IBC 2024", "IRC 2024"],
+        "violation_thresholds": None,
+        "remediation_protocol": None,
+        "severity": "Low",
+    }
 
 
 def list_documents(
