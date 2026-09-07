@@ -1,4 +1,8 @@
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
+let rawBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").trim().replace(/\/+$/, "");
+if (rawBaseUrl && !rawBaseUrl.startsWith("http://") && !rawBaseUrl.startsWith("https://")) {
+  rawBaseUrl = `https://${rawBaseUrl}`;
+}
+const BASE_URL = rawBaseUrl;
 
 export interface ApiError {
   status: number;
