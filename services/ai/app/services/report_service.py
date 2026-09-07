@@ -134,7 +134,13 @@ def generate_pdf_report(
 
     # Generate verify token and URL
     verify_token = uuid.uuid4().hex
-    verify_url = f"{os.getenv('PUBLIC_VERIFY_URL', 'http://localhost/api/v1/reports')}/{verify_token}/verify"
+    public_verify_base = os.getenv("PUBLIC_VERIFY_URL", "http://localhost/verify").rstrip("/")
+    if public_verify_base.endswith("/verify"):
+        verify_url = f"{public_verify_base}/{verify_token}"
+    elif "/verify/" in public_verify_base:
+        verify_url = f"{public_verify_base}/{verify_token}"
+    else:
+        verify_url = f"{public_verify_base}/{verify_token}/verify"
 
     # QR code
     qr_code_data = _generate_qr_base64(verify_url)

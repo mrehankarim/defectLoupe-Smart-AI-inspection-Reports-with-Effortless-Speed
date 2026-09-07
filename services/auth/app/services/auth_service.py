@@ -83,7 +83,11 @@ def register_user(
             detail="Email already registered",
         )
 
-    auto_verify = os.getenv("AUTO_VERIFY_EMAIL", "true").lower() == "true"
+    dev_auto = os.getenv("DEV_AUTO_VERIFY")
+    if dev_auto is not None:
+        auto_verify = dev_auto.lower() in ("true", "1", "yes")
+    else:
+        auto_verify = os.getenv("AUTO_VERIFY_EMAIL", "true").lower() in ("true", "1", "yes")
     user = User(
         email=data.email,
         hashed_password=hash_password(data.password),
