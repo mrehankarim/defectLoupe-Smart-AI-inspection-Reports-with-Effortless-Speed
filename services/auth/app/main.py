@@ -42,6 +42,18 @@ app.add_middleware(
 def root():
     return {"service": "auth-service", "status": "ok"}
 
+from fastapi.responses import JSONResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    import traceback
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "traceback": traceback.format_exc(), "error": str(exc)},
+        headers={"Access-Control-Allow-Origin": request.headers.get("origin", "*"), "Access-Control-Allow-Credentials": "true"}
+    )
+
 
 @app.get("/health")
 def health():
