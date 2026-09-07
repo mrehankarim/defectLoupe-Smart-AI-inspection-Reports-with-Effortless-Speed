@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.repository.base import Base
+from shared.case_insensitive_enum import CaseInsensitiveEnum
 
 
 class PropertyType(str, enum.Enum):
@@ -40,7 +41,7 @@ class Property(Base):
     country: Mapped[str] = mapped_column(String(100), nullable=False, default="US")
 
     property_type: Mapped[PropertyType] = mapped_column(
-        SAEnum(PropertyType, name="property_type_enum"),
+        CaseInsensitiveEnum(PropertyType, name="property_type_enum"),
         nullable=False,
         default=PropertyType.RESIDENTIAL,
     )

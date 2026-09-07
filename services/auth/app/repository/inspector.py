@@ -8,17 +8,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.repository.base import Base
+from shared.case_insensitive_enum import CaseInsensitiveEnum
 
 
 class InspectorType(str, enum.Enum):
-    INDIVIDUAL = "INDIVIDUAL"
-    AGENCY_MEMBER = "AGENCY_MEMBER"
+    INDIVIDUAL = "individual"
+    AGENCY_MEMBER = "agency_member"
 
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, str):
             for member in cls:
-                if member.value.upper() == value.upper() or member.name.upper() == value.upper():
+                if member.value.lower() == value.lower() or member.name.lower() == value.lower():
                     return member
         return None
 
@@ -51,7 +52,7 @@ class Inspector(Base):
     license_number: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     inspector_type: Mapped[InspectorType] = mapped_column(
-        SAEnum(
+        CaseInsensitiveEnum(
             InspectorType,
             name="inspector_type_enum",
             values_callable=lambda e: [m.value for m in e],

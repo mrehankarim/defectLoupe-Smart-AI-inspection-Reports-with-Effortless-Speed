@@ -8,6 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 from app.repository.base import Base
+from shared.case_insensitive_enum import CaseInsensitiveEnum
 
 
 class InspectionStatus(str, enum.Enum):
@@ -44,7 +45,7 @@ class Inspection(Base):
     title: Mapped[str | None] = mapped_column(Text, nullable=True)
     
     status: Mapped[InspectionStatus] = mapped_column(
-        SAEnum(InspectionStatus, name="inspection_status_enum"),
+        CaseInsensitiveEnum(InspectionStatus, name="inspection_status_enum"),
         nullable=False,
         default=InspectionStatus.DRAFT,
     )
